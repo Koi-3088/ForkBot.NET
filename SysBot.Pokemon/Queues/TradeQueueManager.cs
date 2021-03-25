@@ -9,8 +9,11 @@ namespace SysBot.Pokemon
         private readonly PokeTradeHub<T> Hub;
 
         private readonly PokeTradeQueue<T> Trade = new(PokeTradeType.Specific);
+        private readonly PokeTradeQueue<T> Giveaway = new(PokeTradeType.Giveaway);
         private readonly PokeTradeQueue<T> Seed = new(PokeTradeType.Seed);
         private readonly PokeTradeQueue<T> Clone = new(PokeTradeType.Clone);
+        private readonly PokeTradeQueue<T> FixOT = new(PokeTradeType.FixOT);
+        private readonly PokeTradeQueue<T> TradeCord = new(PokeTradeType.TradeCord);
         private readonly PokeTradeQueue<T> Dump = new(PokeTradeType.Dump);
         public readonly TradeQueueInfo<T> Info;
         public readonly PokeTradeQueue<T>[] AllQueues;
@@ -19,7 +22,7 @@ namespace SysBot.Pokemon
         {
             Hub = hub;
             Info = new TradeQueueInfo<T>(hub);
-            AllQueues = new[] { Seed, Dump, Clone, Trade, };
+            AllQueues = new[] { Seed, Dump, Clone, FixOT, TradeCord, Trade, Giveaway };
 
             foreach (var q in AllQueues)
                 q.Queue.Settings = hub.Config.Favoritism;

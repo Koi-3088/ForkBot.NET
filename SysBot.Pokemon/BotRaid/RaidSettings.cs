@@ -23,6 +23,9 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("Echoes each party member as they lock into a Pokémon.")]
         public bool EchoPartyReady { get; set; } = false;
 
+        [Category(Hosting), Description("Echoes when we invite others and when we start the raid.")]
+        public bool EchoRaidNotifications { get; set; } = false;
+
         [Category(Hosting), Description("Allows the bot to echo your Friend Code if set.")]
         public string FriendCode { get; set; } = string.Empty;
 
@@ -49,6 +52,27 @@ namespace SysBot.Pokemon
 
         [Category(Hosting), Description("The Nintendo Switch profile you are using to manage friends. For example, set this to 2 if you are using the second profile.")]
         public int ProfileNumber { get; set; } = 1;
+
+        [Category(Hosting), Description("When set, the bot will create a text file with current Raid Code for OBS.")]
+        public bool RaidLog { get; set; } = false;
+
+        [Category(Hosting), Description("If using USB-Botbase, quit out the raid by toggling airplane mode. For regular hosting and soft-lock AutoRoll.")]
+        public bool AirplaneQuitout { get; set; } = false;
+
+        [Category(Hosting), Description("When set, the bot will roll species. Don't forget to configure \"DenID\" in \"Den\" settings!")]
+        public bool AutoRoll { get; set; } = false;
+
+        [Category(Hosting), Description("If AutoRoll enabled, specify Pokémon species to stop rolling on and to soft-lock host via airplane mode.")]
+        public Species SoftLockSpecies { get; set; } = Species.None;
+
+        [Category(Hosting), Description("If AutoRoll enabled, will hard-lock on specified species. This will save your game.")]
+        public Species HardLockSpecies { get; set; } = Species.None;
+
+        [Category(Hosting), Description("If AutoRoll and SoftLockSpecies, or HardLockSpecies is enabled, specify whether to lock on a Gmax version of that species.")]
+        public bool GmaxLock { get; set; } = false;
+
+        [Category(Hosting), Description("Additional delay for 3-day roll in milliseconds. Base delay is 500 ms.")]
+        public int DateAdvanceDelay { get; set; } = 0;
 
         /// <summary>
         /// Gets a random trade code based on the range settings.

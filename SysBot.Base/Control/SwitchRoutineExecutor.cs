@@ -33,6 +33,14 @@ namespace SysBot.Base
             await Connection.SendAsync(delaycgf, token).ConfigureAwait(false);
         }
 
+        public async Task HoldUSB(SwitchButton b, int hold, int delay, CancellationToken token)
+        {
+            await Connection.SendAsync(SwitchCommand.Hold(b), token).ConfigureAwait(false);
+            await Task.Delay(hold);
+            await Connection.SendAsync(SwitchCommand.Release(b), token).ConfigureAwait(false);
+            await Task.Delay(delay);
+        }
+
         public async Task DaisyChainCommands(int Delay, SwitchButton[] buttons, CancellationToken token)
         {
             SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, Delay, UseCRLF);
@@ -59,5 +67,8 @@ namespace SysBot.Base
             var cmd = SwitchCommand.Configure(SwitchConfigureParameter.echoCommands, value ? 1 : 0, UseCRLF);
             await Connection.SendAsync(cmd, token).ConfigureAwait(false);
         }
+
+        public async Task DaySkip(int resetAfterNSkips, int resetNTP, CancellationToken token) => await Connection.SendAsync(SwitchCommand.DaySkip(resetAfterNSkips, resetNTP, UseCRLF), token).ConfigureAwait(false);
+        public async Task ResetNTP(CancellationToken token) => await Connection.SendAsync(SwitchCommand.ResetTimeNTP(UseCRLF), token).ConfigureAwait(false);
     }
 }

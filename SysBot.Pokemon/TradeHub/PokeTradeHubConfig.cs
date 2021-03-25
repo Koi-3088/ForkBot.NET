@@ -53,6 +53,10 @@ namespace SysBot.Pokemon
 
         [Category(Bots)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
+        public TradeCordSettings TradeCord { get; set; } = new();
+
+        [Category(Bots)]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
         public SeedCheckSettings SeedCheck { get; set; } = new();
 
         [Category(Bots), Description("Settings for idle distribution trades.")]
@@ -74,6 +78,10 @@ namespace SysBot.Pokemon
         [Category(Bots)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public EncounterSettings Encounter { get; set; } = new();
+
+        [Category(Bots)]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public DenSettings Den { get; set; } = new DenSettings();
 
         // Integration
 
