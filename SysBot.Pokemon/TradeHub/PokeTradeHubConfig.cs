@@ -52,6 +52,10 @@ namespace SysBot.Pokemon
 
         [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
+        public LairSettings Lair { get; set; } = new();
+
+        [Category(BotEncounter)]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
         public RaidSettings RaidSWSH { get; set; } = new();
 
         [Category(BotEncounter), Description("Stop conditions for EncounterBot.")]
