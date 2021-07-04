@@ -37,7 +37,7 @@ namespace SysBot.Base
             return Task.Run(() =>
             {
                 Send(SwitchCommand.GetMainNsoBase(false));
-                byte[] baseBytes = ReadResponse(8);
+                byte[] baseBytes = Read();
                 return BitConverter.ToUInt64(baseBytes, 0);
             }, token);
         }
@@ -47,8 +47,17 @@ namespace SysBot.Base
             return Task.Run(() =>
             {
                 Send(SwitchCommand.GetHeapBase(false));
-                byte[] baseBytes = ReadResponse(8);
+                byte[] baseBytes = Read();
                 return BitConverter.ToUInt64(baseBytes, 0);
+            }, token);
+        }
+
+        public Task<byte[]> Screengrab(CancellationToken token)
+        {
+            return Task.Run(() =>
+            {
+                Send(SwitchCommand.Screengrab(false));
+                return Read();
             }, token);
         }
     }

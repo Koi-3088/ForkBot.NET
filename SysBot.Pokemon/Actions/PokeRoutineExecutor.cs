@@ -571,7 +571,9 @@ namespace SysBot.Pokemon
             Log("Game saved!");
         }
 
-        public async Task<bool> LairStatusCheck(uint val, uint ofs, CancellationToken token) => BitConverter.GetBytes(val).SequenceEqual(await Connection.ReadBytesAsync(ofs, 4, token).ConfigureAwait(false));
+        public async Task<bool> LairStatusCheck(ushort val, uint ofs, CancellationToken token) => BitConverter.GetBytes(val).SequenceEqual(await Connection.ReadBytesAsync(ofs, 2, token).ConfigureAwait(false));
+
+        public async Task<bool> LairStatusCheckMain(ushort val, ulong ofs, CancellationToken token) => BitConverter.GetBytes(val).SequenceEqual(await SwitchConnection.ReadBytesAbsoluteAsync(ofs, 2, token).ConfigureAwait(false));
 
         public async Task<ulong> ParsePointer(string pointer, CancellationToken token) //Code from LiveHex
         {
@@ -603,7 +605,7 @@ namespace SysBot.Pokemon
             return address;
         }
 
-        public async Task<PK8?> ReadUntilPresentAbsolute(ulong offset, int waitms, int waitInterval, CancellationToken token, int size = BoxFormatSlotSize) // Need to eliminate duplicate code, currently a hack
+        public async Task<PK8> ReadUntilPresentAbsolute(ulong offset, int waitms, int waitInterval, CancellationToken token, int size = BoxFormatSlotSize) // Need to eliminate duplicate code, currently a hack
         {
             int msWaited = 0;
             while (msWaited < waitms)
@@ -614,7 +616,7 @@ namespace SysBot.Pokemon
                 await Task.Delay(waitInterval, token).ConfigureAwait(false);
                 msWaited += waitInterval;
             }
-            return null;
+            return new PK8();
         }
     }
 }

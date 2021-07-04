@@ -170,5 +170,14 @@ namespace SysBot.Base
                 await Task.Delay(MaximumTransferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
             }
         }
+
+        public async Task<byte[]> Screengrab(CancellationToken token)
+        {
+            await SendAsync(SwitchCommand.Screengrab(), token).ConfigureAwait(false);
+            var buffer = new byte[(260_000 * 2) + 1];
+            var br = Read(buffer);
+            var data = buffer.SliceSafe(0, br);
+            return Decoder.ConvertHexByteStringToBytes(data);
+        }
     }
 }

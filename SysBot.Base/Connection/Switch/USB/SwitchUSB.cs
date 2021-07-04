@@ -116,17 +116,39 @@ namespace SysBot.Base
                 return SendInternal(buffer);
         }
 
-        public int Read(byte[] buffer)
+        protected byte[] Read()
         {
             lock (_sync)
-                return ReadInternal(buffer);
+            {
+                byte[] sizeOfReturn = new byte[4];
+                if (reader == null)
+                    throw new Exception("USB device not found or not connected.");
+
+                reader.Read(sizeOfReturn, 5000, out _);
+                var size = BitConverter.ToInt32(sizeOfReturn, 0);
+                byte[] buffer = new byte[size];
+                var buffSize = reader.ReadBufferSize;
+                int transferredSize = 0;
+
+                while (transferredSize < size)
+                {
+                    reader.Read(buffer, transferredSize, buffSize, 5000, out var lenVal);
+                    transferredSize += lenVal;
+                    Thread.Sleep(1);
+                }
+                return buffer;
+            }
         }
 
         protected byte[] Read(ulong offset, int length, Func<ulong, int, byte[]> method)
         {
-            if (length > MaximumTransferSize)
-                return ReadLarge(offset, length, method);
-            return ReadSmall(offset, length, method);
+            lock (_sync)
+            {
+                var cmd = method(offset, length);
+                SendInternal(cmd);
+                Thread.Sleep(1);
+                return Read();
+            }
         }
 
         protected void Write(byte[] data, ulong offset, Func<ulong, byte[], byte[]> method)
@@ -136,21 +158,7 @@ namespace SysBot.Base
             else WriteSmall(data, offset, method);
         }
 
-        public byte[] ReadSmall(ulong offset, int length, Func<ulong, int, byte[]> method)
-        {
-            lock (_sync)
-            {
-                var cmd = method(offset, length);
-                SendInternal(cmd);
-                Thread.Sleep(1);
-
-                var buffer = new byte[length];
-                var _ = ReadInternal(buffer);
-                return buffer;
-            }
-        }
-
-        public void WriteSmall(byte[] data, ulong offset, Func<ulong, byte[], byte[]> method)
+        protected void WriteSmall(byte[] data, ulong offset, Func<ulong, byte[], byte[]> method)
         {
             lock (_sync)
             {
@@ -158,38 +166,6 @@ namespace SysBot.Base
                 SendInternal(cmd);
                 Thread.Sleep(1);
             }
-        }
-
-        private int ReadInternal(byte[] buffer)
-        {
-            byte[] sizeOfReturn = new byte[4];
-            if (reader == null)
-                throw new Exception("USB device not found or not connected.");
-
-            reader.Read(sizeOfReturn, 5000, out _);
-            reader.Read(buffer, 5000, out var lenVal);
-            return lenVal;
-        }
-
-        private int SendInternal(byte[] buffer)
-        {
-            if (writer == null)
-                throw new Exception("USB device not found or not connected.");
-
-            uint pack = (uint)buffer.Length + 2;
-            var ec = writer.Write(BitConverter.GetBytes(pack), 2000, out _);
-            if (ec != ErrorCode.None)
-            {
-                Disconnect();
-                throw new Exception(UsbDevice.LastErrorString);
-            }
-            ec = writer.Write(buffer, 2000, out var l);
-            if (ec != ErrorCode.None)
-            {
-                Disconnect();
-                throw new Exception(UsbDevice.LastErrorString);
-            }
-            return l;
         }
 
         private void WriteLarge(byte[] data, ulong offset, Func<ulong, byte[], byte[]> method)
@@ -203,26 +179,25 @@ namespace SysBot.Base
             }
         }
 
-        private byte[] ReadLarge(ulong offset, int length, Func<ulong, int, byte[]> method)
+        private int SendInternal(byte[] buffer)
         {
-            var result = new byte[length];
-            for (int i = 0; i < length; i += MaximumTransferSize)
-            {
-                Read(offset + (uint)i, Math.Min(MaximumTransferSize, length - i), method).CopyTo(result, i);
-                Thread.Sleep(MaximumTransferSize / DelayFactor + BaseDelay);
-            }
-            return result;
-        }
+            if (writer == null)
+                throw new Exception("USB device not found or not connected.");
 
-        protected byte[] ReadResponse(int length)
-        {
-            Thread.Sleep(1);
-            lock (_sync)
+            int pack = buffer.Length + 2;
+            var ec = writer.Write(BitConverter.GetBytes(pack), 2000, out _);
+            if (ec != ErrorCode.None)
             {
-                var buffer = new byte[(length * 2) + 0];
-                var _ = Read(buffer);
-                return buffer;
+                Disconnect();
+                throw new Exception(UsbDevice.LastErrorString);
             }
+            ec = writer.Write(buffer, 2000, out var l);
+            if (ec != ErrorCode.None)
+            {
+                Disconnect();
+                throw new Exception(UsbDevice.LastErrorString);
+            }
+            return l;
         }
     }
 }
