@@ -832,7 +832,7 @@ namespace SysBot.Pokemon
             bool fd = false;
             string[] baseLink;
             if (fullSize)
-                baseLink = "https://projectpokemon.org/images/sprites-models/homeimg/poke_capture_0001_000_mf_n_00000000_f_n.png".Split('_');
+                baseLink = "https://raw.githubusercontent.com/Z1R343L/Zygarde.DATA/master/tradecord-images/custom-v13/homeimg/poke_capture_0001_000_mf_n_00000000_f_n.png".Split('_');
             else baseLink = "https://raw.githubusercontent.com/BakaKaito/HomeImages/main/homeimg/128x128/poke_capture_0001_000_mf_n_00000000_f_n.png".Split('_');
 
             if (Enum.IsDefined(typeof(GenderDependent), pkm.Species) && !canGmax && pkm.Form == 0)

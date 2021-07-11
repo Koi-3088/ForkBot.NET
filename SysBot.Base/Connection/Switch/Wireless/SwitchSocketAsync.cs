@@ -21,14 +21,14 @@ namespace SysBot.Base
         {
             if (Connected)
             {
-                Log("Already connected prior, skipping initial connection.");
+                Log("Already connected prior, skipping initial Switch connection.");
                 return;
             }
 
-            Log("Connecting to device...");
+            Log("Trying to make contact and connect to your Switch.");
             Connection.Connect(Info.IP, Info.Port);
             Connected = true;
-            Log("Connected!");
+            Log("Success! Bot connected to Switch!");
             Label = Name;
         }
 
@@ -39,24 +39,24 @@ namespace SysBot.Base
                 Disconnect();
 
             Connection = new Socket(SocketType.Stream, ProtocolType.Tcp);
-            Log("Connecting to device...");
+            Log("Trying to make contact and connect to your Switch.");
             var address = Dns.GetHostAddresses(ip);
             foreach (IPAddress adr in address)
             {
                 IPEndPoint ep = new(adr, Info.Port);
                 Connection.BeginConnect(ep, ConnectCallback, Connection);
                 Connected = true;
-                Log("Connected!");
+                Log("Success! Bot connected to Switch!");
             }
         }
 
         public override void Disconnect()
         {
-            Log("Disconnecting from device...");
+            Log("You're turning me off, but I rather be turned on)");
             Connection.Shutdown(SocketShutdown.Both);
             Connection.BeginDisconnect(true, DisconnectCallback, Connection);
             Connected = false;
-            Log("Disconnected!");
+            Log("Success! Turned off connection to Switch!");
         }
 
         private readonly AutoResetEvent connectionDone = new(false);

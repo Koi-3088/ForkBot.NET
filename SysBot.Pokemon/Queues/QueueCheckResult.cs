@@ -22,9 +22,9 @@ namespace SysBot.Pokemon
         public string GetMessage()
         {
             if (!InQueue || Detail is null)
-                return "You are not in the queue.";
+                return "You're not even in a queue right now. See the image for bot commands.\n https://i.imgur.com/KpysCZb.jpg";
             var position = $"{Position}/{QueueCount}";
-            var msg = $"You are in the {Detail.Type} queue! Position: {position} (ID {Detail.Trade.ID})";
+            var msg = $"You're in the **{Detail.Type} Queue**! Position: {position} (ID {Detail.Trade.ID})";
             var pk = Detail.Trade.TradeData;
             if (pk.Species != 0)
                 msg += $", Receiving: {(Species)Detail.Trade.TradeData.Species}";

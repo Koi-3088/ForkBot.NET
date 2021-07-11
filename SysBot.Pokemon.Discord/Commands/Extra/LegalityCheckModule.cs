@@ -49,7 +49,7 @@ namespace SysBot.Pokemon.Discord
                 x.IsInline = false;
             });
 
-            await ReplyAsync("Here's the legality report!", false, builder.Build()).ConfigureAwait(false);
+            await ReplyAsync("Here's your legality report!", false, builder.Build()).ConfigureAwait(false);
         }
     }
 }

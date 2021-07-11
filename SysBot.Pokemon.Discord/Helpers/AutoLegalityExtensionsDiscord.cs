@@ -12,7 +12,7 @@ namespace SysBot.Pokemon.Discord
         {
             if (set.Species <= 0)
             {
-                await channel.SendMessageAsync("Oops! I wasn't able to interpret your message! If you intended to convert something, please double check what you're pasting!").ConfigureAwait(false);
+                await channel.SendMessageAsync("Sorry! I wasn't able to interpret your message! If you intended to convert something, please double-check what you're sending! Verify that your spacing and spelling is correct.").ConfigureAwait(false);
                 return;
             }
 
@@ -74,13 +74,13 @@ namespace SysBot.Pokemon.Discord
             var legal = pkm.LegalizePokemon();
             if (!new LegalityAnalysis(legal).Valid)
             {
-                await channel.SendMessageAsync($"{download.SanitizedFileName}: Unable to legalize.").ConfigureAwait(false);
+                await channel.SendMessageAsync($"{download.SanitizedFileName}: Unable to legalize. If you need help, please visit <#711870218904928276>.").ConfigureAwait(false);
                 return;
             }
 
             legal.RefreshChecksum();
 
-            var msg = $"Here's your legalized PKM for {download.SanitizedFileName}!\n{ReusableActions.GetFormattedShowdownText(legal)}";
+            var msg = $"Here's your legalized PK8 and Showdown Format for {download.SanitizedFileName}!\n{ReusableActions.GetFormattedShowdownText(legal)}";
             await channel.SendPKMAsync(legal, msg).ConfigureAwait(false);
         }
     }

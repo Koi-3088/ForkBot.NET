@@ -60,7 +60,7 @@ namespace SysBot.Pokemon.Discord
             var users = Context.Message.MentionedUsers;
             if (users.Count == 0)
             {
-                await ReplyAsync("No users mentioned").ConfigureAwait(false);
+                await ReplyAsync("You forgot to mention **which** user. I'm not a psychic, you know.").ConfigureAwait(false);
                 return;
             }
             foreach (var u in users)
@@ -74,7 +74,7 @@ namespace SysBot.Pokemon.Discord
         public async Task ClearAllTradesAsync()
         {
             Info.ClearAllQueues();
-            await ReplyAsync("Cleared all in the queue.").ConfigureAwait(false);
+            await ReplyAsync("Removed everyone from the queue.").ConfigureAwait(false);
         }
 
         [Command("queueToggle")]
@@ -107,10 +107,10 @@ namespace SysBot.Pokemon.Discord
         [RequireSudo]
         public async Task ListUserQueue()
         {
-            var lines = SysCordInstance.Self.Hub.Queues.Info.GetUserList("(ID {0}) - Code: {1} - {2} - {3}");
+            var lines = SysCordInstance.Self.Hub.Queues.Info.GetUserList("(ID {0}) - Code: {1} - {2} - **{3}**");
             var msg = string.Join("\n", lines);
             if (msg.Length < 3)
-                await ReplyAsync("Queue list is empty.").ConfigureAwait(false);
+                await ReplyAsync("This empty queue list be like... \n https://i.imgur.com/eunIymZ.gif").ConfigureAwait(false);
             else
                 await Context.User.SendMessageAsync(msg).ConfigureAwait(false);
         }
@@ -137,9 +137,9 @@ namespace SysBot.Pokemon.Discord
         {
             return result switch
             {
-                QueueResultRemove.CurrentlyProcessing => "Looks like you're currently being processed! Removed from queue.",
-                QueueResultRemove.Removed => "Removed you from the queue.",
-                _ => "Sorry, you are not currently in the queue.",
+                QueueResultRemove.CurrentlyProcessing => "You're already being processed and cannot be removed. Continuing trade...",
+                QueueResultRemove.Removed => "Removed you from the queue successfully.",
+                _ => "You're not even in any of the queues. These are the commands in case you forgot.\n https://i.imgur.com/KpysCZb.jpg",
             };
         }
     }

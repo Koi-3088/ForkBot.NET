@@ -17,13 +17,13 @@ namespace SysBot.Pokemon.Discord
 
             // Check if this user is a Guild User, which is the only context where roles exist
             if (context.User is not SocketGuildUser gUser)
-                return Task.FromResult(PreconditionResult.FromError("You must be in a guild to run this command."));
+                return Task.FromResult(PreconditionResult.FromError("Do not DM commands to me. Commands go in the channel."));
 
             if (mgr.CanUseSudo(gUser.Roles.Select(z => z.Name)))
                 return Task.FromResult(PreconditionResult.FromSuccess());
 
             // Since it wasn't, fail
-            return Task.FromResult(PreconditionResult.FromError("You are not permitted to run this command."));
+            return Task.FromResult(PreconditionResult.FromError("You are not permitted to run this command due to not having the role or the proper permissions."));
         }
     }
 }

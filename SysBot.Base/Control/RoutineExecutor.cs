@@ -20,7 +20,7 @@ namespace SysBot.Base
             SwitchConnection = (ISwitchConnectionAsync)Connection;
         }
 
-        public string LastLogged { get; private set; } = "Not Started";
+        public string LastLogged { get; private set; } = "Waiting to start...";
         public DateTime LastTime { get; private set; } = DateTime.Now;
 
         public void ReportStatus() => LastTime = DateTime.Now;
@@ -39,7 +39,7 @@ namespace SysBot.Base
         public async Task RunAsync(CancellationToken token)
         {
             Connection.Connect();
-            Log("Initializing connection with console...");
+            Log("Connection attempt to your Switch has begun...");
             await InitialStartup(token).ConfigureAwait(false);
             await MainLoop(token).ConfigureAwait(false);
             Connection.Disconnect();

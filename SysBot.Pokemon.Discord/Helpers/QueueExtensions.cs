@@ -22,7 +22,7 @@ namespace SysBot.Pokemon.Discord
             IUserMessage test;
             try
             {
-                const string helper = "I've added you to the queue! I'll message you here when your trade is starting.";
+                const string helper = "I've added you to the queue! I'll message you here when your trade is starting. Please be ready by connecting to the in-game Y-COMM by selecting **Y** and then **PLUS**.";
                 test = await trader.SendMessageAsync(helper).ConfigureAwait(false);
             }
             catch (HttpException ex)
@@ -77,7 +77,7 @@ namespace SysBot.Pokemon.Discord
 
             if (added == QueueResultAdd.AlreadyInQueue)
             {
-                msg = "Sorry, you are already in the queue.";
+                msg = "You can only join the queue once. I'd also like to advise you to never use more than one bot at a time as it violates the rules. Please, be patient. Thank you.";
                 return false;
             }
 
@@ -85,18 +85,18 @@ namespace SysBot.Pokemon.Discord
 
             var ticketID = "";
             if (TradeStartModule.IsStartChannel(Context.Channel.Id))
-                ticketID = $", unique ID: {detail.ID}";
+                ticketID = $" | **ID:** {detail.ID}";
 
             var pokeName = "";
             if (t == PokeTradeType.Specific || t == PokeTradeType.TradeCord || t == PokeTradeType.SupportTrade && pk8.Species != 0)
-                pokeName = $" Receiving: {(t == PokeTradeType.SupportTrade && pk8.Species != (int)Species.Ditto && pk8.HeldItem != 0 ? $"{(Species)pk8.Species} ({ShowdownParsing.GetShowdownText(pk8).Split('@','\n')[1].Trim()})" : $"{(Species)pk8.Species}")}.";
-            msg = $"{user.Mention} - Added to the {type} queue{ticketID}. Current Position: {position.Position}.{pokeName}";
+                pokeName = $" | **Receiving:** {(t == PokeTradeType.SupportTrade && pk8.Species != (int)Species.Ditto && pk8.HeldItem != 0 ? $"{(Species)pk8.Species} ({ShowdownParsing.GetShowdownText(pk8).Split('@','\n')[1].Trim()})" : $"{(Species)pk8.Species}")}.";
+            msg = $"{user.Mention} - Added to the **{type} Queue**{ticketID} | **Current Position:** {position.Position}.{pokeName}";
 
             var botct = Info.Hub.Bots.Count;
             if (position.Position > botct)
             {
                 var eta = Info.Hub.Config.Queues.EstimateDelay(position.Position, botct);
-                msg += $" Estimated: {eta:F1} minutes.";
+                msg += $" | **Estimated Wait:** {eta:F1} minutes.";
             }
             return true;
         }

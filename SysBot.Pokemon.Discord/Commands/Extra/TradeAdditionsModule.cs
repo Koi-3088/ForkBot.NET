@@ -155,7 +155,7 @@ namespace SysBot.Pokemon.Discord
             pkm = PKMConverter.ConvertToType(pkm, typeof(PK8), out _) ?? pkm;
             if (pkm.HeldItem == 0 && !Info.Hub.Config.Trade.Memes)
             {
-                await ReplyAsync($"{Context.User.Username}, the item you entered wasn't recognized.").ConfigureAwait(false);
+                await ReplyAsync($"{Context.User.Username}, the item you entered wasn't recognized. Check spelling, punctuation, and capitalization.").ConfigureAwait(false);
                 return;
             }
 
@@ -165,7 +165,7 @@ namespace SysBot.Pokemon.Discord
             else if (pkm is not PK8 || !la.Valid)
             {
                 var reason = result == "Timeout" ? "That set took too long to generate." : "I wasn't able to create something from that.";
-                var imsg = $"Oops! {reason} Here's my best attempt for that {species}!";
+                var imsg = $"I'm sorry, but I can't seem to create this. Visit <#711870218904928276> if you need support.";
                 await Context.Channel.SendPKMAsync(pkm, imsg).ConfigureAwait(false);
                 return;
             }
@@ -300,7 +300,7 @@ namespace SysBot.Pokemon.Discord
 
             if (invalid || !ItemRestrictions.IsHeldItemAllowed(set.HeldItem, 8) || noItem || (set.Nickname.ToLower() == "egg" && !Enum.IsDefined(typeof(ValidEgg), set.Species)))
             {
-                var msg = $"{(noItem ? $"{context.User.Username}, the item you entered wasn't recognized." : $"Oops! I wasn't able to create that {GameInfo.Strings.Species[set.Species]}.")} Here's a meme instead!\n";
+                var msg = $"{(noItem ? $"{context.User.Username}, the item you entered wasn't recognized." : $"I'm sorry, but I can't create that **{GameInfo.Strings.Species[set.Species]}**.")} Is it on the shiny-locked or trade-blocked list?\n";
                 await context.Channel.SendMessageAsync($"{(invalid || noItem ? msg : "")}{path[rng.Next(path.Length)]}").ConfigureAwait(false);
                 return true;
             }

@@ -131,13 +131,13 @@ namespace SysBot.Pokemon
 
         public async Task<SAV8SWSH> IdentifyTrainer(CancellationToken token)
         {
-            Log("Grabbing trainer data of host console...");
+            Log("Pulling trainer info from your Switch...");
             var sav = await GetFakeTrainerSAV(token).ConfigureAwait(false);
             GameLang = (LanguageID)sav.Language;
             Version = sav.Version;
             InGameName = sav.OT;
             Connection.Label = $"{InGameName}-{sav.DisplayTID:000000}";
-            Log($"{Connection.Name} identified as {Connection.Label}, using {GameLang}.");
+            Log($"{Connection.Name} identified as {Connection.Label}, using the {GameLang} language.");
 
             if (await GetTextSpeed(token).ConfigureAwait(false) != TextSpeedOption.Fast)
                 Log("Text speed should be set to FAST. Stop the bot and fix this if you encounter problems.");
@@ -183,7 +183,7 @@ namespace SysBot.Pokemon
         {
             if (!await IsGameConnectedToYComm(token).ConfigureAwait(false))
             {
-                Log("Reconnecting to Y-Comm...");
+                Log("Reconnecting to Y-COMM...");
                 await ReconnectToYComm(config, token).ConfigureAwait(false);
             }
         }
@@ -237,7 +237,7 @@ namespace SysBot.Pokemon
         public async Task ExitTrade(PokeTradeHubConfig config, bool unexpected, CancellationToken token)
         {
             if (unexpected)
-                Log("Unexpected behavior, recover position");
+                Log("Unexpected behavior. Bot needs a minute to fix itself...");
 
             int attempts = 0;
             int softBanAttempts = 0;
@@ -286,7 +286,7 @@ namespace SysBot.Pokemon
         public async Task ReOpenGame(PokeTradeHubConfig config, CancellationToken token)
         {
             // Reopen the game if we get softbanned
-            Log("Potential softban detected, reopening game just in case!");
+            Log("Potential softban detected, reopening game just in case! **Bot will be down** until owner manually starts it up again!");
             await CloseGame(config, token).ConfigureAwait(false);
             await StartGame(config, token).ConfigureAwait(false);
 
@@ -316,7 +316,7 @@ namespace SysBot.Pokemon
             await Click(HOME, 2_000 + config.Timings.ExtraTimeReturnHome, token).ConfigureAwait(false);
             await Click(X, 1_000, token).ConfigureAwait(false);
             await Click(A, 5_000 + config.Timings.ExtraTimeCloseGame, token).ConfigureAwait(false);
-            Log("Closed out of the game!");
+            Log("The game closed, which means the Switch owner needs to manually start the bot for it to work again! **For now, consider the bot down.**");
         }
 
         public async Task StartGame(PokeTradeHubConfig config, CancellationToken token, bool softReset = false, bool lairReset = false)
@@ -338,14 +338,13 @@ namespace SysBot.Pokemon
             await Click(DUP, 0_600, token).ConfigureAwait(false);
             await Click(A, 0_600, token).ConfigureAwait(false);
 
-            Log("Restarting the game!");
+            Log("Restarting the game. Waiting for Switch owner to manually start the bot up again! **For now, consider the bot down.**");
 
             // Switch Logo lag, skip cutscene, game load screen
             await Task.Delay(10_000 + config.Timings.ExtraTimeLoadGame, token).ConfigureAwait(false);
 
             for (int i = 0; i < 4; i++)
                 await Click(A, 1_000, token).ConfigureAwait(false);
-
             var timer = 60_000;
             while (!await IsOnOverworld(config, token).ConfigureAwait(false) && !softReset && !lairReset)
             {
@@ -386,7 +385,7 @@ namespace SysBot.Pokemon
 
         public async Task ResetTradePosition(PokeTradeHubConfig config, CancellationToken token)
         {
-            Log("Resetting bot position.");
+            Log("Resetting bot position...");
 
             // Shouldn't ever be used while not on overworld.
             if (!await IsOnOverworld(config, token).ConfigureAwait(false))

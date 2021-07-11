@@ -205,12 +205,12 @@ namespace SysBot.Pokemon.Discord
             var mgr = SysCordInstance.Manager;
             if (!mgr.CanUseCommandUser(msg.Author.Id))
             {
-                await msg.Channel.SendMessageAsync("You are not permitted to use this command.").ConfigureAwait(false);
+                await msg.Channel.SendMessageAsync("You are not permitted to run this command due to not having the role or the proper permissions.").ConfigureAwait(false);
                 return true;
             }
             if (!mgr.CanUseCommandChannel(msg.Channel.Id) && msg.Author.Id != mgr.Owner)
             {
-                await msg.Channel.SendMessageAsync("You can't use that command here.").ConfigureAwait(false);
+                await msg.Channel.SendMessageAsync("You are not permitted to run this command due to not having the role or the proper permissions.").ConfigureAwait(false);
                 return true;
             }
 

@@ -115,7 +115,7 @@ namespace SysBot.Pokemon
                         return false;
 
                     result.Poke.ResetPartyStats();
-                    result.Message = $"It put up a fight, but you caught {(result.Poke.IsShiny ? $"**{speciesName}**" : $"{speciesName}")}!";
+                    result.Message = $"It put up an incredibly tough fight, but in the end you managed to catch {(result.Poke.IsShiny ? $"{speciesName}" : $"{speciesName}")}!\n";
                     if (user.DexCompletionCount < 30)
                         result.Message += DexCount(user, result.Poke.Species, false);
                 }
@@ -182,7 +182,7 @@ namespace SysBot.Pokemon
                 var pk = (PK8?)PKMConverter.GetPKMfromBytes(File.ReadAllBytes(match.Path));
                 if (pk == null)
                 {
-                    result.Message = "Oops, something happened when converting your Pokémon!";
+                    result.Message = "Sorry, something happened when trying to convert your Pokémon!";
                     return false;
                 }
                 result.Poke = pk;
@@ -190,7 +190,7 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(result.Poke);
                 if (!la.Valid || !(result.Poke is PK8))
                 {
-                    result.Message = "Oops, I cannot trade this Pokémon!";
+                    result.Message = "Sorry, I cannot trade this Pokémon!";
                     return false;
                 }
 
@@ -207,7 +207,7 @@ namespace SysBot.Pokemon
         public Results ListHandler(TradeExtensions.TCUserInfoRoot.TCUserInfo user, string input)
         {
             Results result = new();
-            result.EmbedName = $"{user.Username}'s List";
+            result.EmbedName = $"**{user.Username}'s List**";
 
             bool FuncList()
             {
@@ -275,7 +275,7 @@ namespace SysBot.Pokemon
         public Results InfoHandler(TradeExtensions.TCUserInfoRoot.TCUserInfo user, string input)
         {
             Results result = new();
-            result.EmbedName = $"{user.Username}'s Pokémon Info";
+            result.EmbedName = $"**{user.Username}'s Pokémon Info**";
 
             bool FuncInfo()
             {
@@ -295,7 +295,7 @@ namespace SysBot.Pokemon
                 var pk = (PK8?)PKMConverter.GetPKMfromBytes(File.ReadAllBytes(match.Path));
                 if (pk == null)
                 {
-                    result.Message = "Oops, something happened when converting your Pokémon!";
+                    result.Message = "Sorry, something happened when converting your Pokémon!";
                     return false;
                 }
 
@@ -399,7 +399,7 @@ namespace SysBot.Pokemon
                 var dcSpecies2 = user.Daycare2.ID == 0 ? "" : $"(ID: {user.Daycare2.ID}) {(user.Daycare2.Shiny ? "★" : "")}{SpeciesName.GetSpeciesNameGeneration(user.Daycare2.Species, 2, 8)}{user.Daycare2.Form} ({(Ball)user.Daycare2.Ball})";
 
                 if (user.Daycare1.ID != 0 && user.Daycare2.ID != 0)
-                    result.Message = $"{dcSpecies1}\n{dcSpecies2}{(CanGenerateEgg(user, out _, out _) ? "\n\nThey seem to really like each other." : "\n\nThey don't really seem to be fond of each other. Make sure they're of the same evolution tree and can be eggs!")}";
+                    result.Message = $"{dcSpecies1}\n{dcSpecies2}{(CanGenerateEgg(user, out _, out _) ? "\n\nThey seem to really love each other!" : "\n\nThey hate each other. Make sure they're of the same evolution tree and can be eggs!")}";
                 else if (user.Daycare1.ID == 0 || user.Daycare2.ID == 0)
                     result.Message = $"{(user.Daycare1.ID == 0 ? dcSpecies2 : dcSpecies1)}\n\nIt seems lonely.";
             }
@@ -411,7 +411,7 @@ namespace SysBot.Pokemon
         public Results DaycareHandler(TradeExtensions.TCUserInfoRoot.TCUserInfo user, string action, string id)
         {
             Results result = new();
-            result.EmbedName = $"{user.Username}'s Daycare";
+            result.EmbedName = $"**{user.Username}'s Daycare**";
             bool deposit = false;
             bool withdraw = false;
 
@@ -550,7 +550,7 @@ namespace SysBot.Pokemon
                 var dex = (int[])Enum.GetValues(typeof(Gen8Dex));
                 var missingEntries = GetMissingDexEntries(dex, m_user).Count;
 
-                result.Message = $"You gifted your {(match.Shiny ? "★" : "")}{match.Species}{match.Form} to {m_user.Username}. New ID is {newID}.";
+                result.Message = $"You gifted your {(match.Shiny ? "★" : "")}{match.Species}{match.Form} to {m_user.Username}. Enjoy your new home! New ID is **{newID}**.";
                 if (m_user.DexCompletionCount == 0 || (m_user.DexCompletionCount < 30 && missingEntries <= 50))
                     result.Message += DexCount(m_user, specID, true);
 
@@ -597,7 +597,7 @@ namespace SysBot.Pokemon
             {
                 if (user.Favorites.Count == 0)
                 {
-                    result.Message = "You don't have anything in favorites yet!";
+                    result.Message = "You don't have anything in your favorites yet!";
                     return false;
                 }
 
@@ -619,7 +619,7 @@ namespace SysBot.Pokemon
         public Results FavoritesHandler(TradeExtensions.TCUserInfoRoot.TCUserInfo user, string input)
         {
             Results result = new();
-            result.EmbedName = $"{user.Username}'s Favorite";
+            result.EmbedName = $"**{user.Username}'s Favorite**";
 
             bool FuncFavorites()
             {
@@ -820,7 +820,7 @@ namespace SysBot.Pokemon
                 var pk = (PK8?)PKMConverter.GetPKMfromBytes(File.ReadAllBytes(match.Path));
                 if (pk == null)
                 {
-                    result.Message = "Oops, something happened when converting your Pokémon!";
+                    result.Message = "Sorry, something happened when converting your Pokémon!";
                     return false;
                 }
 
@@ -840,7 +840,7 @@ namespace SysBot.Pokemon
                         HatchSteps = 0,
                     };
 
-                    result.Message = $"Set your {(match.Shiny ? "★" : "")}{(pk.IsNicknamed ? $"{user.Buddy.Nickname}" : $"{match.Species}{match.Form}")} as your new buddy!";
+                    result.Message = $"You've set your **{(match.Shiny ? "★" : "")}{(pk.IsNicknamed ? $"{user.Buddy.Nickname}" : $"{match.Species}{match.Form}")}** as your new buddy!";
                     return true;
                 }
             }
@@ -888,7 +888,7 @@ namespace SysBot.Pokemon
                 var pk = (PK8?)PKMConverter.GetPKMfromBytes(File.ReadAllBytes(match.Path));
                 if (pk == null)
                 {
-                    result.Message = "Oops, something happened when converting your Pokémon!";
+                    result.Message = "Sorry, something happened when converting your Pokémon!";
                     return false;
                 }
 
@@ -907,7 +907,7 @@ namespace SysBot.Pokemon
                 File.WriteAllBytes(match.Path, pk.DecryptedPartyData);
                 user.Buddy.Nickname = clear ? pk.Nickname : input;
                 result.User = user;
-                result.Message = clear ? "Your buddy's nickname was cleared!" : "Your buddy's nickname was updated!";
+                result.Message = clear ? "Your buddy's nickname was removed!" : "Your buddy's nickname was updated!";
                 return true;
             }
 
@@ -973,8 +973,8 @@ namespace SysBot.Pokemon
 
                     File.WriteAllBytes(match.Path, pk.DecryptedPartyData);
                     if (pk.EXP >= xpMin)
-                        buddyMsg = $"\n{user.Buddy.Nickname} gained {xpGet} EXP and leveled up to level {pk.CurrentLevel}!";
-                    else buddyMsg = $"\n{user.Buddy.Nickname} gained {xpGet} EXP!";
+                        buddyMsg = $"\n**{user.Buddy.Nickname}** gained **{xpGet} EXP** and leveled up to **Level {pk.CurrentLevel}**!";
+                    else buddyMsg = $"\n**{user.Buddy.Nickname}** gained **{xpGet} EXP**!";
                 }
             }
             return user;
@@ -1074,7 +1074,7 @@ namespace SysBot.Pokemon
             if (entry)
                 user.Dex.Add(species);
 
-            string msg = gift && entry ? $"\n{user.Username} registered a new entry to the Pokédex!" : entry ? "\nRegistered to the Pokédex." : "";
+            string msg = gift && entry ? $"\n{user.Username} registered a new entry to the Pokédex!" : entry ? "\nThis Pokémon is new!\nIt's now registered to the Pokédex.\n" : "";
             if (user.Dex.Count >= 664 && user.DexCompletionCount < 30)
             {
                 user.Dex.Clear();
@@ -1109,7 +1109,7 @@ namespace SysBot.Pokemon
             var finalEggName = eggSpeciesName + eggForm;
 
             pk.ResetPartyStats();
-            msg = $"&^&You got {(pk.IsShiny ? "a **shiny egg**" : "an egg")} from the daycare! Welcome, {(pk.IsShiny ? $"**{finalEggName}**" : $"{finalEggName}")}!";
+            msg = $"&^&You've received {(pk.IsShiny ? "a **shiny egg**" : "an egg")} from the daycare! Welcome to the world, {(pk.IsShiny ? $"**{finalEggName}**" : $"**{finalEggName}")}**!";
             if (user.DexCompletionCount < 30)
                 msg += DexCount(user, pk.Species, false);
             return pk;

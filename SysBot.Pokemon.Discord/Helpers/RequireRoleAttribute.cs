@@ -21,7 +21,7 @@ namespace SysBot.Pokemon.Discord
 
             // Check if this user is a Guild User, which is the only context where roles exist
             if (context.User is not SocketGuildUser gUser)
-                return Task.FromResult(PreconditionResult.FromError("You must be in a guild to run this command."));
+                return Task.FromResult(PreconditionResult.FromError("Do not DM commands to me. Commands go in the channel."));
 
             // If this command was executed by a user with the appropriate role, return a success
             if (gUser.Roles.Any(r => r.Name == _name))

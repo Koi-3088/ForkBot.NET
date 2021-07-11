@@ -57,20 +57,20 @@ namespace SysBot.Base
                 return;
             }
 
-            LogUtil.LogError("Bot has crashed!", ident);
+            LogUtil.LogError("**Bot has crashed**. Owner needs to fix it manually. If the owner's not around, disable the bot channel for now.", ident);
 
             if (!string.IsNullOrEmpty(ae.Message))
-                LogUtil.LogError("Aggregate message:" + ae.Message, ident);
+                LogUtil.LogError("**Pointless & Redundant Error Message:** " + ae.Message, ident);
 
             var st = ae.StackTrace;
             if (!string.IsNullOrEmpty(st))
-                LogUtil.LogError("Aggregate stacktrace:" + st, ident);
+                LogUtil.LogError("Aggregate Stacktrace" + st, ident);
 
             foreach (var e in ae.InnerExceptions)
             {
                 if (!string.IsNullOrEmpty(e.Message))
-                    LogUtil.LogError("Inner message:" + e.Message, ident);
-                LogUtil.LogError("Inner stacktrace:" + e.StackTrace, ident);
+                    LogUtil.LogError("Internal Program Error Message: " + e.Message, ident);
+                LogUtil.LogError("Inner Stacktrace" + e.StackTrace, ident);
             }
         }
 

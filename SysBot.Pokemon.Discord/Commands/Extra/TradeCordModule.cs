@@ -97,7 +97,7 @@ namespace SysBot.Pokemon.Discord
             var id = Context.User.Id;
             if (!TradeCordCanCatch(id, out TimeSpan timeRemaining))
             {
-                msg = $"{Context.User.Username}, you're too quick!\nPlease try again in {(timeRemaining.TotalSeconds < 2 ? 1 : timeRemaining.TotalSeconds):N0} {(_ = timeRemaining.TotalSeconds < 2 ? "second" : "seconds")}!";
+                msg = $"**{Context.User.Username}**, you're too quick!\nPlease try again in {(timeRemaining.TotalSeconds < 2 ? 1 : timeRemaining.TotalSeconds):N0} {(_ = timeRemaining.TotalSeconds < 2 ? "second" : "seconds")}!";
                 await Util.EmbedUtil(Context, name, msg).ConfigureAwait(false);
                 return;
             }
@@ -146,15 +146,15 @@ namespace SysBot.Pokemon.Discord
             {
                 var spookyRng = TradeExtensions.Random.Next(101);
                 var imgRng = TradeExtensions.Random.Next(1, 3);
-                string imgGarf = "https://i.imgur.com/BOb6IbW.png";
-                string imgConk = "https://i.imgur.com/oSUQhYv.png";
+                string imgGarf = "https://i.imgur.com/xUmEepE.png";
+                string imgConk = "https://i.imgur.com/xUmEepE.png";
                 var ball = (Ball)TradeExtensions.Random.Next(2, 26);
                 var speciesRand = TradeExtensions.RandomInit().SpeciesRNG;
-                var descF = $"You threw {(ball == Ball.Ultra ? "an" : "a")} {(ball == Ball.Cherish ? Ball.Poke : ball)} Ball at a wild {(spookyRng >= 90 ? "...whatever that thing is" : SpeciesName.GetSpeciesNameGeneration(speciesRand, 2, 8))}...";
-                msg = $"{(spookyRng >= 90 ? "One wiggle... Two... It breaks free and stares at you, smiling. You run for dear life." : "...but it managed to escape!")}{result.Message}";
+                var descF = $"You threw {(ball == Ball.Ultra ? "an" : "a")} **{(ball == Ball.Cherish ? Ball.Poke : ball)} Ball** at a {(spookyRng >= 90 ? "...wait, who the hell is this?!" : SpeciesName.GetSpeciesNameGeneration(speciesRand, 2, 8))}...";
+                msg = $"{(spookyRng >= 90 ? "Pepe Ash appears before you, attempting to catch ***you***!" : "You've failed to catch it and it ran away.")}{result.Message}";
 
                 var authorF = new EmbedAuthorBuilder { Name = name };
-                var footerF = new EmbedFooterBuilder { Text = $"{(spookyRng >= 90 ? $"But deep inside you know there is no escape... {(result.EggPokeID != 0 ? $"Egg ID {result.EggPokeID}" : "")}" : result.EggPokeID != 0 ? $"Egg ID {result.EggPokeID}" : "")}" };
+                var footerF = new EmbedFooterBuilder { Text = $"{(spookyRng >= 90 ? $"He lets you go, feeling you are more than useless. {(result.EggPokeID != 0 ? $"Egg ID {result.EggPokeID}" : "")}" : result.EggPokeID != 0 ? $"Egg ID #{result.EggPokeID}" : "")}" };
                 var embedF = new EmbedBuilder
                 {
                     Color = Color.Teal,
@@ -180,7 +180,7 @@ namespace SysBot.Pokemon.Discord
             var finalName = speciesName + form;
             var pokeImg = TradeExtensions.PokeImg(result.Poke, result.Poke.CanGigantamax, Hub.Config.TradeCord.UseFullSizeImages);
             var ballImg = $"https://raw.githubusercontent.com/BakaKaito/HomeImages/main/Ballimg/50x50/{((Ball)result.Poke.Ball).ToString().ToLower()}ball.png";
-            var desc = $"You threw {(result.Poke.Ball == 2 ? "an" : "a")} {(Ball)result.Poke.Ball} Ball at a {(result.Poke.IsShiny ? $"**shiny** wild **{finalName}**" : $"wild {finalName}")}...";
+            var desc = $"You threw {(result.Poke.Ball == 2 ? "an" : "a")} **{(Ball)result.Poke.Ball} Ball** at a {(result.Poke.IsShiny ? $"**shiny** wild **{finalName}**" : $"**wild {finalName}")}**...";
 
             var author = new EmbedAuthorBuilder { Name = name };
             if (!Hub.Config.TradeCord.UseLargerPokeBalls)
@@ -189,7 +189,7 @@ namespace SysBot.Pokemon.Discord
                 ballImg = "";
             }
 
-            var footer = new EmbedFooterBuilder { Text = $"Catch {result.User.CatchCount} | Pokémon ID {result.PokeID}{(result.EggPokeID == 0 ? "" : $" | Egg ID {result.EggPokeID}")}" };
+            var footer = new EmbedFooterBuilder { Text = $"Catch #{result.User.CatchCount} | Pokémon ID #{result.PokeID}{(result.EggPokeID == 0 ? "" : $" | Egg ID #{result.EggPokeID}")}" };
             var embed = new EmbedBuilder
             {
                 Color = (result.Poke.IsShiny && result.Poke.FatefulEncounter) || result.Poke.ShinyXor == 0 ? Color.Gold : result.Poke.ShinyXor <= 16 ? Color.LightOrange : Color.Teal,
@@ -482,7 +482,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
         public async Task TradeCordFavorites()
         {
-            var name = $"{Context.User.Username}'s Favorites";
+            var name = $"**{Context.User.Username}'s Favorites**";
             if (!TradeCordParanoiaChecks(out string msg))
             {
                 await Util.EmbedUtil(Context, name, msg).ConfigureAwait(false);
@@ -505,7 +505,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
         public async Task TradeCordFavorites([Summary("Catch ID")] string id)
         {
-            var name = $"{Context.User.Username}'s Favorite";
+            var name = $"**{Context.User.Username}'s Favorite**";
             if (!TradeCordParanoiaChecks(out string msg))
             {
                 await Util.EmbedUtil(Context, name, msg).ConfigureAwait(false);
@@ -564,7 +564,7 @@ namespace SysBot.Pokemon.Discord
         public async Task TradeCordDexPerks([Summary("Optional perk name and amount to add, or \"clear\" to remove all perks.")][Remainder] string input = "")
         {
             var embed = new EmbedBuilder { Color = Color.DarkBlue };
-            string name = $"{Context.User.Username}'s Perks";
+            string name = $"**{Context.User.Username}'s Perks**";
             input = input.ToLower();
 
             if (!TradeCordParanoiaChecks(out string msg))
@@ -576,7 +576,7 @@ namespace SysBot.Pokemon.Discord
             var ctx = new TradeExtensions.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.Perks };
             var result = TradeExtensions.ProcessTradeCord(ctx, new string[] { input }, input != "", Hub.Config.TradeCord);
             if (result.Success && result.User.DexCompletionCount >= 1)
-                embed.WithFooter(new EmbedFooterBuilder { Text = $"You have {result.User.DexCompletionCount} unused {(result.User.DexCompletionCount == 1 ? "perk" : "perks")}!" });
+                embed.WithFooter(new EmbedFooterBuilder { Text = $"You have **{result.User.DexCompletionCount}** unused {(result.User.DexCompletionCount == 1 ? "perk" : "perks")}!" });
 
             await Util.EmbedUtil(Context, name, result.Message, embed).ConfigureAwait(false);
         }
@@ -587,7 +587,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
         public async Task TradeCordSpeciesBoost([Remainder] string input)
         {
-            string name = $"{Context.User.Username}'s Species Boost";
+            string name = $"**{Context.User.Username}'s Species Boost**";
             if (!TradeCordParanoiaChecks(out string msg))
             {
                 await Util.EmbedUtil(Context, name, msg).ConfigureAwait(false);
@@ -605,7 +605,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
         public async Task TradeCordBuddy([Remainder] string input = "")
         {
-            string name = $"{Context.User.Username}'s Buddy";
+            string name = $"**{Context.User.Username}'s Buddy**";
             input = input.ToLower();
             if (!TradeCordParanoiaChecks(out string msg))
             {
@@ -669,7 +669,7 @@ namespace SysBot.Pokemon.Discord
         [RequireQueueRole(nameof(DiscordManager.RolesTradeCord))]
         public async Task TradeCordNickname([Remainder] string input)
         {
-            string name = $"{Context.User.Username}'s Buddy Nickname";
+            string name = $"**{Context.User.Username}'s Buddy Nickname**";
             if (!TradeCordParanoiaChecks(out string msg))
             {
                 await Util.EmbedUtil(Context, name, msg).ConfigureAwait(false);

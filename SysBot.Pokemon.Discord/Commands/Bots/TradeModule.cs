@@ -146,7 +146,7 @@ namespace SysBot.Pokemon.Discord
             var attachment = Context.Message.Attachments.FirstOrDefault();
             if (attachment == default)
             {
-                await ReplyAsync("No attachment provided!").ConfigureAwait(false);
+                await ReplyAsync("You forgot to attach the PK8 file!").ConfigureAwait(false);
                 return;
             }
 
@@ -177,14 +177,14 @@ namespace SysBot.Pokemon.Discord
         {
             if (!pk8.CanBeTraded())
             {
-                await ReplyAsync("Provided Pokémon content is blocked from trading!").ConfigureAwait(false);
+                await ReplyAsync("Pokémon is blocked from trading! See https://imgur.com/egbrbDc for further details or visit <#711870218904928276> for support.").ConfigureAwait(false);
                 return;
             }
 
             var la = new LegalityAnalysis(pk8);
             if (!la.Valid)
             {
-                await ReplyAsync("PK8 attachment is not legal, and cannot be traded!").ConfigureAwait(false);
+                await ReplyAsync("PK8 can't be traded! Need help? Let us know in <#711870218904928276>.").ConfigureAwait(false);
                 return;
             }
 
