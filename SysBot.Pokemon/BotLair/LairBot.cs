@@ -277,7 +277,7 @@ namespace SysBot.Pokemon
             {
                 var move = LairBotUtil.MoveRoot.Moves.FirstOrDefault(x => x.MoveID == PlayerPk.Moves[priority ? priorityMove : bestMove]);
                 bool recoil = move.Recoil >= 206 && move.EffectSequence >= 48;
-                if ((stuck && (OldMoveIndex == (priority ? priorityMove : bestMove))) || (Settings.EnableOHKO && (recoil || move.Charge)) || move.MoveID == (int)Move.Belch)
+                if ((stuck && (OldMoveIndex == (priority ? priorityMove : bestMove))) || (Settings.EnableOHKO && (recoil || move.Charge)) || move.MoveID == (int)Move.Belch || move.MoveID == (int)Move.Counter)
                 {
                     dmgWeight[priority ? priorityMove : bestMove] = 0.0;
                     bestMove = dmgWeight.Max() < 0.0 ? statusMoves[new Random().Next(statusMoves.Count)] : dmgWeight.IndexOf(dmgWeight.Max());
@@ -320,7 +320,7 @@ namespace SysBot.Pokemon
                 var maxDmgMoveIndex = dmgWeightPlayer.ToList().IndexOf(dmgWeightPlayer.Max());
                 var move = LairBotUtil.MoveRoot.Moves.FirstOrDefault(x => x.MoveID == PlayerPk.Moves[maxDmgMoveIndex]);
 
-                if (move.Charge)
+                if (move.Charge || move.MoveID == (int)Move.Belch || move.MoveID == (int)Move.Counter)
                 {
                     dmgWeightPlayer[maxDmgMoveIndex] = 0.0;
                     if (!dmgWeightPlayer.Any(x => x > 0.0))

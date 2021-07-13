@@ -21,6 +21,7 @@ namespace SysBot.Pokemon
         public static DateTime EventVoteTimer = new();
         private static TCUserInfoRoot UserInfo = new();
         private static readonly object _sync = new();
+        private static readonly object _syncLog = new();
         public static readonly Random Random = new();
         private static DateTime ConfigTimer = DateTime.Now;
         private static bool TCRWLockEnable;
@@ -488,48 +489,51 @@ namespace SysBot.Pokemon
                 File.WriteAllText(filepath, blank);
             }
 
-            var content = File.ReadAllText(filepath).Split('\n').ToList();
-            var splitTotal = content[0].Split(',');
-            content.RemoveRange(0, 3);
-
-            int pokeTotal = int.Parse(splitTotal[0].Split(' ')[1]) + 1;
-            int eggTotal = int.Parse(splitTotal[1].Split(' ')[1]) + (pk.IsEgg ? 1 : 0);
-            int starTotal = int.Parse(splitTotal[2].Split(' ')[1]) + (pk.IsShiny && pk.ShinyXor > 0 ? 1 : 0);
-            int squareTotal = int.Parse(splitTotal[3].Split(' ')[1]) + (pk.IsShiny && pk.ShinyXor == 0 ? 1 : 0);
-            int markTotal = int.Parse(splitTotal[4].Split(' ')[1]) + (pk.HasMark() ? 1 : 0);
-
-            var form = FormOutput(pk.Species, pk.Form, out _);
-            var speciesName = $"{SpeciesName.GetSpeciesNameGeneration(pk.Species, pk.Language, 8)}{form}";
-            var index = content.FindIndex(x => x.Contains(speciesName));
-
-            if (index == -1)
-                content.Add($"{speciesName}: 1, {(pk.IsShiny && pk.ShinyXor > 0 ? 1 : 0)}★, {(pk.IsShiny && pk.ShinyXor == 0 ? 1 : 0)}■, {(pk.HasMark() ? 1 : 0)}🎀, {GetPercent(pokeTotal, 1)}%");
-
-            var length = index == -1 ? 1 : 0;
-            for (int i = 0; i < content.Count - length; i++)
+            lock (_syncLog)
             {
-                var sanitized = GetSanitizedEncounterLineArray(content[i]);
-                if (i == index)
-                {
-                    int speciesTotal = int.Parse(sanitized[1]) + 1;
-                    int stTotal = int.Parse(sanitized[2]) + (pk.IsShiny && pk.ShinyXor > 0 ? 1 : 0);
-                    int sqTotal = int.Parse(sanitized[3]) + (pk.IsShiny && pk.ShinyXor == 0 ? 1 : 0);
-                    int mTotal = int.Parse(sanitized[4]) + (pk.HasMark() ? 1 : 0);
-                    content[i] = $"{speciesName}: {speciesTotal}, {stTotal}★, {sqTotal}■, {mTotal}🎀, {GetPercent(pokeTotal, speciesTotal)}%";
-                }
-                else content[i] = $"{sanitized[0]} {sanitized[1]}, {sanitized[2]}★, {sanitized[3]}■, {sanitized[4]}🎀, {GetPercent(pokeTotal, int.Parse(sanitized[1]))}%";
-            }
+                var content = File.ReadAllText(filepath).Split('\n').ToList();
+                var splitTotal = content[0].Split(',');
+                content.RemoveRange(0, 3);
 
-            content.Sort();
-            string totalsString =
-                $"Totals: {pokeTotal} Pokémon, " +
-                $"{eggTotal} Eggs ({GetPercent(pokeTotal, eggTotal)}%), " +
-                $"{starTotal} ★ ({GetPercent(pokeTotal, starTotal)}%), " +
-                $"{squareTotal} ■ ({GetPercent(pokeTotal, squareTotal)}%), " +
-                $"{markTotal} 🎀 ({GetPercent(pokeTotal, markTotal)}%)" +
-                "\n_________________________________________________\n";
-            content.Insert(0, totalsString);
-            File.WriteAllText(filepath, string.Join("\n", content));
+                int pokeTotal = int.Parse(splitTotal[0].Split(' ')[1]) + 1;
+                int eggTotal = int.Parse(splitTotal[1].Split(' ')[1]) + (pk.IsEgg ? 1 : 0);
+                int starTotal = int.Parse(splitTotal[2].Split(' ')[1]) + (pk.IsShiny && pk.ShinyXor > 0 ? 1 : 0);
+                int squareTotal = int.Parse(splitTotal[3].Split(' ')[1]) + (pk.IsShiny && pk.ShinyXor == 0 ? 1 : 0);
+                int markTotal = int.Parse(splitTotal[4].Split(' ')[1]) + (pk.HasMark() ? 1 : 0);
+
+                var form = FormOutput(pk.Species, pk.Form, out _);
+                var speciesName = $"{SpeciesName.GetSpeciesNameGeneration(pk.Species, pk.Language, 8)}{form}".Replace(" ", "");
+                var index = content.FindIndex(x => x.Split(':')[0].Equals(speciesName));
+
+                if (index == -1)
+                    content.Add($"{speciesName}: 1, {(pk.IsShiny && pk.ShinyXor > 0 ? 1 : 0)}★, {(pk.IsShiny && pk.ShinyXor == 0 ? 1 : 0)}■, {(pk.HasMark() ? 1 : 0)}🎀, {GetPercent(pokeTotal, 1)}%");
+
+                var length = index == -1 ? 1 : 0;
+                for (int i = 0; i < content.Count - length; i++)
+                {
+                    var sanitized = GetSanitizedEncounterLineArray(content[i]);
+                    if (i == index)
+                    {
+                        int speciesTotal = int.Parse(sanitized[1]) + 1;
+                        int stTotal = int.Parse(sanitized[2]) + (pk.IsShiny && pk.ShinyXor > 0 ? 1 : 0);
+                        int sqTotal = int.Parse(sanitized[3]) + (pk.IsShiny && pk.ShinyXor == 0 ? 1 : 0);
+                        int mTotal = int.Parse(sanitized[4]) + (pk.HasMark() ? 1 : 0);
+                        content[i] = $"{speciesName}: {speciesTotal}, {stTotal}★, {sqTotal}■, {mTotal}🎀, {GetPercent(pokeTotal, speciesTotal)}%";
+                    }
+                    else content[i] = $"{sanitized[0]} {sanitized[1]}, {sanitized[2]}★, {sanitized[3]}■, {sanitized[4]}🎀, {GetPercent(pokeTotal, int.Parse(sanitized[1]))}%";
+                }
+
+                content.Sort();
+                string totalsString =
+                    $"Totals: {pokeTotal} Pokémon, " +
+                    $"{eggTotal} Eggs ({GetPercent(pokeTotal, eggTotal)}%), " +
+                    $"{starTotal} ★ ({GetPercent(pokeTotal, starTotal)}%), " +
+                    $"{squareTotal} ■ ({GetPercent(pokeTotal, squareTotal)}%), " +
+                    $"{markTotal} 🎀 ({GetPercent(pokeTotal, markTotal)}%)" +
+                    "\n_________________________________________________\n";
+                content.Insert(0, totalsString);
+                File.WriteAllText(filepath, string.Join("\n", content));
+            }
         }
 
         private static string GetPercent(int total, int subtotal) => (100.0 * ((double)subtotal / total)).ToString("N2");
@@ -734,7 +738,7 @@ namespace SysBot.Pokemon
             if (user == null)
                 user = new TCUserInfoRoot.TCUserInfo { UserID = gift ? ctx.GifteeID : ctx.ID, Username = gift ? ctx.GifteeName : ctx.Username };
 
-            if (user.Username == string.Empty)
+            if (user.Username == string.Empty || user.Username != ctx.Username)
                 user.Username = gift ? ctx.GifteeName : ctx.Username;
 
             return user;

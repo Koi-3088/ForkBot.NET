@@ -174,10 +174,22 @@ namespace SysBot.Base
         public async Task<byte[]> Screengrab(CancellationToken token)
         {
             await SendAsync(SwitchCommand.Screengrab(), token).ConfigureAwait(false);
-            var buffer = new byte[(260_000 * 2) + 1];
-            var br = Read(buffer);
-            var data = buffer.SliceSafe(0, br);
-            return Decoder.ConvertHexByteStringToBytes(data);
+            byte[] buffer = new byte[1_000_000];
+            int ofs = 0;
+
+            await Task.Delay(Connection.ReceiveBufferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
+            while (Connection.Available > 0)
+            {
+                int recv = Connection.Receive(buffer, ofs, Connection.ReceiveBufferSize, SocketFlags.None);
+                ofs += recv;
+                await Task.Delay(MaximumTransferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
+            }
+
+            if (ofs % 2 != 0)
+                ofs -= 1;
+
+            buffer = buffer.SliceSafe(0, ofs);
+            return Decoder.ConvertHexByteStringToBytes(buffer);
         }
     }
 }

@@ -6,6 +6,7 @@
         Injector,
         ResetLegendaryLairFlags,
     }
+
     public enum DexRecLoc : ulong
     {
         None = 0x00,

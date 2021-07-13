@@ -287,8 +287,8 @@ namespace SysBot.Pokemon
             else if (poke.Type == PokeTradeType.FixOT)
             {
                 var clone = (PK8)pk.Clone();
-                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)").Value != ""
-                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)").Value != "";
+                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)").Value != ""
+                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)").Value != "";
 
                 var extraInfo = $"OT: {TrainerName}\nBall: {(Ball)clone.Ball}\nShiny: {(clone.ShinyXor == 0 ? "Square" : clone.ShinyXor > 0 && clone.ShinyXor <= 16 ? "Star" : "No")}";
                 var set = ShowdownParsing.GetShowdownText(clone).Split('\n').ToList();

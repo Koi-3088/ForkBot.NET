@@ -96,7 +96,6 @@ namespace SysBot.Base
             {
                 if (SwDevice != null)
                 {
-                    Send(SwitchCommand.DetachController(false));
                     if (SwDevice.IsOpen)
                     {
                         if (SwDevice is IUsbDevice wholeUsbDevice)
@@ -125,6 +124,8 @@ namespace SysBot.Base
                     throw new Exception("USB device not found or not connected.");
 
                 reader.Read(sizeOfReturn, 5000, out _);
+                Thread.Sleep(1);
+
                 var size = BitConverter.ToInt32(sizeOfReturn, 0);
                 byte[] buffer = new byte[size];
                 var buffSize = reader.ReadBufferSize;

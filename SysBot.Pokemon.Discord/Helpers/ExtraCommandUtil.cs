@@ -1,6 +1,6 @@
 ﻿using Discord;
-using Discord.Rest;
 using Discord.Commands;
+using Discord.WebSocket;
 using System;
 using System.Linq;
 using System.Diagnostics;
@@ -11,6 +11,17 @@ namespace SysBot.Pokemon.Discord
 {
     public class ExtraCommandUtil
     {
+        private static readonly Dictionary<ulong, ReactMessageContents> ReactMessageDict = new();
+        private static bool DictWipeRunning = false;
+
+        private class ReactMessageContents
+        {
+            public List<string> Pages { get; set; } = new();
+            public EmbedBuilder Embed { get; set; } = new();
+            public ulong MessageID { get; set; }
+            public DateTime EntryTime { get; set; }
+        }
+
         public async Task ListUtil(SocketCommandContext ctx, string nameMsg, string entry)
         {
             List<string> pageContent = TradeExtensions.ListUtilPrep(entry);
@@ -37,84 +48,111 @@ namespace SysBot.Pokemon.Discord
 
             var msg = await ctx.Message.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
             if (pageContent.Count > 1 && canReact)
-                _ = Task.Run(async () => await ReactionAwait(ctx, msg, nameMsg, pageContent).ConfigureAwait(false));
+            {
+                bool exists = ReactMessageDict.TryGetValue(ctx.User.Id, out _);
+                if (exists)
+                    ReactMessageDict[ctx.User.Id] = new() { Embed = embed, Pages = pageContent, MessageID = msg.Id, EntryTime = DateTime.Now };
+                else ReactMessageDict.Add(ctx.User.Id, new() { Embed = embed, Pages = pageContent, MessageID = msg.Id, EntryTime = DateTime.Now });
+
+                IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
+                _ = Task.Run(() => msg.AddReactionsAsync(reactions).ConfigureAwait(false));
+                if (!DictWipeRunning)
+                    _ = Task.Run(() => DictWipeMonitor().ConfigureAwait(false));
+            }
         }
 
-        private async Task ReactionAwait(SocketCommandContext ctx, RestUserMessage msg, string nameMsg, List<string> pageContent)
+        private async Task DictWipeMonitor()
         {
-            int page = 0;
-            var userId = ctx.User.Id;
-            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
-            await msg.AddReactionsAsync(reactions).ConfigureAwait(false);
-            var embed = new EmbedBuilder { Color = Color.DarkBlue }.AddField(x => { x.Name = nameMsg; x.IsInline = false; }).WithFooter(x => { x.IconUrl = "https://i.imgur.com/nXNBrlr.png"; });
-            var sw = new Stopwatch();
-            sw.Start();
-
-            while (sw.ElapsedMilliseconds < 20_000)
+            DictWipeRunning = true;
+            while (true)
             {
-                await msg.UpdateAsync().ConfigureAwait(false);
-                var react = msg.Reactions.FirstOrDefault(x => x.Value.ReactionCount > 1 && x.Value.IsMe);
-                if (react.Key == default)
-                    continue;
-
-                if (react.Key.Name == reactions[0].Name || react.Key.Name == reactions[1].Name)
+                for (int i = 0; i < ReactMessageDict.Count; i++)
                 {
-                    var reactUsers = await msg.GetReactionUsersAsync(reactions[react.Key.Name == reactions[0].Name ? 0 : 1], 100).FlattenAsync().ConfigureAwait(false);
-                    var usr = reactUsers.FirstOrDefault(x => x.Id == userId && !x.IsBot);
-                    if (usr == default)
-                        continue;
-
-                    if (react.Key.Name == reactions[0].Name)
-                    {
-                        if (page == 0)
-                            page = pageContent.Count - 1;
-                        else page--;
-                    }
-                    else
-                    {
-                        if (page + 1 == pageContent.Count)
-                            page = 0;
-                        else page++;
-                    }
-
-                    embed.Fields[0].Value = pageContent[page];
-                    embed.Footer.Text = $"Page {page + 1} of {pageContent.Count}";
-                    await msg.RemoveReactionAsync(reactions[react.Key.Name == reactions[0].Name ? 0 : 1], usr);
-                    await msg.ModifyAsync(msg => msg.Embed = embed.Build()).ConfigureAwait(false);
-                    sw.Restart();
+                    var entry = ReactMessageDict.ElementAt(i);
+                    var delta = (DateTime.Now - entry.Value.EntryTime).TotalSeconds;
+                    if (delta > 120.0)
+                        ReactMessageDict.Remove(entry.Key);
                 }
-                else if (react.Key.Name == reactions[2].Name || react.Key.Name == reactions[3].Name)
-                {
-                    var reactUsers = await msg.GetReactionUsersAsync(reactions[react.Key.Name == reactions[2].Name ? 2 : 3], 100).FlattenAsync().ConfigureAwait(false);
-                    var usr = reactUsers.FirstOrDefault(x => x.Id == userId && !x.IsBot);
-                    if (usr == default)
-                        continue;
 
-                    List<string> tempList = new();
-                    foreach (var p in pageContent)
-                    {
-                        var split = p.Replace(", ", ",").Split(',');
-                        tempList.AddRange(split);
-                    }
-
-                    var tempEntry = string.Join(", ", react.Key.Name == reactions[2].Name ? tempList.OrderBy(x => x.Split(' ')[1]) : tempList.OrderByDescending(x => x.Split(' ')[1]));
-                    pageContent = TradeExtensions.ListUtilPrep(tempEntry);
-                    embed.Fields[0].Value = pageContent[page];
-                    embed.Footer.Text = $"Page {page + 1} of {pageContent.Count}";
-                    await msg.RemoveReactionAsync(reactions[react.Key.Name == reactions[2].Name ? 2 : 3], usr);
-                    await msg.ModifyAsync(msg => msg.Embed = embed.Build()).ConfigureAwait(false);
-                    sw.Restart();
-                }
+                await Task.Delay(10_000).ConfigureAwait(false);
             }
-            await msg.RemoveAllReactionsAsync().ConfigureAwait(false);
+        }
+
+        public static async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, ISocketMessageChannel _, SocketReaction reaction)
+        {
+            if (!TradeExtensions.TCInitialized || !reaction.User.IsSpecified)
+                return;
+
+            var user = reaction.User.Value;
+            if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
+                return;
+
+            IUserMessage msg;
+            if (!cachedMsg.HasValue)
+                msg = await cachedMsg.GetOrDownloadAsync().ConfigureAwait(false);
+            else msg = cachedMsg.Value;
+
+            if (msg.Embeds.Count < 1)
+                return;
+
+            bool invoker = msg.Embeds.First().Fields[0].Name.Contains(user.Username);
+            if (!invoker)
+                return;
+
+            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
+            if (!reactions.Contains(reaction.Emote))
+                return;
+
+            var contents = ReactMessageDict[user.Id];
+            bool oldMessage = msg.Id != contents.MessageID;
+            if (oldMessage)
+                return;
+
+            int page = contents.Pages.IndexOf((string)contents.Embed.Fields[0].Value);
+            if (reaction.Emote.Name == reactions[0].Name || reaction.Emote.Name == reactions[1].Name)
+            {
+                if (reaction.Emote.Name == reactions[0].Name)
+                {
+                    if (page == 0)
+                        page = contents.Pages.Count - 1;
+                    else page--;
+                }
+                else
+                {
+                    if (page + 1 == contents.Pages.Count)
+                        page = 0;
+                    else page++;
+                }
+
+                contents.Embed.Fields[0].Value = contents.Pages[page];
+                contents.Embed.Footer.Text = $"Page {page + 1} of {contents.Pages.Count}";
+                await msg.RemoveReactionAsync(reactions[reaction.Emote.Name == reactions[0].Name ? 0 : 1], user);
+                await msg.ModifyAsync(msg => msg.Embed = contents.Embed.Build()).ConfigureAwait(false);
+            }
+            else if (reaction.Emote.Name == reactions[2].Name || reaction.Emote.Name == reactions[3].Name)
+            {
+                List<string> tempList = new();
+                foreach (var p in contents.Pages)
+                {
+                    var split = p.Replace(", ", ",").Split(',');
+                    tempList.AddRange(split);
+                }
+
+                var tempEntry = string.Join(", ", reaction.Emote.Name == reactions[2].Name ? tempList.OrderBy(x => x.Split(' ')[1]) : tempList.OrderByDescending(x => x.Split(' ')[1]));
+                contents.Pages = TradeExtensions.ListUtilPrep(tempEntry);
+                contents.Embed.Fields[0].Value = contents.Pages[page];
+                contents.Embed.Footer.Text = $"Page {page + 1} of {contents.Pages.Count}";
+                await msg.RemoveReactionAsync(reactions[reaction.Emote.Name == reactions[2].Name ? 2 : 3], user);
+                await msg.ModifyAsync(msg => msg.Embed = contents.Embed.Build()).ConfigureAwait(false);
+            }
         }
 
         public async Task<bool> ReactionVerification(SocketCommandContext ctx)
         {
             var sw = new Stopwatch();
-            IEmote[] reaction = { new Emoji("👍") };
+            IEmote reaction = new Emoji("👍");
             var msg = await ctx.Channel.SendMessageAsync($"{ctx.User.Username}, please react to the attached emoji in order to confirm you're not using a script.").ConfigureAwait(false);
-            await msg.AddReactionsAsync(reaction).ConfigureAwait(false);
+            await msg.AddReactionAsync(reaction).ConfigureAwait(false);
 
             sw.Start();
             while (sw.ElapsedMilliseconds < 20_000)
@@ -124,9 +162,9 @@ namespace SysBot.Pokemon.Discord
                 if (react.Key == default)
                     continue;
 
-                if (react.Key.Name == reaction[0].Name)
+                if (react.Key.Name == reaction.Name)
                 {
-                    var reactUsers = await msg.GetReactionUsersAsync(reaction[0], 100).FlattenAsync().ConfigureAwait(false);
+                    var reactUsers = await msg.GetReactionUsersAsync(reaction, 100).FlattenAsync().ConfigureAwait(false);
                     var usr = reactUsers.FirstOrDefault(x => x.Id == ctx.User.Id && !x.IsBot);
                     if (usr == default)
                         continue;
