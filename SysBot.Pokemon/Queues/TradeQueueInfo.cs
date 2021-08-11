@@ -92,11 +92,7 @@ namespace SysBot.Pokemon
                 return QueueResultRemove.Removed;
 
             foreach (var detail in details)
-            {
-                if (detail.Type == PokeRoutineType.TradeCord && TradeExtensions.TradeCordPath.TryGetValue(detail.UserID, out _))
-                    TradeExtensions.TradeCordPath.Remove(detail.UserID);
                 Remove(detail);
-            }
             return QueueResultRemove.CurrentlyProcessing;
         }
 
@@ -108,6 +104,9 @@ namespace SysBot.Pokemon
                 var queues = hub.Queues.AllQueues;
                 foreach (var detail in details)
                 {
+                    if (detail.Type == PokeRoutineType.TradeCord && TradeExtensions.TradeCordPath.TryGetValue(detail.UserID, out _))
+                        TradeExtensions.TradeCordPath.Remove(detail.UserID);
+
                     foreach (var queue in queues)
                     {
                         int removed = queue.Remove(detail.Trade);
