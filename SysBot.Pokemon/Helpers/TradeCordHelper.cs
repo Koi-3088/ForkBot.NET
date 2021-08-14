@@ -1003,6 +1003,11 @@ namespace SysBot.Pokemon
                     result.Message = "Could not find this Pokémon.";
                     return false;
                 }
+                else if (match.Egg)
+                {
+                    result.Message = "Eggs cannot evolve.";
+                    return false;
+                }
 
                 var pk = (PK8?)PKMConverter.GetPKMfromBytes(File.ReadAllBytes(match.Path));
                 if (pk == null)
@@ -1442,6 +1447,7 @@ namespace SysBot.Pokemon
                 (int)Species.Yamask => pk.Form > 0 ? evoList.Find(x => x.EvoType == EvolutionType.HPDownBy49) : evoList.First(),
                 (int)Species.Cosmoem => pk.Version == 45 ? evoList.Find(x => x.EvolvesInto == (int)Species.Lunala) : evoList.Find(x => x.EvolvesInto == (int)Species.Solgaleo),
                 (int)Species.Nincada => evoList.Find(x => x.EvolvesInto == (int)Species.Ninjask),
+                (int)Species.Espurr => evoList.Find(x => x.EvolvedForm == (pk.Gender == (int)Gender.Male ? 0 : 1)),
                 _ => evoList.First(),
             };
 
@@ -1489,6 +1495,7 @@ namespace SysBot.Pokemon
                             return false;
                         }
                     }; break;
+                case EvolutionType.LevelUpKnowMove: pk.CurrentLevel++; break;
             };
 
             if (pk.Species == (int)Species.Nincada)
@@ -1839,6 +1846,9 @@ namespace SysBot.Pokemon
                 for (int f = 0; f < temp.PersonalInfo.FormCount; f++)
                 {
                     var blank = new PK8 { Species = i, Form = f };
+                    if (i == (int)Species.Meowstic && f > 0)
+                        blank = new PK8 { Species = i, Form = f, Gender = 1 };
+
                     var evoTree = EvolutionTree.GetEvolutionTree(blank, 8);
                     var preEvos = evoTree.GetValidPreEvolutions(blank, 100, 8, true);
                     var evos = evoTree.GetEvolutions(blank.Species, blank.Form);
@@ -1868,6 +1878,8 @@ namespace SysBot.Pokemon
 
                             if (preEvos[c].Species == (int)Species.Cosmoem)
                                 template.EvolvesAtLevel = 53;
+                            else if (preEvos[c].Species == (int)Species.Tangrowth)
+                                template.EvolvesAtLevel = 24;
 
                             list.Add(template);
                         }

@@ -287,8 +287,11 @@ namespace SysBot.Pokemon
             else if (poke.Type == PokeTradeType.FixOT)
             {
                 var clone = (PK8)pk.Clone();
-                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)").Value != ""
-                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)").Value != "";
+                if (Hub.Config.Discord.ReturnPK8s)
+                    poke.SendNotification(this, clone, "Here's what you showed me!");
+
+                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(2DOS3)").Value != ""
+                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(2DOS3)").Value != "";
 
                 var ball = TradeExtensions.Pokeball.Contains(clone.Species) ? "\nBall: Poke" : $"\nBall: {(Ball)clone.Ball}";
                 string shiny = string.Empty;
