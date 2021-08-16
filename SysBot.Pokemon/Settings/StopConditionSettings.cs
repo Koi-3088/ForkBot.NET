@@ -36,13 +36,13 @@ namespace SysBot.Pokemon
         [Category(StopConditions), Description("If set to TRUE, matches both ShinyTarget and TargetIVs settings. Otherwise, looks for either ShinyTarget or TargetIVs match.")]
         public bool MatchShinyAndIV { get; set; } = true;
 
-        [Category(StopConditions), Description("Toggle catching Pokémon. Master Ball will be used to guarantee a catch.")]
+        [Category(StopConditions), Description("[EncounterBot] Toggle catching Pokémon. Master Ball will be used to guarantee a catch.")]
         public bool CatchEncounter { get; set; } = false;
 
-        [Category(StopConditions), Description("Toggle whether to inject Master Balls when we run out.")]
+        [Category(StopConditions), Description("[EncounterBot] Toggle whether to inject Master Balls when we run out.")]
         public bool InjectPokeBalls { get; set; } = false;
 
-        [Category(StopConditions), Description("Enter your numerical Discord ID to be pinged in a log channel upon EggFetch, FossilBot or EncounterBot result.")]
+        [Category(StopConditions), Description("Enter your numerical Discord ID to be pinged by the bot when a matching result is found.")]
         public string PingOnMatch { get; set; } = string.Empty;
 
         public static bool EncounterFound(PK8 pk, int[] targetminIVs, int[] targetmaxIVs, StopConditionSettings settings)
