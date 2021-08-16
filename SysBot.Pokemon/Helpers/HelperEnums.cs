@@ -1287,10 +1287,10 @@
     public enum TimeOfDay
     {
         Any,
-        Sunrise,
+        Dawn,
         Morning,
         Day,
-        Sunset,
+        Dusk,
         Night,
     }
 }

@@ -1019,6 +1019,9 @@ namespace SysBot.Pokemon
                 var oldName = pk.IsNicknamed ? pk.Nickname : $"{SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8)}{TradeExtensions.FormOutput(pk.Species, pk.Form, out _)}";
                 var timeStr = TimeOfDayString(user.TimeZoneOffset, false);
                 var tod = TradeExtensions.EnumParse<TimeOfDay>(timeStr);
+                if (tod == TimeOfDay.Dawn)
+                    tod = TimeOfDay.Morning;
+
                 if (!EvolvePK(pk, item, alcremie, tod, out string message, out PK8? shedinja))
                 {
                     result.Message = message;
@@ -1476,6 +1479,11 @@ namespace SysBot.Pokemon
                 msg = "This item needs to be held, not used.";
                 return false;
             }
+            else if (pk.CanGigantamax && (pk.Species == (int)Species.Meowth || pk.Species == (int)Species.Pikachu || pk.Species == (int)Species.Eevee))
+            {
+                msg = $"Gigantamax {SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8)} cannot evolve.";
+                return false;
+            }
 
             switch (result.EvoType)
             {
@@ -1487,13 +1495,22 @@ namespace SysBot.Pokemon
                 case EvolutionType.LevelUpFriendship:
                 case EvolutionType.LevelUpFriendshipMorning:
                 case EvolutionType.LevelUpFriendshipNight:
-                case EvolutionType.LevelUpAffection50MoveType:
                     {
                         if (pk.CurrentFriendship < 179)
                         {
                             msg = "Your Pokémon isn't friendly enough yet.";
                             return false;
                         }
+                        pk.CurrentLevel++;
+                    }; break;
+                case EvolutionType.LevelUpAffection50MoveType:
+                    {
+                        if (pk.CurrentFriendship < 250)
+                        {
+                            msg = "Your Pokémon isn't affectionate enough yet.";
+                            return false;
+                        }
+                        pk.CurrentLevel++;
                     }; break;
                 case EvolutionType.LevelUpKnowMove: pk.CurrentLevel++; break;
             };
@@ -1936,7 +1953,7 @@ namespace SysBot.Pokemon
                 EvolutionType.LevelUpFriendshipMorning or EvolutionType.LevelUpMorning => TimeOfDay.Morning,
                 EvolutionType.LevelUpHeldItemDay or EvolutionType.LevelUpVersionDay => TimeOfDay.Day,
                 EvolutionType.LevelUpFriendshipNight or EvolutionType.LevelUpHeldItemNight or EvolutionType.LevelUpNight or EvolutionType.LevelUpVersionNight => TimeOfDay.Night,
-                EvolutionType.LevelUpDusk => TimeOfDay.Sunset,
+                EvolutionType.LevelUpDusk => TimeOfDay.Dusk,
                 _ => TimeOfDay.Any,
             };
         }
@@ -1958,25 +1975,25 @@ namespace SysBot.Pokemon
             var tod = GetTimeOfDay(offset);
             return tod switch
             {
-                TimeOfDay.Sunrise => icon ? "https://i.imgur.com/hSQR4MT.png" : "Dawn",
+                TimeOfDay.Dawn => icon ? "https://i.imgur.com/hSQR4MT.png" : "Dawn",
                 TimeOfDay.Morning => icon ? "https://i.imgur.com/tZiPlen.png" : "Morning",
                 TimeOfDay.Day => icon ? "https://i.imgur.com/tZiPlen.png" : "Day",
-                TimeOfDay.Sunset => icon ? "https://i.imgur.com/hSQR4MT.png" : "Dusk",
+                TimeOfDay.Dusk => icon ? "https://i.imgur.com/hSQR4MT.png" : "Dusk",
                 _ => icon ? "https://i.imgur.com/ZL7sCqW.png" : "Night",
             };
         }
 
         private static TimeOfDay GetTimeOfDay(int offset)
         {
-            var time = (offset < 0 ? DateTime.UtcNow.Subtract(TimeSpan.FromHours(offset * -1)) : DateTime.Now.AddHours(offset)).Hour;
+            var time = (offset < 0 ? DateTime.UtcNow.Subtract(TimeSpan.FromHours(offset * -1)) : DateTime.UtcNow.AddHours(offset)).Hour;
             if (time < 6 && time >= 5)
-                return TimeOfDay.Sunrise;
+                return TimeOfDay.Dawn;
             else if (time >= 6 && time < 12)
                 return TimeOfDay.Morning;
             else if (time >= 12 && time < 19)
                 return TimeOfDay.Day;
             if (time >= 19 && time < 20)
-                return TimeOfDay.Sunset;
+                return TimeOfDay.Dusk;
             else return TimeOfDay.Night;
         }
 
