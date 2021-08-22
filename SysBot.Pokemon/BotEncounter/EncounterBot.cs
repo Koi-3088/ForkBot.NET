@@ -28,6 +28,14 @@ namespace SysBot.Pokemon
         private int encounterCount;
         private int catchCount;
         private byte[] pouchData = { 0 };
+        private byte[] BerryPouch = { 0 };
+        private byte[] IngredientPouch = { 0 };
+        private int curryCount;
+        private PK8 PartyMon = new();
+        private PK8 Camper = new();
+        private const int InjectBox = 0;
+        private const int InjectSlot = 0;
+        private static readonly PK8 Blank = new();
 
         public override async Task MainLoop(CancellationToken token)
         {
@@ -52,6 +60,7 @@ namespace SysBot.Pokemon
                 EncounterMode.SoftReset => DoSoftResetEncounter(token),
                 EncounterMode.Regigigas => DoSoftResetEncounter(token),
                 EncounterMode.SoJCamp => DoSoJCampEncounter(token),
+                EncounterMode.Curry => DoCurryMonEncounter(token),
                 _ => WalkInLine(token),
             };
             await task.ConfigureAwait(false);
@@ -379,6 +388,198 @@ namespace SysBot.Pokemon
                 while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
                     await Task.Delay(2_000).ConfigureAwait(false);
             }
+        }
+
+        private async Task DoCurryMonEncounter(CancellationToken token)
+        {
+            Log("Make sure that the Setting MarkOnly is set to False. Curry Mark is only applied when we take a Pokemon with us.");
+
+            await SetCurrentBox(0, token).ConfigureAwait(false);
+
+            var existing = await ReadBoxPokemon(InjectBox, InjectSlot, token).ConfigureAwait(false);
+            if (existing.Species != 0 && existing.ChecksumValid)
+            {
+                Log("Destination slot is occupied! Dumping the Pokémon found there...");
+                DumpPokemon(DumpSetting.DumpFolder, "saved", existing);
+            }
+            Log("Clearing destination slot to start the bot.");
+            await SetBoxPokemon(Blank, InjectBox, InjectSlot, token).ConfigureAwait(false);
+
+            while (!token.IsCancellationRequested && Config.NextRoutineType == PokeRoutineType.EncounterBot)
+            {
+                if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+                {
+                    Log("Entering camp...");
+                    await Click(X, 2_000, token).ConfigureAwait(false);
+                    await Click(A, 10_000, token).ConfigureAwait(false);
+                    if (await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false)) // In camp
+                        await Click(X, 1_000, token).ConfigureAwait(false);
+                    await Click(DRIGHT, 0_600, token).ConfigureAwait(false);
+                    await Click(B, 1_000, token).ConfigureAwait(false);
+                }
+
+                PartyMon = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[[main+2636120]+280]+D8]+78]+10]+98]", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+                if (PartyMon.Species == 0)
+                    PartyMon = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[main+2636170]+2F0]+58]+130]+138]+D0", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+                if (PartyMon.Species == 0)
+                    PartyMon = await ReadUntilPresentAbsolute(await ParsePointer("[[[[main+28ED668]+68]+1E8]+1D0]+128", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+                if (PartyMon.Species == 0)
+                    PartyMon = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[main+296C030]+60]+40]+1B0]+58]", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+
+                if (PartyMon.Species != 0)
+                    Log($"Logging present camper: {(PartyMon.ShinyXor == 0 ? "■ " : PartyMon.ShinyXor <= 16 ? "★ " : "")}{SpeciesName.GetSpeciesNameGeneration(PartyMon.Species, 2, 8)}{TradeExtensions.FormOutput(PartyMon.Species, PartyMon.Form, out _)}");
+
+                while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+                {
+                    Log("Logging berry and ingredient counts...");
+                    IngredientPouch = await Connection.ReadBytesAsync(IngredientPouchOffset, 100, token).ConfigureAwait(false);
+                    BerryPouch = await Connection.ReadBytesAsync(BerryPouchOffset, 212, token).ConfigureAwait(false);
+
+                    await CookingCurry(token).ConfigureAwait(false);
+
+                    curryCount++;
+                    Camper = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[[main+2636120]+280]+D8]+78]+10]+98]", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+                    if (Camper.Species == 0)
+                        Camper = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[main+2636170]+2F0]+58]+130]+138]+D0", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+                    if (Camper.Species == 0)
+                        Camper = await ReadUntilPresentAbsolute(await ParsePointer("[[[[main+28ED668]+68]+1E8]+1D0]+128", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+                    if (Camper.Species == 0)
+                        Camper = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[main+296C030]+60]+40]+1B0]+58]", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
+
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+                    if (Camper.EncryptionConstant != PartyMon.EncryptionConstant)
+#pragma warning restore CS8602 // Dereference of a possibly null reference.
+                    {
+                        await SetStick(RIGHT, 0, 30_000, 1_000, token).ConfigureAwait(false);
+                        Log($"New camper found on Curry: {curryCount}.");
+                        if (await HandleEncounter(Camper, false, token).ConfigureAwait(false))
+                            return;
+                    }
+                    if (Camper.Species == 0)
+                    {
+                        // Failsafe if pointer is bad
+                        pouchData = await Connection.ReadBytesAsync(PokeBallOffset, 116, token).ConfigureAwait(false);
+                        await SetStick(RIGHT, 0, 30_000, 1_000, token).ConfigureAwait(false);
+                        await ScrollForCamper(token).ConfigureAwait(false);
+                        Camper = await ReadBoxPokemon(0, 0, token).ConfigureAwait(false);
+                        if (Camper.Species != 0)
+                        {
+                            if (await HandleEncounter(Camper, false, token).ConfigureAwait(false))
+                                return;
+
+                            await SetBoxPokemon(Blank, InjectBox, InjectSlot, token).ConfigureAwait(false);
+                            Log($"Not the camper I'm looking for..");
+
+                            Log("Restoring original pouch data.");
+                            await Connection.WriteBytesAsync(pouchData, PokeBallOffset, token).ConfigureAwait(false);
+                        }
+                        for (int p = 0; p < 2; p++)
+                            await Click(B, 0_800, token).ConfigureAwait(false);
+                    }
+                    else if (Camper.EncryptionConstant == PartyMon.EncryptionConstant)
+                        Log($"No new campers on Curry: {curryCount}...");
+
+                    Log($"Recovering ingredients!");
+                    await ResetBothSticks(token).ConfigureAwait(false);
+                    await Connection.WriteBytesAsync(BerryPouch, 0x45067C50, token).ConfigureAwait(false);
+                    await Connection.WriteBytesAsync(IngredientPouch, 0x45068B00, token).ConfigureAwait(false);
+                    await Task.Delay(0_800).ConfigureAwait(false);
+                }
+            }
+        }
+
+        private async Task ScrollForCamper(CancellationToken token)
+        {
+            Log($"Seems like someone is hiding..");
+            await Click(A, 0_050, token).ConfigureAwait(false);
+            for (int scroll = 0; scroll < 12; scroll++)
+            {
+                if (await LairStatusCheck(0xFF4872F9, 0x6B311300, token).ConfigureAwait(false)) // Screen value when camper walks to us and dialogue box pops up
+                    break;
+
+                await SetStick(LEFT, -30_000, 0, 0_450, token).ConfigureAwait(false); // ←
+                await Click(A, 0_050, token).ConfigureAwait(false);
+
+                await SetStick(LEFT, 30_000, 0, 0_450, token).ConfigureAwait(false); // →
+                await Click(A, 0_050, token).ConfigureAwait(false);
+            }
+
+            if (await LairStatusCheck(0xFF4872F9, 0x6B311300, token).ConfigureAwait(false))
+                Log($"A new camper was found!");
+            do
+            {
+                await Click(A, 0_500, token).ConfigureAwait(false);
+            } while (!await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false));
+            if (await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false))
+            {
+                await ResetBothSticks(token).ConfigureAwait(false);
+                Log($"Curry #{curryCount} had a new camper join our camp!");
+                await Click(A, 1_000, token).ConfigureAwait(false);
+                await Click(A, 1_000, token).ConfigureAwait(false);
+                await Task.Delay(1_000).ConfigureAwait(false);
+            }
+        }
+
+        private async Task CookingCurry(CancellationToken token)
+        {
+            await ResetBothSticks(token).ConfigureAwait(false);
+            Log("Let's make curry!");
+            await Click(X, 2_000, token).ConfigureAwait(false);
+            await Click(A, 2_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Task.Delay(4_000).ConfigureAwait(false);
+            Log("Selecting ingredients...");
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Task.Delay(4_000).ConfigureAwait(false);
+            Log("Selecting berries...");
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Click(PLUS, 1_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
+            Log($"Dropping ingredients in!");
+            await Task.Delay(7_000).ConfigureAwait(false);
+            Log($"Mashing A to fan curry!");
+
+            var sw = new System.Diagnostics.Stopwatch();
+            sw.Start();
+            do
+            {
+                await Click(A, 0_050, token).ConfigureAwait(false);
+            } while (sw.ElapsedMilliseconds < 14_000);
+
+            Log($"Stirring the pot!");
+            sw.Restart();
+            do
+            {
+                await SetStick(RIGHT, -30_000, 0, 0_050, token).ConfigureAwait(false); // ←
+                await SetStick(RIGHT, 0, 30_000, 0_050, token).ConfigureAwait(false); // ↑
+                await SetStick(RIGHT, 30_000, 0, 0_050, token).ConfigureAwait(false); // →
+                await SetStick(RIGHT, 0, -30_000, 0_050, token).ConfigureAwait(false); // ↓
+            } while (sw.ElapsedMilliseconds < 19_000);
+            sw.Stop();
+            await Task.Delay(8_000).ConfigureAwait(false);
+
+            Log($"Adding a sprinkle of love!");
+            await Click(A, 0_500, token).ConfigureAwait(false);
+            await Task.Delay(20_000).ConfigureAwait(false);
+            Log($"Presenting our curry!");
+
+            while (!await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false))
+                await Click(A, 1_000, token).ConfigureAwait(false);
+
+            Log($"Checking for a camper..");
+            for (int p = 0; p < 2; p++)
+                await Click(B, 0_800, token).ConfigureAwait(false);
+        }
+        
+        private async Task ResetBothSticks(CancellationToken token)
+        {
+            // If aborting the sequence, we might have the stick set at some position. Clear it just in case.
+            await SetStick(RIGHT, 0, 0, 0_500, token).ConfigureAwait(false);
+            await SetStick(LEFT, 0, 0, 0_500, token).ConfigureAwait(false);
+            await Task.Delay(1_000).ConfigureAwait(false);
         }
     }
 }
