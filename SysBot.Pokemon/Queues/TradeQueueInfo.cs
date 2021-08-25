@@ -55,7 +55,7 @@ namespace SysBot.Pokemon
             {
                 var queue = Hub.Queues.GetQueue(t);
                 if (queue.Count == 0)
-                    return "The queue be empty like https://i.imgur.com/eunIymZ.gif";
+                    return "The queue is as much of an empty void as my heart.";
                 return queue.Summary();
             }
         }
@@ -93,8 +93,8 @@ namespace SysBot.Pokemon
 
             foreach (var detail in details)
             {
-                if (detail.Type == PokeRoutineType.TradeCord)
-                    TradeExtensions.TradeCordPath.Remove(TradeExtensions.TradeCordPath.FirstOrDefault(x => x.Contains(detail.UserID.ToString())));
+                if (detail.Type == PokeRoutineType.TradeCord && TradeExtensions.TradeCordPath.TryGetValue(detail.UserID, out _))
+                    TradeExtensions.TradeCordPath.Remove(detail.UserID);
                 Remove(detail);
             }
             return QueueResultRemove.CurrentlyProcessing;

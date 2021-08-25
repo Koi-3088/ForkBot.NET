@@ -246,7 +246,7 @@ namespace SysBot.Pokemon.WinForms
             this.MaximizeBox = false;
             this.Name = "Main";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "ZE_SysBot x64 v8.8";
+            this.Text = "ZE_SysBot x64 v9.1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Main_FormClosing);
             this.TC_Main.ResumeLayout(false);
             this.Tab_Bots.ResumeLayout(false);

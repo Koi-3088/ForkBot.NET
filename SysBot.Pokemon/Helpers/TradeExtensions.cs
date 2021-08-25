@@ -17,7 +17,7 @@ namespace SysBot.Pokemon
         private static readonly string InfoPath = "TradeCord\\UserInfo.json";
         public static Dictionary<ulong, DateTime> TradeCordCooldown = new();
         public static HashSet<ulong> MuteList = new();
-        public static List<string> TradeCordPath = new();
+        public static Dictionary<ulong, string> TradeCordPath = new();
         public static DateTime EventVoteTimer = new();
         private static TCUserInfoRoot UserInfo = new();
         private static readonly object _sync = new();
@@ -63,6 +63,7 @@ namespace SysBot.Pokemon
             public int CherishRNG { get; set; }
             public int SpeciesRNG { get; set; }
             public int SpeciesBoostRNG { get; set; }
+            public int ItemRNG { get; set; }
         }
 
         public class TCUserInfoRoot
@@ -73,6 +74,7 @@ namespace SysBot.Pokemon
             {
                 public string Username { get; set; } = string.Empty;
                 public ulong UserID { get; set; }
+                public int TimeZoneOffset { get; set; }
                 public int CatchCount { get; set; }
                 public int SpeciesBoost { get; set; }
                 public int DexCompletionCount { get; set; }
@@ -88,6 +90,7 @@ namespace SysBot.Pokemon
                 public Daycare2 Daycare2 { get; set; } = new();
                 public HashSet<Catch> Catches { get; set; } = new();
                 public Buddy Buddy { get; set; } = new();
+                public HashSet<Items> Items { get; set; } = new();
             }
 
             public class Catch
@@ -124,10 +127,17 @@ namespace SysBot.Pokemon
             {
                 public int ID { get; set; }
                 public Ability Ability { get; set; }
-                public int HatchSteps { get; set; }
                 public string Nickname { get; set; } = "";
             }
+
+            public class Items
+            {
+                public TCItems Item { get; set; }
+                public int ItemCount { get; set; }
+            }
         }
+
+        public static T EnumParse<T>(string input) where T : struct, Enum => !Enum.TryParse(input, true, out T result) ? new() : result;
 
         public static bool SelfBotScanner(ulong id, int cd)
         {
@@ -156,8 +166,7 @@ namespace SysBot.Pokemon
             {
                 var data = pkm.Data;
                 var deco = (uint)Random.Next(7);
-                BitConverter.GetBytes(deco).CopyTo(data, 0xE4);
-                pkm = PKMConverter.GetPKMfromBytes(data) ?? pkm;
+                pkm.ChangeFormArgument(deco);
             }
 
             var laInit = new LegalityAnalysis(pkm);
@@ -280,6 +289,7 @@ namespace SysBot.Pokemon
                 BallApplicator.ApplyBallLegalRandom(pkm);
 
             pkm = TrashBytes(pkm);
+            pkm.CurrentFriendship = pkm.PersonalInfo.BaseFriendship;
             return (PK8)pkm;
         }
 
@@ -293,7 +303,7 @@ namespace SysBot.Pokemon
             var ballRng = $"\nBall: {(Ball)Random.Next(2, 27)}";
             var ballRngDC = Random.Next(1, 3);
             var enumVals = (int[])Enum.GetValues(typeof(ValidEgg));
-            bool specificEgg = (evo1 == evo2 && Enum.IsDefined(typeof(ValidEgg), evo1)) || ((evo1 == 132 || evo2 == 132) && (Enum.IsDefined(typeof(ValidEgg), evo1) || Enum.IsDefined(typeof(ValidEgg), evo2))) || ((evo1 == 29 || evo1 == 32) && (evo2 == 29 || evo2 == 32));
+            bool specificEgg = (evo1 == evo2 && Breeding.CanHatchAsEgg(evo1)) || ((evo1 == 132 || evo2 == 132) && (Breeding.CanHatchAsEgg(evo1) || Breeding.CanHatchAsEgg(evo2))) || ((evo1 == 29 || evo1 == 32) && (evo2 == 29 || evo2 == 32));
             var dittoLoc = DittoSlot(evo1, evo2);
             var speciesRng = specificEgg ? SpeciesName.GetSpeciesNameGeneration(dittoLoc == 1 ? evo2 : evo1, 2, 8) : SpeciesName.GetSpeciesNameGeneration(enumVals[Random.Next(enumVals.Length)], 2, 8);
             var speciesRngID = SpeciesName.GetSpeciesID(speciesRng);
@@ -333,7 +343,6 @@ namespace SysBot.Pokemon
                 pkm.Ball = info.Daycare2.Ball;
 
             EggTrade((PK8)pkm);
-            pkm.CurrentFriendship = pkm.PersonalInfo.HatchCycles;
             pkm.SetAbilityIndex(Random.Next(3));
             pkm.Nature = Random.Next(25);
             pkm.StatNature = pkm.Nature;
@@ -404,6 +413,8 @@ namespace SysBot.Pokemon
             pk.ClearRelearnMoves();
             pk.Moves = new int[] { 0, 0, 0, 0 };
             var la = new LegalityAnalysis(pk);
+            var enc = la.EncounterMatch;
+            pk.CurrentFriendship = enc is EncounterStatic s ? s.EggCycles : pk.PersonalInfo.HatchCycles;
             pk.RelearnMoves = MoveBreed.GetExpectedMoves(pk.RelearnMoves, la.EncounterMatch);
             pk.Moves = pk.RelearnMoves;
             pk.Move1_PPUps = pk.Move2_PPUps = pk.Move3_PPUps = pk.Move4_PPUps = 0;
@@ -564,7 +575,7 @@ namespace SysBot.Pokemon
             if (!gmax)
             {
                 if (form > 0)
-                    return reader.ReadToEnd().Split('_')[1].Split('\n')[species].Split('|')[form - 1];
+                    return reader.ReadToEnd().Split('_')[1].Split('\n')[species].Split('|')[species == 80 && form == 2 ? 0 : form - 1];
                 else return reader.ReadToEnd().Split('\n')[species];
             }
 
@@ -581,8 +592,8 @@ namespace SysBot.Pokemon
             else return new();
 
             mgPkm.CurrentLevel = mg.LevelMin;
-            if (mg.HeldItem != 0 && ItemRestrictions.IsHeldItemAllowed(mg.HeldItem, 8))
-                mgPkm.HeldItem = mg.HeldItem;
+            if (mgPkm.Species != (int)Species.Giratina)
+                mgPkm.HeldItem = 0;
 
             var la = new LegalityAnalysis(mgPkm);
             if (!la.Valid)
@@ -664,9 +675,12 @@ namespace SysBot.Pokemon
                 try
                 {
                     var user = GetUserInfo(ctx, false);
+                    if (user.DexCompletionCount >= 1)
+                        ShinyCharmReward(user);
+
                     var traded = user.Catches.ToList().FindAll(x => x.Traded);
-                    var tradeSignal = TradeCordPath.FirstOrDefault(x => x.Contains(user.UserID.ToString()));
-                    if (traded.Count != 0 && tradeSignal == default)
+                    bool exists = TradeCordPath.TryGetValue(user.UserID, out string path);
+                    if (traded.Count != 0 && !exists)
                     {
                         foreach (var trade in traded)
                         {
@@ -678,7 +692,7 @@ namespace SysBot.Pokemon
                     }
 
                     TCUserInfoRoot.TCUserInfo giftee = new();
-                    if (ctx.Context == TCCommandContext.Gift)
+                    if (ctx.Context == TCCommandContext.Gift || ctx.Context == TCCommandContext.GiftItem)
                         giftee = GetUserInfo(ctx, true);
 
                     var helper = new TradeCordHelper(settings);
@@ -702,6 +716,13 @@ namespace SysBot.Pokemon
                         TCCommandContext.Boost => helper.SpeciesBoostHandler(user, input[0]),
                         TCCommandContext.Buddy => helper.BuddyHandler(user, input[0]),
                         TCCommandContext.Nickname => helper.NicknameHandler(user, input[0]),
+                        TCCommandContext.Evolution => helper.EvolutionHandler(user, input[0]),
+                        TCCommandContext.GiveItem => helper.GiveItemHandler(user, input[0]),
+                        TCCommandContext.GiftItem => helper.GiftItemHandler(user, giftee, input[0], input[1]),
+                        TCCommandContext.TakeItem => helper.TakeItemHandler(user),
+                        TCCommandContext.ItemList => helper.ItemListHandler(user, input[0]),
+                        TCCommandContext.DropItem => helper.ItemDropHandler(user, input[0]),
+                        TCCommandContext.TimeZone => helper.TimeZoneHandler(user, input[0]),
                         _ => throw new NotImplementedException(),
                     };
                     var result = Task.Run(() => task).Result;
@@ -709,7 +730,7 @@ namespace SysBot.Pokemon
                     if (update && result.Success)
                     {
                         UpdateUserInfo(result.User);
-                        if (ctx.Context == TCCommandContext.Gift)
+                        if (ctx.Context == TCCommandContext.Gift || ctx.Context == TCCommandContext.GiftItem)
                             UpdateUserInfo(result.Giftee);
                     }
 
@@ -801,33 +822,28 @@ namespace SysBot.Pokemon
             }
         }
 
-        public static void TradeStatusUpdate(string id, bool cancelled = false)
+        public static void TradeStatusUpdate(ulong id, bool cancelled = false)
         {
-            var origPath = TradeCordPath.FirstOrDefault(x => x.Contains(id));
-            if (!cancelled && origPath != default)
+            bool exists = TradeCordPath.TryGetValue(id, out string path);
+            if (!cancelled && exists)
             {
-                var tradedPath = Path.Combine($"TradeCord\\Backup\\{id}", origPath.Split('\\')[2]);
+                var tradedPath = Path.Combine($"TradeCord\\Backup\\{id}", path.Split('\\')[2]);
                 try
                 {
-                    File.Move(origPath, tradedPath);
+                    File.Move(path, tradedPath);
                 }
                 catch (IOException)
                 {
-                    File.Move(origPath, tradedPath.Insert(tradedPath.IndexOf(".") - 1, "ex"));
+                    File.Move(path, tradedPath.Insert(tradedPath.IndexOf(".") - 1, "ex"));
                 }
             }
 
-            if (TradeCordPath.FirstOrDefault(x => x.Contains(id)) != default)
-            {
-                var entries = TradeCordPath.FindAll(x => x.Contains(id));
-                for (int i = 0; i < entries.Count; i++)
-                    TradeCordPath.Remove(entries[i]);
-            }
+            if (exists)
+                TradeCordPath.Remove(id);
         }
 
         public static string PokeImg(PKM pkm, bool canGmax, bool fullSize)
         {
-            var alcremieDeco = (uint)(pkm.Species == (int)Species.Alcremie ? pkm.Data[0xE4] : 0);
             bool md = false;
             bool fd = false;
             string[] baseLink;
@@ -846,7 +862,7 @@ namespace SysBot.Pokemon
             baseLink[3] = pkm.Form < 10 ? $"00{pkm.Form}" : $"0{pkm.Form}";
             baseLink[4] = pkm.PersonalInfo.OnlyFemale ? "fo" : pkm.PersonalInfo.OnlyMale ? "mo" : pkm.PersonalInfo.Genderless ? "uk" : fd ? "fd" : md ? "md" : "mf";
             baseLink[5] = canGmax ? "g" : "n";
-            baseLink[6] = "0000000" + (pkm.Species == (int)Species.Alcremie ? alcremieDeco : 0);
+            baseLink[6] = "0000000" + (pkm.Species == (int)Species.Alcremie ? pkm.Data[0xE4] : 0);
             baseLink[8] = pkm.IsShiny ? "r.png" : "n.png";
             return string.Join("_", baseLink);
         }
@@ -864,6 +880,7 @@ namespace SysBot.Pokemon
                 CherishRNG = Random.Next(101),
                 SpeciesRNG = enumVals[Random.Next(enumVals.Length)],
                 SpeciesBoostRNG = Random.Next(101),
+                ItemRNG = Random.Next(101),
             };
         }
 
@@ -891,6 +908,24 @@ namespace SysBot.Pokemon
 
             TCRWLockEnable = false;
             return true;
+        }
+
+
+        private static void ShinyCharmReward(TCUserInfoRoot.TCUserInfo user)
+        {
+            var hasSC = user.Items.FirstOrDefault(x => x.Item == TCItems.ShinyCharm) != default;
+            if (!hasSC)
+            {
+                var eggBoost = user.ActivePerks.FindAll(x => x == DexPerks.EggRateBoost).Count;
+                var shinyBoost = user.ActivePerks.FindAll(x => x == DexPerks.ShinyBoost).Count;
+
+                user.DexCompletionCount += eggBoost;
+                user.DexCompletionCount += shinyBoost;
+
+                user.Items.Add(new() { Item = TCItems.ShinyCharm, ItemCount = 1 });
+                user.ActivePerks.RemoveAll(x => x == DexPerks.EggRateBoost || x == DexPerks.ShinyBoost);
+                UpdateUserInfo(user);
+            }
         }
     }
 }

@@ -139,7 +139,7 @@ namespace SysBot.Pokemon
         {
             // Anti-spam
             if (pk.IsNicknamed && !(enc is EncounterTrade {IsNicknamed: true}) && pk.Nickname.Length > 6)
-                return true;
+                return false;
             return DisallowSurpriseTrade(pk);
         }
 
@@ -147,9 +147,9 @@ namespace SysBot.Pokemon
         {
             // Anti-spam
             if (IsSpammyString(pk.OT_Name))
-                return true;
+                return false;
             if (pk.IsNicknamed && IsSpammyString(pk.Nickname))
-                return true;
+                return false;
 
             // Surprise Trade currently bans Mythicals and Legendaries, not Sub-Legendaries.
             if (Legal.Legends.Contains(pk.Species))
@@ -165,7 +165,7 @@ namespace SysBot.Pokemon
         private static bool IsSpammyString(string name)
         {
             if (name.IndexOf('.') >= 0 || name.IndexOf('\\') >= 0 || name.IndexOf('/') >= 0)
-                return true;
+                return false;
 
             if (name.Length <= 6)
                 return false;

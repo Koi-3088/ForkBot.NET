@@ -61,8 +61,8 @@ namespace SysBot.Pokemon.Discord
             {
 				var sav = AutoLegalityWrapper.GetTrainerInfo(gen);
 				var pkm = sav.GetLegal(template, out var result);
-				if (pkm.Nickname.ToLower() == "egg" && Enum.IsDefined(typeof(ValidEgg), pkm.Species))
-					TradeExtensions.EggTrade((PK8)pkm);
+                if (pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
+                    TradeExtensions.EggTrade((PK8)pkm);
 
                 var la = new LegalityAnalysis(pkm);
                 var spec = GameInfo.Strings.Species[template.Species];
@@ -146,7 +146,7 @@ namespace SysBot.Pokemon.Discord
             var attachment = Context.Message.Attachments.FirstOrDefault();
             if (attachment == default)
             {
-                await ReplyAsync("You forgot to attach the PK8 file!").ConfigureAwait(false);
+                await ReplyAsync("You forgot to attach the PK8 file or Showdown Format!").ConfigureAwait(false);
                 return;
             }
 
