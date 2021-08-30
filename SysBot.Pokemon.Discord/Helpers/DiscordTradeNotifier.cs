@@ -41,23 +41,24 @@ namespace SysBot.Pokemon.Discord
 
         public void TradeCanceled(PokeRoutineExecutor routine, PokeTradeDetail<T> info, PokeTradeResult msg)
         {
+            if (info.Type == PokeTradeType.TradeCord)
+                TradeCordDatabase.HandleTradedCatches(Trader.Id, false);
+
             OnFinish?.Invoke(routine);
             Trader.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
-            if (info.Type == PokeTradeType.TradeCord)
-                TradeExtensions.TradeStatusUpdate(Trader.Id, true);
         }
 
         public void TradeFinished(PokeRoutineExecutor routine, PokeTradeDetail<T> info, T result)
         {
+            if (info.Type == PokeTradeType.TradeCord)
+                TradeCordDatabase.HandleTradedCatches(Trader.Id, true);
+
             OnFinish?.Invoke(routine);
             var tradedToUser = Data.Species;
             var message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
             Trader.SendMessageAsync(message).ConfigureAwait(false);
             if (result.Species != 0 && Hub.Config.Discord.ReturnPK8s)
                 Trader.SendPKMAsync(result, "Here's what you traded me!").ConfigureAwait(false);
-
-            if (info.Type == PokeTradeType.TradeCord)
-                TradeExtensions.TradeStatusUpdate(Trader.Id);
         }
 
         public void SendNotification(PokeRoutineExecutor routine, PokeTradeDetail<T> info, string message)

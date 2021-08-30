@@ -1221,6 +1221,7 @@
         ItemList,
         DropItem,
         TimeZone,
+        DeleteUser,
     }
 
     public enum TCItems
@@ -1240,6 +1241,7 @@
         DuskStone = 108,
         DawnStone = 109,
         OvalStone = 110,
+        GriseousOrb = 112,
         KingsRock = 221,
         Everstone = 229,
         MetalCoat = 233,
@@ -1255,6 +1257,23 @@
         WhippedDream = 646,
         Sachet = 647,
         IceStone = 849,
+        FightingMemory = 904,
+        FlyingMemory = 905,
+        PoisonMemory = 906,
+        GroundMemory = 907,
+        RockMemory = 908,
+        BugMemory = 909,
+        GhostMemory = 910,
+        SteelMemory = 911,
+        FireMemory = 912,
+        WaterMemory = 913,
+        GrassMemory = 914,
+        ElectricMemory = 915,
+        PsychicMemory = 916,
+        IceMemory = 917,
+        DragonMemory = 918,
+        DarkMemory = 919,
+        FairyMemory = 920,
         StrawberrySweet = 1109,
         BerrySweet = 1111,
         LoveSweet = 1110,
@@ -1284,6 +1303,14 @@
         RainbowSwirl = 8,
     }
 
+    public enum RegionalFormArgument
+    {
+        None = -1,
+        Kanto = 0,
+        Alola = 1,
+        Galar = 2,
+    }
+
     public enum TimeOfDay
     {
         Any,
@@ -1292,5 +1319,25 @@
         Day,
         Dusk,
         Night,
+    }
+
+    public enum TableEnum
+    {
+        Users = 0,
+        TrainerInfo = 1,
+        Dex = 2,
+        Perks = 3,
+        Daycare = 4,
+        Buddy = 5,
+        Items = 6,
+        Catches = 7,
+    }
+
+    public enum SQLTableContext
+    {
+        Select,
+        Update,
+        Insert,
+        Delete,
     }
 }

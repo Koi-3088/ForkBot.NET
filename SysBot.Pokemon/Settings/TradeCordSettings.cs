@@ -10,6 +10,9 @@ namespace SysBot.Pokemon
         [Category(FeatureToggle), Description("Enter Channel ID(s) where TradeCord should be active, or leave blank.")]
         public string TradeCordChannels { get; set; } = string.Empty;
 
+        [Category(FeatureToggle), Description("If enabled, every time the program is started up, inactive users will be deleted (no commands used for at least a month).")]
+        public bool ClearInactive { get; set; } = false;
+
         [Category(FeatureToggle), Description("Choose whether to use full-size Home images from ProjectPokémon or downsized ones.")]
         public bool UseFullSizeImages { get; set; } = true;
 
@@ -24,9 +27,6 @@ namespace SysBot.Pokemon
 
         [Category(FeatureToggle), Description("Enter the amount of time in minutes a user-invoked event will last.")]
         public int TradeCordEventDuration { get; set; } = 30;
-
-        [Category(FeatureToggle), Description("Enter how frequently (in seconds) \"UserInfo.json\" should be updated.")]
-        public int ConfigUpdateInterval { get; set; } = 60;
 
         [Category(FeatureToggle), Description("Enter the likelihood of a successful catch. Default: 90.")]
         public int CatchRate { get; set; } = 90;
@@ -82,5 +82,6 @@ namespace SysBot.Pokemon
         Legends,
         EventPoke,
         RodentLite,
+        ClickbaitArticle,
     }
 }

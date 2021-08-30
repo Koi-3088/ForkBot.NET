@@ -335,11 +335,8 @@ namespace SysBot.Pokemon
                     Log("Invalid data detected. Restarting loop.");
                     continue;
                 }
-                else
-                {
-                    if (await HandleEncounter(pk, true, token).ConfigureAwait(false))
-                        return;
-                }
+                else if (await HandleEncounter(pk, true, token).ConfigureAwait(false))
+                    return;
 
                 Log($"Resetting {SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8)} by restarting the game");
                 await CloseGame(Hub.Config, token).ConfigureAwait(false);
@@ -393,7 +390,6 @@ namespace SysBot.Pokemon
         private async Task DoCurryMonEncounter(CancellationToken token)
         {
             Log("Make sure that the Setting MarkOnly is set to False. Curry Mark is only applied when we take a Pokemon with us.");
-
             await SetCurrentBox(0, token).ConfigureAwait(false);
 
             var existing = await ReadBoxPokemon(InjectBox, InjectSlot, token).ConfigureAwait(false);
@@ -402,6 +398,7 @@ namespace SysBot.Pokemon
                 Log("Destination slot is occupied! Dumping the Pokémon found there...");
                 DumpPokemon(DumpSetting.DumpFolder, "saved", existing);
             }
+
             Log("Clearing destination slot to start the bot.");
             await SetBoxPokemon(Blank, InjectBox, InjectSlot, token).ConfigureAwait(false);
 
@@ -414,6 +411,7 @@ namespace SysBot.Pokemon
                     await Click(A, 10_000, token).ConfigureAwait(false);
                     if (await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false)) // In camp
                         await Click(X, 1_000, token).ConfigureAwait(false);
+
                     await Click(DRIGHT, 0_600, token).ConfigureAwait(false);
                     await Click(B, 1_000, token).ConfigureAwait(false);
                 }
@@ -427,7 +425,7 @@ namespace SysBot.Pokemon
                     PartyMon = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[main+296C030]+60]+40]+1B0]+58]", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
 
                 if (PartyMon.Species != 0)
-                    Log($"Logging present camper: {(PartyMon.ShinyXor == 0 ? "■ " : PartyMon.ShinyXor <= 16 ? "★ " : "")}{SpeciesName.GetSpeciesNameGeneration(PartyMon.Species, 2, 8)}{TradeExtensions.FormOutput(PartyMon.Species, PartyMon.Form, out _)}");
+                    Log($"Logging present camper: {(PartyMon.ShinyXor == 0 ? "■ " : PartyMon.ShinyXor <= 16 ? "★ " : "")}{SpeciesName.GetSpeciesNameGeneration(PartyMon.Species, 2, 8)}{TradeCordHelperUtil.FormOutput(PartyMon.Species, PartyMon.Form, out _)}");
 
                 while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
                 {
@@ -446,15 +444,14 @@ namespace SysBot.Pokemon
                     if (Camper.Species == 0)
                         Camper = await ReadUntilPresentAbsolute(await ParsePointer("[[[[[main+296C030]+60]+40]+1B0]+58]", token).ConfigureAwait(false), 2_000, 0_200, token).ConfigureAwait(false);
 
-#pragma warning disable CS8602 // Dereference of a possibly null reference.
                     if (Camper.EncryptionConstant != PartyMon.EncryptionConstant)
-#pragma warning restore CS8602 // Dereference of a possibly null reference.
                     {
                         await SetStick(RIGHT, 0, 30_000, 1_000, token).ConfigureAwait(false);
                         Log($"New camper found on Curry: {curryCount}.");
                         if (await HandleEncounter(Camper, false, token).ConfigureAwait(false))
                             return;
                     }
+
                     if (Camper.Species == 0)
                     {
                         // Failsafe if pointer is bad
@@ -468,18 +465,19 @@ namespace SysBot.Pokemon
                                 return;
 
                             await SetBoxPokemon(Blank, InjectBox, InjectSlot, token).ConfigureAwait(false);
-                            Log($"Not the camper I'm looking for..");
+                            Log("Not the camper I'm looking for...");
 
                             Log("Restoring original pouch data.");
                             await Connection.WriteBytesAsync(pouchData, PokeBallOffset, token).ConfigureAwait(false);
                         }
+
                         for (int p = 0; p < 2; p++)
                             await Click(B, 0_800, token).ConfigureAwait(false);
                     }
                     else if (Camper.EncryptionConstant == PartyMon.EncryptionConstant)
                         Log($"No new campers on Curry: {curryCount}...");
 
-                    Log($"Recovering ingredients!");
+                    Log("Recovering ingredients!");
                     await ResetBothSticks(token).ConfigureAwait(false);
                     await Connection.WriteBytesAsync(BerryPouch, 0x45067C50, token).ConfigureAwait(false);
                     await Connection.WriteBytesAsync(IngredientPouch, 0x45068B00, token).ConfigureAwait(false);
@@ -490,7 +488,7 @@ namespace SysBot.Pokemon
 
         private async Task ScrollForCamper(CancellationToken token)
         {
-            Log($"Seems like someone is hiding..");
+            Log("Seems like someone is hiding..");
             await Click(A, 0_050, token).ConfigureAwait(false);
             for (int scroll = 0; scroll < 12; scroll++)
             {
@@ -505,11 +503,12 @@ namespace SysBot.Pokemon
             }
 
             if (await LairStatusCheck(0xFF4872F9, 0x6B311300, token).ConfigureAwait(false))
-                Log($"A new camper was found!");
+                Log("A new camper was found!");
             do
             {
                 await Click(A, 0_500, token).ConfigureAwait(false);
             } while (!await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false));
+
             if (await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false))
             {
                 await ResetBothSticks(token).ConfigureAwait(false);
@@ -523,25 +522,29 @@ namespace SysBot.Pokemon
         private async Task CookingCurry(CancellationToken token)
         {
             await ResetBothSticks(token).ConfigureAwait(false);
+
             Log("Let's make curry!");
             await Click(X, 2_000, token).ConfigureAwait(false);
             await Click(A, 2_000, token).ConfigureAwait(false);
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Task.Delay(4_000).ConfigureAwait(false);
+
             Log("Selecting ingredients...");
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Task.Delay(4_000).ConfigureAwait(false);
+
             Log("Selecting berries...");
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Click(PLUS, 1_000, token).ConfigureAwait(false);
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Click(A, 1_000, token).ConfigureAwait(false);
-            Log($"Dropping ingredients in!");
-            await Task.Delay(7_000).ConfigureAwait(false);
-            Log($"Mashing A to fan curry!");
 
+            Log("Dropping ingredients in!");
+            await Task.Delay(7_000).ConfigureAwait(false);
+
+            Log("Mashing A to fan curry!");
             var sw = new System.Diagnostics.Stopwatch();
             sw.Start();
             do
@@ -549,7 +552,7 @@ namespace SysBot.Pokemon
                 await Click(A, 0_050, token).ConfigureAwait(false);
             } while (sw.ElapsedMilliseconds < 14_000);
 
-            Log($"Stirring the pot!");
+            Log("Stirring the pot!");
             sw.Restart();
             do
             {
@@ -561,15 +564,15 @@ namespace SysBot.Pokemon
             sw.Stop();
             await Task.Delay(8_000).ConfigureAwait(false);
 
-            Log($"Adding a sprinkle of love!");
+            Log("Adding a sprinkle of love!");
             await Click(A, 0_500, token).ConfigureAwait(false);
             await Task.Delay(20_000).ConfigureAwait(false);
-            Log($"Presenting our curry!");
 
+            Log("Presenting our curry!");
             while (!await LairStatusCheck(0xFF000000, 0x6B311300, token).ConfigureAwait(false))
                 await Click(A, 1_000, token).ConfigureAwait(false);
 
-            Log($"Checking for a camper..");
+            Log("Checking for a camper..");
             for (int p = 0; p < 2; p++)
                 await Click(B, 0_800, token).ConfigureAwait(false);
         }

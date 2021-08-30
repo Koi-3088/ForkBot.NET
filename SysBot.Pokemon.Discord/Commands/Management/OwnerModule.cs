@@ -69,8 +69,8 @@ namespace SysBot.Pokemon.Discord
         public async Task ExitProgram()
         {
             await Context.Channel.EchoAndReply("Shutting down... goodbye! **Bot services are going offline.**").ConfigureAwait(false);
-            if (TradeExtensions.TCInitialized)
-                TradeExtensions.SerializeInfo();
+            if (TradeCordHelper.TCInitialized)
+                TradeCordHelper.CleanDB();
             Environment.Exit(0);
         }
     }

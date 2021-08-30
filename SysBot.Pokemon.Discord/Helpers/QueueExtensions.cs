@@ -11,7 +11,7 @@ namespace SysBot.Pokemon.Discord
     {
         private const uint MaxTradeCode = 99999999;
 
-        public static async Task AddToQueueAsync(this SocketCommandContext Context, int code, string trainer, RequestSignificance sig, PK8 trade, PokeRoutineType routine, PokeTradeType type, SocketUser trader)
+        public static async Task AddToQueueAsync(this SocketCommandContext Context, int code, string trainer, RequestSignificance sig, PK8 trade, PokeRoutineType routine, PokeTradeType type, SocketUser trader, int catchID = 0)
         {
             if ((uint)code > MaxTradeCode)
             {
@@ -34,7 +34,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             // Try adding
-            var result = Context.AddToTradeQueue(trade, code, trainer, sig, routine, type, trader, out var msg);
+            var result = Context.AddToTradeQueue(trade, code, trainer, sig, routine, type, trader, out var msg, catchID);
 
             // Notify in channel
             await Context.Channel.SendMessageAsync(msg).ConfigureAwait(false);
@@ -55,12 +55,12 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        public static async Task AddToQueueAsync(this SocketCommandContext Context, int code, string trainer, RequestSignificance sig, PK8 trade, PokeRoutineType routine, PokeTradeType type)
+        public static async Task AddToQueueAsync(this SocketCommandContext Context, int code, string trainer, RequestSignificance sig, PK8 trade, PokeRoutineType routine, PokeTradeType type, int catchID = 0)
         {
-            await AddToQueueAsync(Context, code, trainer, sig, trade, routine, type, Context.User).ConfigureAwait(false);
+            await AddToQueueAsync(Context, code, trainer, sig, trade, routine, type, Context.User, catchID).ConfigureAwait(false);
         }
 
-        private static bool AddToTradeQueue(this SocketCommandContext Context, PK8 pk8, int code, string trainerName, RequestSignificance sig, PokeRoutineType type, PokeTradeType t, SocketUser trader, out string msg)
+        private static bool AddToTradeQueue(this SocketCommandContext Context, PK8 pk8, int code, string trainerName, RequestSignificance sig, PokeRoutineType type, PokeTradeType t, SocketUser trader, out string msg, int catchID = 0)
         {
             var user = trader;
             var userID = user.Id;
@@ -80,6 +80,9 @@ namespace SysBot.Pokemon.Discord
                 msg = "Sorry, you are already in the queue.";
                 return false;
             }
+
+            if (detail.Type == PokeTradeType.TradeCord)
+                TradeCordHelper.TradeCordTrades.Add(trader.Id, catchID);
 
             var position = Info.CheckPosition(userID, type);
 

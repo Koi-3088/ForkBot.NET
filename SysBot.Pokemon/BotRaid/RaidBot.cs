@@ -217,7 +217,7 @@ namespace SysBot.Pokemon
                 var dexno = BitConverter.ToUInt16(data, 0);
 
                 data = await Connection.ReadBytesAsync(ofs + RaidAltFormInc, 1, token).ConfigureAwait(false);
-                var altformstr = data[0] == 0 ? "" : TradeExtensions.FormOutput(dexno, data[0], out _);
+                var altformstr = data[0] == 0 ? "" : TradeCordHelperUtil.FormOutput(dexno, data[0], out _);
 
                 data = await Connection.ReadBytesAsync(ofs + RaidShinyIncr, 1, token).ConfigureAwait(false);
                 var shiny = data[0] == 1 ? "★" : "";

@@ -127,8 +127,8 @@ namespace SysBot.Pokemon.WinForms
                 NullValueHandling = NullValueHandling.Ignore
             });
             File.WriteAllText(ConfigPath, lines);
-            if (TradeExtensions.TCInitialized)
-                TradeExtensions.SerializeInfo();
+            if (TradeCordHelper.TCInitialized)
+                TradeCordHelper.CleanDB();
         }
 
         private void B_Start_Click(object sender, EventArgs e)

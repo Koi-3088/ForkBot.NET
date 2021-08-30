@@ -2,9 +2,10 @@
 using PKHeX.Core.Searching;
 using SysBot.Base;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq;
+using System.Text.RegularExpressions;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.PokeDataOffsets;
 
@@ -290,12 +291,12 @@ namespace SysBot.Pokemon
                 if (Hub.Config.Discord.ReturnPK8s)
                     poke.SendNotification(this, clone, "Here's what you showed me!");
 
-                var adOT = System.Text.RegularExpressions.Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(2DOS3)").Value != ""
-                    || System.Text.RegularExpressions.Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(2DOS3)").Value != "";
+                var adOT = Regex.Match(clone.OT_Name, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(2DOS3)|(PPorg)|(Tik\wok$)|(YouTube)", RegexOptions.IgnoreCase).Value != ""
+                    || Regex.Match(clone.Nickname, @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*)|(TV$)|(PKHeX)|(FB:)|(SysBot)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(2DOS3)|(PPorg)|(Tik\wok$)|(YouTube)", RegexOptions.IgnoreCase).Value != "";
 
-                var ball = TradeExtensions.Pokeball.Contains(clone.Species) ? "\nBall: Poke" : $"\nBall: {(Ball)clone.Ball}";
+                var ball = TradeCordHelperUtil.Pokeball.Contains(clone.Species) ? "\nBall: Poke" : $"\nBall: {(Ball)clone.Ball}";
                 string shiny = string.Empty;
-                if (!TradeCordHelper.ShinyLockCheck(clone.Species, ball, clone.Form > 0))
+                if (!TradeCordHelperUtil.ShinyLockCheck(clone.Species, ball, clone.Form > 0))
                     shiny = $"\nShiny: {(clone.ShinyXor == 0 ? "Square" : clone.IsShiny ? "Star" : "No")}";
                 else shiny = "\nShiny: No";
 
