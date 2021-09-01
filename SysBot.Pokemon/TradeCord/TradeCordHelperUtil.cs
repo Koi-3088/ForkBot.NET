@@ -357,9 +357,11 @@ namespace SysBot.Pokemon
                 // Use item
                 (int)Species.Vaporeon or (int)Species.Poliwrath or (int)Species.Cloyster or (int)Species.Starmie or (int)Species.Ludicolo or (int)Species.Simipour => TCItems.WaterStone,
                 (int)Species.Jolteon or (int)Species.Raichu or (int)Species.Magnezone or (int)Species.Eelektross or (int)Species.Vikavolt => TCItems.ThunderStone,
-                (int)Species.Flareon or (int)Species.Ninetales or (int)Species.Arcanine or (int)Species.Simisear => form == 0 ? TCItems.FireStone : TCItems.IceStone,
+                (int)Species.Flareon or (int)Species.Arcanine or (int)Species.Simisear => TCItems.FireStone,
                 (int)Species.Leafeon or (int)Species.Vileplume or (int)Species.Victreebel or (int)Species.Exeggutor or (int)Species.Shiftry or (int)Species.Simisage => TCItems.LeafStone,
-                (int)Species.Glaceon or (int)Species.Sandshrew or (int)Species.Darmanitan => TCItems.IceStone,
+                (int)Species.Ninetales or (int)Species.Sandshrew when form > 0 => TCItems.IceStone,
+                (int)Species.Glaceon => TCItems.IceStone,
+                (int)Species.Darmanitan when form == 2 => TCItems.IceStone,
                 (int)Species.Nidoqueen or (int)Species.Nidoking or (int)Species.Clefable or (int)Species.Wigglytuff or (int)Species.Delcatty or (int)Species.Musharna => TCItems.MoonStone,
                 (int)Species.Bellossom or (int)Species.Sunflora or (int)Species.Whimsicott or (int)Species.Lilligant or (int)Species.Heliolisk => TCItems.SunStone,
                 (int)Species.Togekiss or (int)Species.Roserade or (int)Species.Cinccino or (int)Species.Florges => TCItems.ShinyStone,
@@ -368,8 +370,9 @@ namespace SysBot.Pokemon
                 (int)Species.Polteageist => form == 0 ? TCItems.CrackedPot : TCItems.ChippedPot,
                 (int)Species.Appletun => TCItems.SweetApple,
                 (int)Species.Flapple => TCItems.TartApple,
-                (int)Species.Slowbro => TCItems.GalaricaCuff,
-                (int)Species.Slowking or (int)Species.Politoed => form == 0 ? TCItems.KingsRock : TCItems.GalaricaWreath,
+                (int)Species.Slowbro when form > 0 => TCItems.GalaricaCuff,
+                (int)Species.Slowking when form > 0 => TCItems.GalaricaWreath,
+                (int)Species.Slowking or (int)Species.Politoed => TCItems.KingsRock,
 
                 // Held item
                 (int)Species.Kingdra => TCItems.DragonScale,
@@ -456,9 +459,9 @@ namespace SysBot.Pokemon
             };
         }
 
-        private PK8 ShedinjaGenerator(PK8 pk)
+        private PK8? ShedinjaGenerator(PK8 pk, out string msg)
         {
-            PK8 shedinja = (PK8)pk.Clone();
+            PK8? shedinja = (PK8)pk.Clone();
             var index = shedinja.PersonalInfo.GetAbilityIndex(shedinja.Ability);
             shedinja.Species = (int)Species.Shedinja;
             shedinja.SetGender(2);
@@ -473,6 +476,14 @@ namespace SysBot.Pokemon
             var la = new LegalityAnalysis(shedinja);
             var enc = la.Info.EncounterMatch;
             shedinja.SetRelearnMoves(shedinja.GetSuggestedRelearnMoves(enc));
+
+            msg = string.Empty;
+            la = new LegalityAnalysis(shedinja);
+            if (!la.Valid)
+            {
+                msg = $"Failed to evolve Nincada: \n{la.Report()}";
+                shedinja = null;
+            }
             return shedinja;
         }
 
@@ -588,14 +599,9 @@ namespace SysBot.Pokemon
 
             if (pk.Species == (int)Species.Nincada)
             {
-                shedinja = ShedinjaGenerator(pk);
-                var laShed = new LegalityAnalysis(shedinja);
-                if (!laShed.Valid)
-                {
-                    shedinja = null;
-                    msg = $"Failed to evolve Nincada: \n{laShed.Report()}";
+                shedinja = ShedinjaGenerator(pk, out msg);
+                if (shedinja == null)
                     return false;
-                }
             }
 
             if (pk.Generation == 8 && ((pk.Species == (int)Species.Koffing && result.EvolvedForm == 0) || ((pk.Species == (int)Species.Exeggcute || pk.Species == (int)Species.Pikachu || pk.Species == (int)Species.Cubone) && result.EvolvedForm > 0)))
@@ -642,7 +648,9 @@ namespace SysBot.Pokemon
             EvolutionTemplate result = pk.Species switch
             {
                 (int)Species.Tyrogue => pk.Stat_ATK == pk.Stat_DEF ? evoList.Find(x => x.EvoType == EvolutionType.LevelUpAeqD) : pk.Stat_ATK > pk.Stat_DEF ? evoList.Find(x => x.EvoType == EvolutionType.LevelUpATK) : evoList.Find(x => x.EvoType == EvolutionType.LevelUpDEF),
-                (int)Species.Eevee when item <= 0 => pk.CurrentFriendship >= 250 ? evoList.Find(x => x.EvoType == EvolutionType.LevelUpAffection50MoveType) : evoList.Find(x => x.DayTime == tod),
+                (int)Species.Eevee when item > 0 => evoList.Find(x => x.Item == (TCItems)item),
+                (int)Species.Eevee when pk.CurrentFriendship >= 250 => evoList.Find(x => x.EvoType == EvolutionType.LevelUpAffection50MoveType),
+                (int)Species.Eevee when item <= 0 => evoList.Find(x => x.DayTime == tod),
                 (int)Species.Toxel => LowKey.Contains(pk.Nature) ? evoList.Find(x => x.EvolvedForm == 1) : evoList.Find(x => x.EvolvedForm == 0),
                 (int)Species.Milcery when alcremieForm >= 0 => evoList.Find(x => x.EvolvedForm == alcremieForm),
                 (int)Species.Cosmoem => pk.Version == 45 ? evoList.Find(x => x.EvolvesInto == (int)Species.Lunala) : evoList.Find(x => x.EvolvesInto == (int)Species.Solgaleo),
@@ -650,9 +658,11 @@ namespace SysBot.Pokemon
                 (int)Species.Espurr => evoList.Find(x => x.EvolvedForm == (pk.Gender == (int)Gender.Male ? 0 : 1)),
                 (int)Species.Combee => evoList.Find(x => x.EvolvesInto == (pk.Gender == (int)Gender.Male ? -1 : (int)Species.Vespiquen)),
                 (int)Species.Koffing or (int)Species.Exeggcute or (int)Species.Pikachu or (int)Species.Cubone when form != -1 => evoList.Find(x => x.EvolvedForm == form),
-                (int)Species.Meowth when pk.Form == 2 => evoList.First(x => x.EvolvesInto == (int)Species.Perrserker),
-                (int)Species.Zigzagoon or (int)Species.Linoone or (int)Species.Yamask or (int)Species.Corsola or (int)Species.Diglett when pk.Form > 0 => evoList.First(x => x.BaseForm > 0),
-                _ => evoList.First(x => x.BaseForm == pk.Form),
+                (int)Species.Meowth when pk.Form == 2 => evoList.Find(x => x.EvolvesInto == (int)Species.Perrserker),
+                (int)Species.Zigzagoon or (int)Species.Linoone or (int)Species.Yamask or (int)Species.Corsola or (int)Species.Diglett when pk.Form > 0 => evoList.Find(x => x.BaseForm > 0),
+                (int)Species.Darumaka when pk.Form == 1 => evoList.Find(x => x.EvolvedForm == 2 && x.Item == (TCItems)item),
+                (int)Species.Darumaka when pk.Form == 0 => evoList.Find(x => x.EvolvedForm == 0),
+                _ => evoList.Find(x => x.BaseForm == pk.Form),
             };
             return result;
         }

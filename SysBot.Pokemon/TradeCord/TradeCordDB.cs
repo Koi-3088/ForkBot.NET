@@ -141,7 +141,7 @@ namespace SysBot.Pokemon
                 "trainerinfo" => TrainerInfoReader(reader),
                 "users" => UserInfoReader(reader),
                 "items" => ItemReader(reader),
-                "catches" => CatchReader(reader),
+                "catches" => CatchReader(reader, id),
                 "binary_catches" => CatchPKMReader(reader),
                 _ => throw new NotImplementedException(),
             };
@@ -258,7 +258,7 @@ namespace SysBot.Pokemon
             cmd.ExecuteNonQuery();
         }
 
-        private Dictionary<int, TCCatch> CatchReader(SQLiteDataReader reader)
+        private Dictionary<int, TCCatch> CatchReader(SQLiteDataReader reader, ulong id)
         {
             Dictionary<int, TCCatch> catches = new();
             while (reader.Read())
@@ -275,7 +275,16 @@ namespace SysBot.Pokemon
                 entry.Traded = (int)reader["was_traded"] != 0;
                 entry.Legendary = (int)reader["is_legendary"] != 0;
                 entry.Event = (int)reader["is_event"] != 0;
-                catches.Add(entry.ID, entry);
+                try
+                {
+                    catches.Add(entry.ID, entry);
+                }
+                catch
+                {
+                    Base.LogUtil.LogError("Duplicate entry found, removing...", "[SQL Catch Reader]");
+                    RemoveRows(id, "catches", $"and id = {entry.ID}");
+                    RemoveRows(id, "binary_catches", $"and id = {entry.ID}");
+                }
             }
             return catches;
         }

@@ -253,7 +253,7 @@ namespace SysBot.Pokemon
                 if (Util.Rng.ItemRNG >= 100 - Settings.ItemRate)
                 {
                     TCItems item;
-                    if (Util.Rng.ShinyCharmRNG > 30)
+                    if (Util.Rng.ShinyCharmRNG > 15)
                     {
                         var vals = Enum.GetValues(typeof(TCItems));
                         do
@@ -393,12 +393,15 @@ namespace SysBot.Pokemon
                     filters[i] = Util.ListNameSanitize(filters[i]);
                 }
 
+                string nickname = input;
                 input = Util.ListNameSanitize(input);
                 bool speciesAndForm = input.Contains("-");
                 bool isSpecies = SpeciesName.GetSpeciesID(speciesAndForm ? input.Split('-')[0] : input) > 0;
                 bool isBall = Enum.TryParse(input, true, out Ball enumBall);
                 bool isShiny = filters.FirstOrDefault(x => x == "Shiny") != default;
                 var filterBall = filters.FirstOrDefault(x => x != "Shiny");
+                var strings = GameInfo.GetStrings(LanguageID.English.GetLanguage2CharName()).forms;
+                bool isForm = strings.Contains(input);
 
                 if (input == "")
                 {
@@ -406,9 +409,9 @@ namespace SysBot.Pokemon
                     return false;
                 }
 
-                string def = filters.Count == 0 ? $"and {(input == "All" ? "species != ''" : input == "Legendaries" ? "is_legendary = 1" : input == "Events" ? "is_event = 1" : input == "Eggs" ? "is_egg = 1" : input == "Shinies" ? "is_shiny = 1" : isBall ? $"ball = '{enumBall}'" : (speciesAndForm ? $"species||form = '{input}'" : isSpecies ? $"species = '{input}'" : $"form = '{input}' or nickname = '{input}'"))} and was_traded = 0" : "";
-                string one = filters.Count == 1 ? $"and {(input == "All" ? "species != ''" : input == "Legendaries" ? "is_legendary = 1" : input == "Events" ? "is_event = 1" : input == "Eggs" ? "is_egg = 1" : input == "Shinies" ? "is_shiny = 1" : (speciesAndForm ? $"species||form = '{input}'" : isSpecies ? $"species = '{input}'" : $"form = '{input}' or nickname = '{input}'"))} and {(isShiny ? "is_shiny = 1" : $"ball = '{filters[0]}'")} and was_traded = 0" : "";
-                string two = filters.Count == 2 ? $"and {(input == "All" ? "species != ''" : input == "Legendaries" ? "is_legendary = 1" : input == "Events" ? "is_event = 1" : input == "Eggs" ? "is_egg = 1" : (speciesAndForm ? $"species||form = '{input}'" : isSpecies ? $"species = '{input}'" : $"form = '{input}' or nickname = '{input}'"))} and ball = '{filterBall}' and is_shiny = 1 and was_traded = 0" : "";
+                string def = filters.Count == 0 ? $"and {(input == "All" ? "species != ''" : input == "Legendaries" ? "is_legendary = 1" : input == "Events" ? "is_event = 1" : input == "Eggs" ? "is_egg = 1" : input == "Shinies" ? "is_shiny = 1" : isBall ? $"ball = '{enumBall}'" : (speciesAndForm ? $"species||form = '{input}'" : isSpecies ? $"species = '{input}'" : isForm ? $"form = '-{input}'" : $"nickname = '{nickname}'"))} and was_traded = 0" : "";
+                string one = filters.Count == 1 ? $"and {(input == "All" ? "species != ''" : input == "Legendaries" ? "is_legendary = 1" : input == "Events" ? "is_event = 1" : input == "Eggs" ? "is_egg = 1" : input == "Shinies" ? "is_shiny = 1" : (speciesAndForm ? $"species||form = '{input}'" : isSpecies ? $"species = '{input}'" : isForm ? $"form = '-{input}'" : $"nickname = '{nickname}'"))} and {(isShiny ? "is_shiny = 1" : $"ball = '{filters[0]}'")} and was_traded = 0" : "";
+                string two = filters.Count == 2 ? $"and {(input == "All" ? "species != ''" : input == "Legendaries" ? "is_legendary = 1" : input == "Events" ? "is_event = 1" : input == "Eggs" ? "is_egg = 1" : (speciesAndForm ? $"species||form = '{input}'" : isSpecies ? $"species = '{input}'" : isForm ? $"form = '-{input}'" : $"nickname = '{nickname}'"))} and ball = '{filterBall}' and is_shiny = 1 and was_traded = 0" : "";
 
                 Dictionary<int, TCCatch> matches = filters.Count switch
                 {
@@ -416,6 +419,12 @@ namespace SysBot.Pokemon
                     2 => GetLookupAsClassObject<Dictionary<int, TCCatch>>(user.UserInfo.UserID, "catches", two),
                     _ => GetLookupAsClassObject<Dictionary<int, TCCatch>>(user.UserInfo.UserID, "catches", def),
                 };
+
+                if (matches.Count == 0)
+                {
+                    result.Message = "No results found.";
+                    return false;
+                }
 
                 HashSet<string> count = new(), countSh = new();
                 if (input == "Shinies")
@@ -435,12 +444,6 @@ namespace SysBot.Pokemon
                 }
 
                 result.Message = string.Join(", ", input == "Shinies" ? countSh.OrderBy(x => int.Parse(x.Split(' ')[0].Trim(new char[] { '(', '_', ')' }))) : count.OrderBy(x => int.Parse(x.Split(' ')[0].Trim(new char[] { '(', '_', ')' }))));
-                if (result.Message == "")
-                {
-                    result.Message = "No results found.";
-                    return false;
-                }
-
                 var listName = input == "Shinies" ? "Shiny Pokémon" : input == "All" ? "Pokémon" : input == "Egg" ? "Eggs" : $"{input} List";
                 var listCount = input == "Shinies" ? $"★{countSh.Count}" : $"{count.Count}, ★{countSh.Count}";
                 result.EmbedName = $"{user.UserInfo.Username}'s {listName} (Total: {listCount})";
@@ -980,6 +983,12 @@ namespace SysBot.Pokemon
                 }
 
                 string[] perk = input.Split(',', ' ');
+                if (perk.Length < 2)
+                {
+                    result.Message = "Not enough parameters provided.";
+                    return false;
+                }
+
                 if (!int.TryParse(perk[1], out int count))
                 {
                     result.Message = "Incorrect input, could not parse perk point amount.";
@@ -1749,12 +1758,10 @@ namespace SysBot.Pokemon
             else if (Util.Rng.EggShinyRNG + (user.Daycare.Shiny1 && user.Daycare.Shiny2 ? 5 : 0) >= 100 - Settings.StarShinyRate)
                 star = true;
 
-            var name = SpeciesName.GetSpeciesNameGeneration(user.Daycare.Species1, 2, 8);
-            var template1 = (PK8)AutoLegalityWrapper.GetLegal(AutoLegalityWrapper.GetTrainerInfo(8), AutoLegalityWrapper.GetTemplate(new ShowdownSet($"{name}{user.Daycare.Form1}")), out _);
-            name = SpeciesName.GetSpeciesNameGeneration(user.Daycare.Species2, 2, 8);
-            var template2 = (PK8)AutoLegalityWrapper.GetLegal(AutoLegalityWrapper.GetTrainerInfo(8), AutoLegalityWrapper.GetTemplate(new ShowdownSet($"{name}{user.Daycare.Form2}")), out _);
+            var pk1 = GetLookupAsClassObject<PK8>(user.UserInfo.UserID, "binary_catches", $"and id = {user.Daycare.ID1}");
+            var pk2 = GetLookupAsClassObject<PK8>(user.UserInfo.UserID, "binary_catches", $"and id = {user.Daycare.ID2}");
+            var pk = Util.EggRngRoutine(pk1, pk2, trainerInfo, evo1, evo2, star, square);
 
-            var pk = Util.EggRngRoutine(template1, template2, trainerInfo, evo1, evo2, star, square);
             var eggSpeciesName = SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8);
             var eggForm = TradeCordHelperUtil.FormOutput(pk.Species, pk.Form, out _);
             var finalEggName = eggSpeciesName + eggForm;
