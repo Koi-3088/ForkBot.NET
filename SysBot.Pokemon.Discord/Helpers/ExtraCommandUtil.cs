@@ -253,7 +253,7 @@ namespace SysBot.Pokemon.Discord
         private static List<string> SpliceAtWord(string entry, int start, int length)
         {
             int counter = 0;
-            var temp = entry.Contains(",") ? entry.Split(',').Skip(start) : entry.Split('\n').Skip(start);
+            var temp = entry.Contains(",") ? entry.Split(',').Skip(start) : entry.Contains("|") ? entry.Split('|').Skip(start) : entry.Split('\n').Skip(start);
             List<string> list = new();
 
             if (entry.Length < length)
@@ -287,7 +287,7 @@ namespace SysBot.Pokemon.Discord
                     if (splice.Count == 0)
                         break;
 
-                    pageContent.Add(string.Join(entry.Contains(",") ? ", " : "\n", splice));
+                    pageContent.Add(string.Join(entry.Contains(",") ? ", " : entry.Contains("|") ? " | " : "\n", splice));
                 }
             }
             else pageContent.Add(entry == "" ? emptyList : entry);
