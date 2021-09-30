@@ -17,6 +17,7 @@ namespace SysBot.Pokemon.Discord
     {
         private const string detail = "I am an open-source Discord bot powered by PKHeX.Core and other open-source software.";
         private const string repo = "https://github.com/kwsch/SysBot.NET";
+        private const string fork = "https://github.com/Koi-3088/ForkBot.NET";
 
         [Command("info")]
         [Alias("about", "whoami", "owner")]
@@ -31,7 +32,8 @@ namespace SysBot.Pokemon.Discord
             };
 
             builder.AddField("Info",
-                $"- [Source Code]({repo})\n" +
+                $"- [Original Source Code]({repo})\n" +
+                $"- [Fork's Source Code]({fork})\n" +
                 $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
                 $"- {Format.Bold("Library")}: Discord.Net ({DiscordConfig.Version})\n" +
                 $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
