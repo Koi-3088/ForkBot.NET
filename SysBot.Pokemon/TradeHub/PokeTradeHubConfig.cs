@@ -89,9 +89,9 @@ namespace SysBot.Pokemon
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public CurryBotSettings Curry { get; set; } = new();
 
-        [Category(Bots)]
+        [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public BoolSettings Bool { get; set; } = new();
+        public RollingRaidSettings RollingRaid { get; set; } = new();
 
         // Integration
 
