@@ -102,14 +102,14 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        public static async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, ISocketMessageChannel _, SocketReaction reaction)
+        public static async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, Cacheable<IMessageChannel, ulong> ch, SocketReaction reaction)
         {
-            bool hasEmbed = cachedMsg.HasValue && cachedMsg.Value.Embeds.Count > 0;
-            if (!hasEmbed || !reaction.User.IsSpecified || (!TradeCordHelper<T>.TCInitialized && !cachedMsg.Value.Embeds.First().Fields[0].Name.Contains("Giveaway Pool")))
+            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
+            if (!reactions.Contains(reaction.Emote))
                 return;
 
-            var user = reaction.User.Value;
-            if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
+            var tc = SysCord<T>.Runner.Hub.Config.Discord.TradeCordChannels.List;
+            if (!ch.HasValue || ch.Value is IDMChannel || (tc.Count != 0 && tc.FirstOrDefault(x => x.ID == ch.Id || x.Name == ch.Value.Name) == default))
                 return;
 
             IUserMessage msg;
@@ -117,15 +117,16 @@ namespace SysBot.Pokemon.Discord
                 msg = await cachedMsg.GetOrDownloadAsync().ConfigureAwait(false);
             else msg = cachedMsg.Value;
 
-            if (msg.Embeds.Count < 1)
+            bool process = msg.Embeds.Count > 0 && (TradeCordHelper<T>.TCInitialized || msg.Embeds.First().Fields[0].Name.Contains("Giveaway Pool"));
+            if (!process || !reaction.User.IsSpecified)
+                return;
+
+            var user = reaction.User.Value;
+            if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
                 return;
 
             bool invoker = msg.Embeds.First().Fields[0].Name == ReactMessageDict[user.Id].Embed.Fields[0].Name;
             if (!invoker)
-                return;
-
-            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
-            if (!reactions.Contains(reaction.Emote))
                 return;
 
             var contents = ReactMessageDict[user.Id];

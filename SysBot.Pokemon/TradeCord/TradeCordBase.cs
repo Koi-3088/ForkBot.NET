@@ -1363,6 +1363,7 @@ namespace SysBot.Pokemon
 
         private static List<EvolutionTemplate> EvolutionRequirements()
         {
+            var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             var list = new List<EvolutionTemplate>();
             for (int i = 1; i < (Game == GameVersion.BDSP ? 494 : 899); i++)
             {
@@ -1383,7 +1384,6 @@ namespace SysBot.Pokemon
 
                     var set = new ShowdownSet($"{SpeciesName.GetSpeciesNameGeneration(i, 2, 8)}{TradeExtensions<T>.FormOutput(i, f, out _)}{gender}");
                     var templateS = AutoLegalityWrapper.GetTemplate(set);
-                    var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
                     var blank = sav.GetLegal(templateS, out string result);
                     if (result != "Regenerated")
                         continue;
