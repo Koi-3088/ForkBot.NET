@@ -39,6 +39,7 @@ namespace SysBot.Pokemon
         private bool airplaneUsable = false;
         private bool softLock = false;
         private bool hardLock = false;
+        private bool rolled = false;
         private int airplaneLobbyExitCount;
         private int RaidLogCount;
         private uint denOfs = 0;
@@ -85,6 +86,8 @@ namespace SysBot.Pokemon
             }
 
             Log($"Ending {nameof(RollingRaidBot)} loop.");
+            if (rolled)
+                await ResetTime(token).ConfigureAwait(false);
             await HardStop().ConfigureAwait(false);
         }
 
@@ -156,6 +159,9 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < Settings.DaysToRoll; i++)
                 {
                     await DaySkip(token).ConfigureAwait(false);
+                    if (!rolled && Settings.DaysToRoll > 0)
+                        rolled = true;
+
                     await Task.Delay(0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false);
                     Log($"Roll {i + 1}...");
                     if (i == Settings.DaysToRoll - 1)

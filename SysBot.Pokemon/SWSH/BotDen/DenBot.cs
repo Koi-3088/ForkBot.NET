@@ -144,20 +144,7 @@ namespace SysBot.Pokemon
                 if (remaining == lastQuarterLog || remaining + 3 == skips)
                     remaining = await SkipCheck(skips, remaining, token).ConfigureAwait(false);
             }
-
-            if (token.IsCancellationRequested)
-                return;
-
-            if (Settings.TimeReset == TimeReset.Reset)
-                await ResetTime(token).ConfigureAwait(false);
-            else if (Settings.TimeReset == TimeReset.ResetNTP)
-            {
-                if (!await IsGameConnectedToYComm(token).ConfigureAwait(false))
-                    Log("Syncing time via NTP requires internet connection. Connecting to YComm in order to ensure we're connected.");
-
-                await EnsureConnectedToYComm(Hub.Config, token).ConfigureAwait(false);
-                await ResetNTP(token).ConfigureAwait(false);
-            }
+            await ResetTime(token).ConfigureAwait(false);
         }
 
         private async Task<bool> SkipCorrection(int skips, CancellationToken token)

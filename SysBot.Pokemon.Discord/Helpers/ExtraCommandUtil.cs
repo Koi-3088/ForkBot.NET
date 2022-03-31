@@ -86,7 +86,7 @@ namespace SysBot.Pokemon.Discord
             var instance = SysCord<T>.Runner.Hub.Config;
             var helper = new TradeCordHelper<T>(instance.TradeCord);
             var ctx = new TradeCordHelper<T>.TC_CommandContext() { Context = TCCommandContext.DeleteUser, ID = user.Id, Username = user.Username };
-            var result = helper.ProcessTradeCord(ctx, new string[] { user.Id.ToString() });
+            var result =  await helper.ProcessTradeCord(ctx, new string[] { user.Id.ToString() }).ConfigureAwait(false);
             if (result.Success)
             {
                 var channels = instance.Discord.EchoChannels.List;
@@ -102,14 +102,14 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        public static async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, ISocketMessageChannel _, SocketReaction reaction)
+        public static async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, Cacheable<IMessageChannel, ulong> ch, SocketReaction reaction)
         {
-            bool hasEmbed = cachedMsg.HasValue && cachedMsg.Value.Embeds.Count > 0;
-            if (!hasEmbed || !reaction.User.IsSpecified || (!TradeCordHelper<T>.TCInitialized && !cachedMsg.Value.Embeds.First().Fields[0].Name.Contains("Giveaway Pool")))
+            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
+            if (!reactions.Contains(reaction.Emote))
                 return;
 
-            var user = reaction.User.Value;
-            if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
+            var tc = SysCord<T>.Runner.Hub.Config.Discord.TradeCordChannels.List;
+            if (!ch.HasValue || ch.Value is IDMChannel || (tc.Count != 0 && tc.FirstOrDefault(x => x.ID == ch.Id || x.Name == ch.Value.Name) == default))
                 return;
 
             IUserMessage msg;
@@ -117,15 +117,16 @@ namespace SysBot.Pokemon.Discord
                 msg = await cachedMsg.GetOrDownloadAsync().ConfigureAwait(false);
             else msg = cachedMsg.Value;
 
-            if (msg.Embeds.Count < 1)
+            bool process = msg.Embeds.Count > 0 && (TradeCordHelper<T>.TCInitialized || msg.Embeds.First().Fields[0].Name.Contains("Giveaway Pool"));
+            if (!process || !reaction.User.IsSpecified)
+                return;
+
+            var user = reaction.User.Value;
+            if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
                 return;
 
             bool invoker = msg.Embeds.First().Fields[0].Name == ReactMessageDict[user.Id].Embed.Fields[0].Name;
             if (!invoker)
-                return;
-
-            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
-            if (!reactions.Contains(reaction.Emote))
                 return;
 
             var contents = ReactMessageDict[user.Id];
@@ -224,23 +225,21 @@ namespace SysBot.Pokemon.Discord
 
             await Task.Delay(30_000).ConfigureAwait(false);
             await msg.UpdateAsync().ConfigureAwait(false);
-            List<int> reactList = new();
-            for (int i = 0; i < 5; i++)
-                reactList.Add(msg.Reactions.Values.ToArray()[i].ReactionCount);
 
-            var topVote = reactList.Max();
-            bool tieBreak = reactList.FindAll(x => x == topVote).Count > 1;
+            var reactArr = msg.Reactions.Where(x => reactions.Contains(x.Key)).Select(x => x.Value.ReactionCount).ToList();
+            var topVote = reactArr.Max();
+            bool tieBreak = reactArr.FindAll(x => x == topVote).Count > 1;
             if (tieBreak)
             {
                 List<int> indexes = new();
-                for (int i = 0; i < reactList.Count; i++)
+                for (int i = 0; i < reactArr.Count; i++)
                 {
-                    if (reactList[i] == topVote)
+                    if (reactArr[i] == topVote)
                         indexes.Add(i);
                 }
                 return indexes[new Random().Next(indexes.Count)];
             }
-            return reactList.IndexOf(topVote);
+            return reactArr.IndexOf(topVote);
         }
 
         public async Task EmbedUtil(SocketCommandContext ctx, string name, string value, EmbedBuilder? embed = null)

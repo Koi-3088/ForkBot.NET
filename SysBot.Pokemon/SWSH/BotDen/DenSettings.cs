@@ -46,9 +46,6 @@ namespace SysBot.Pokemon
         [Category(DenSkip), Description("Seed to inject. Please disclose seed-injected raids.")]
         public string SeedToInject { get; set; } = string.Empty;
 
-        [Category(DenSkip), Description("Should we reset network time. \"Reset\" - based on current system time, \"ResetNTP\" - sync with network.")]
-        public TimeReset TimeReset { get; set; } = TimeReset.Reset;
-
         [Category(DenSkip)]
         [TypeConverter(typeof(DenFiltersCategoryConverter))]
         public class DenFiltersCategory

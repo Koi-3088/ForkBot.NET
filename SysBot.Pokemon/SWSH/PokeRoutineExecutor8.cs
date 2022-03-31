@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Diagnostics;
 using PKHeX.Core;
 using SysBot.Base;
 using static SysBot.Base.SwitchButton;
@@ -327,10 +328,9 @@ namespace SysBot.Pokemon
         public async Task<bool> SpinTrade(uint offset, byte[] comparison, int waitms, int waitInterval, bool match, CancellationToken token)
         {
             // Revival of Red's SpinTrade
-            if (!await GetCoordinatesForSpin(token).ConfigureAwait(false))
-                return await ReadUntilChanged(offset, comparison, waitms, waitInterval, match, token).ConfigureAwait(false);
-
-            var sw = new System.Diagnostics.Stopwatch();
+            var name = $"{Connection.Name} {Connection.Label}";
+            await GetCoordinatesForSpin(name, token).ConfigureAwait(false);
+            var sw = new Stopwatch();
             sw.Start();
 
             do
@@ -354,33 +354,29 @@ namespace SysBot.Pokemon
             } while (sw.ElapsedMilliseconds < waitms);
 
             await Task.Delay(waitInterval, token).ConfigureAwait(false);
-            await SpinCorrection(token).ConfigureAwait(false);
+            await SpinCorrection(name, token).ConfigureAwait(false);
             return false;
         }
 
-        public async Task SpinCorrection(CancellationToken token)
+        public async Task SpinCorrection(string name, CancellationToken token)
         {
-            await SwitchConnection.WriteBytesAbsoluteAsync(TradeExtensions<PK8>.XCoords, TradeExtensions<PK8>.CoordinatesOffset, token).ConfigureAwait(false);
-            await SwitchConnection.WriteBytesAbsoluteAsync(TradeExtensions<PK8>.YCoords, TradeExtensions<PK8>.CoordinatesOffset + 0x4, token).ConfigureAwait(false);
-            await SwitchConnection.WriteBytesAbsoluteAsync(TradeExtensions<PK8>.ZCoords, TradeExtensions<PK8>.CoordinatesOffset + 0x8, token).ConfigureAwait(false);
+            await SwitchConnection.WriteBytesAbsoluteAsync(TradeExtensions<PK8>.Coordinates[name].Item1, TradeExtensions<PK8>.CoordinatesOffset, token).ConfigureAwait(false);
+            await SwitchConnection.WriteBytesAbsoluteAsync(TradeExtensions<PK8>.Coordinates[name].Item2, TradeExtensions<PK8>.CoordinatesOffset + 0x4, token).ConfigureAwait(false);
+            await SwitchConnection.WriteBytesAbsoluteAsync(TradeExtensions<PK8>.Coordinates[name].Item3, TradeExtensions<PK8>.CoordinatesOffset + 0x8, token).ConfigureAwait(false);
         }
 
-        private async Task<bool> GetCoordinatesForSpin(CancellationToken token)
+        private async Task GetCoordinatesForSpin(string name, CancellationToken token)
         {
-            if (TradeExtensions<PK8>.CoordinatesSet)
-                return true;
-            else if (!TradeExtensions<PK8>.CoordinatesSet && TradeExtensions<PK8>.CoordinatesOffset != 0)
-                return false;
+            if (TradeExtensions<PK8>.Coordinates.TryGetValue(name, out _))
+                return;
 
             TradeExtensions<PK8>.CoordinatesOffset = await ParsePointer("[[[[[[main+26365B8]+88]+1F8]+E0]+10]+E0]+60", token).ConfigureAwait(false); // Thank you for the pointer, Zyro <3
-            TradeExtensions<PK8>.XCoords = await SwitchConnection.ReadBytesAbsoluteAsync(TradeExtensions<PK8>.CoordinatesOffset, 4, token).ConfigureAwait(false);
-            TradeExtensions<PK8>.YCoords = await SwitchConnection.ReadBytesAbsoluteAsync(TradeExtensions<PK8>.CoordinatesOffset + 0x4, 4, token).ConfigureAwait(false);
-            TradeExtensions<PK8>.ZCoords = await SwitchConnection.ReadBytesAbsoluteAsync(TradeExtensions<PK8>.CoordinatesOffset + 0x8, 4, token).ConfigureAwait(false);
-            if (TradeExtensions<PK8>.XCoords.Length == 1 || TradeExtensions<PK8>.YCoords.Length == 1 || TradeExtensions<PK8>.ZCoords.Length == 1)
-                return false;
-
-            TradeExtensions<PK8>.CoordinatesSet = true;
-            return true;
+            TradeExtensions<PK8>.Coordinates.Add(name,
+                (
+                    await SwitchConnection.ReadBytesAbsoluteAsync(TradeExtensions<PK8>.CoordinatesOffset, 4, token).ConfigureAwait(false),
+                    await SwitchConnection.ReadBytesAbsoluteAsync(TradeExtensions<PK8>.CoordinatesOffset + 0x4, 4, token).ConfigureAwait(false),
+                    await SwitchConnection.ReadBytesAbsoluteAsync(TradeExtensions<PK8>.CoordinatesOffset + 0x8, 4, token).ConfigureAwait(false)
+                ));
         }
 
         public async Task SaveGame(PokeTradeHubConfig config, CancellationToken token)
