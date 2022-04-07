@@ -5,7 +5,6 @@ using System.Data.SQLite;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
-using Newtonsoft.Json;
 using PKHeX.Core;
 using PKHeX.Core.AutoMod;
 using static PKHeX.Core.Species;
@@ -39,12 +38,6 @@ namespace SysBot.Pokemon
         protected readonly int[] USWormhole = { 144, 145, 146, 150, 245, 250, 381, 383, 384, 480, 481, 482, 487, 488, 645, 646, 793, 794, 796, 799, 483, 485, 641, 643, 716, 798 };
         protected readonly int[] GalarFossils = { 880, 881, 882, 883 };
 
-        private static readonly string UsersValues = "@user_id, @username, @catch_count, @time_offset, @last_played, @receive_ping";
-        private static readonly string TrainerInfoValues = "@user_id, @ot, @ot_gender, @tid, @sid, @language";
-        private static readonly string DexValues = "@user_id, @dex_count, @entries";
-        private static readonly string PerksValues = "@user_id, @perks, @species_boost";
-        private static readonly string DaycareValues = "@user_id, @shiny1, @id1, @species1, @form1, @ball1, @shiny2, @id2, @species2, @form2, @ball2";
-        private static readonly string BuddyValues = "@user_id, @id, @name, @ability";
         protected static readonly string ItemsValues = "@user_id, @id, @count";
         protected static readonly string CatchValues = "@user_id, @id, @is_shiny, @ball, @nickname, @species, @form, @is_egg, @is_favorite, @was_traded, @is_legendary, @is_event, @is_gmax";
         protected static readonly string BinaryCatchesValues = "@user_id, @id, @data";
@@ -63,18 +56,6 @@ namespace SysBot.Pokemon
             "create table if not exists binary_catches(user_id integer, id int default 0, data blob default null, foreign key (user_id) references users (user_id) on delete cascade)",
         };
 
-        private readonly string[] TableInsertCommands =
-        {
-            $"insert into users(user_id, username, catch_count, time_offset, last_played, receive_ping) values({UsersValues})",
-            $"insert into trainerinfo(user_id, ot, ot_gender, tid, sid, language) values({TrainerInfoValues})",
-            $"insert into dex(user_id, dex_count, entries) values({DexValues})",
-            $"insert into perks(user_id, perks, species_boost) values({PerksValues})",
-            $"insert into daycare(user_id, shiny1, id1, species1, form1, ball1, shiny2, id2, species2, form2, ball2) values({DaycareValues})",
-            $"insert into buddy(user_id, id, name, ability) values({BuddyValues})",
-            $"insert into items(user_id, id, count) values({ItemsValues})",
-            $"insert into catches(user_id, id, is_shiny, ball, nickname, species, form, is_egg, is_favorite, was_traded, is_legendary, is_event, is_gmax) values({CatchValues})",
-        };
-
         private readonly string[] IndexCreateCommands =
         {
             "create index if not exists catch_index on catches(user_id, id, ball, nickname, species, form, is_shiny, is_egg, is_favorite, was_traded, is_legendary, is_event, is_gmax)",
@@ -87,15 +68,6 @@ namespace SysBot.Pokemon
             if (Dex.Length == 0)
                 Dex = GetPokedex();
             Rng = RandomScramble();
-        }
-
-        protected A GetRoot<A>(string file) where A : new()
-        {
-            using StreamReader sr = File.OpenText(file);
-            using JsonReader reader = new JsonTextReader(sr);
-            JsonSerializer serializer = new();
-            A? root = (A?)serializer.Deserialize(reader, typeof(A));
-            return root ?? new();
         }
 
         private static TCRng RandomScramble()
@@ -545,16 +517,6 @@ namespace SysBot.Pokemon
                 }
             }
 
-            if (File.Exists("TradeCord/UserInfo.json"))
-            {
-                if (!MigrateToDB())
-                {
-                    Connection.Dispose();
-                    Connected = false;
-                    return false;
-                }
-            }
-
             Base.LogUtil.LogInfo("Checking if database needs to be updated...", "[SQLite]");
             if (Game == GameVersion.SWSH)
             {
@@ -691,219 +653,6 @@ namespace SysBot.Pokemon
             return true;
         }
 
-        private bool MigrateToDB()
-        {
-            // Check if mode is set to BDSP. SQLite migration came before BDSP, so only SwSh can migrate.
-            if (Game == GameVersion.BDSP)
-            {
-                Base.LogUtil.LogError("In order to migrate a SwSh database correctly, please switch mode to \"1\" before initializing migration.", "[SQLite]");
-                return false;
-            }
-
-            try
-            {
-                var users = GetRoot<TCUserInfoRoot>("TradeCord/UserInfo.json").Users;
-                using var tran = Connection.BeginTransaction();
-                for (int u = 0; u < users.Count; u++)
-                {
-                    var dir = $"TradeCord\\{users[u].UserID}";
-                    string dexStr = "";
-
-                    var dexArr = users[u].Dex.ToArray();
-                    for (int i = 0; i < dexArr.Length; i++)
-                        dexStr += $"{dexArr[i]}{(i + 1 < dexArr.Length ? "," : "")}";
-
-                    string perkStr = "";
-                    for (int i = 0; i < users[u].ActivePerks.Count; i++)
-                        perkStr += $"{(int)users[u].ActivePerks[i]}{(i + 1 < users[u].ActivePerks.Count ? "," : "")}";
-
-                    string favStr = "";
-                    var favArr = users[u].Favorites.ToArray();
-                    for (int i = 0; i < favArr.Length; i++)
-                        favStr += $"{favArr[i]}{(i + 1 < favArr.Length ? "," : "")}";
-
-                    var itemList = users[u].Items.ToList();
-                    if (users[u].DexCompletionCount >= 1 && itemList.FirstOrDefault(x => x.Item == TCItems.ShinyCharm) == default)
-                        itemList.Add(new() { Item = TCItems.ShinyCharm, ItemCount = 1 });
-
-                    var cmd = Connection.CreateCommand();
-                    cmd.Transaction = tran;
-                    for (int i = 0; i < TableInsertCommands.Length; i++)
-                    {
-                        var enumType = (TableEnum)i;
-                        switch (enumType)
-                        {
-                            case TableEnum.Users:
-                                {
-                                    cmd.CommandText = TableInsertCommands[i];
-                                    cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                    cmd.Parameters.AddWithValue("@username", users[u].Username);
-                                    cmd.Parameters.AddWithValue("@catch_count", users[u].CatchCount);
-                                    cmd.Parameters.AddWithValue("@time_offset", users[u].TimeZoneOffset);
-                                    cmd.Parameters.AddWithValue("@last_played", $"{DateTime.Now}");
-                                    cmd.Parameters.AddWithValue("@receive_ping", 0);
-                                    cmd.ExecuteNonQuery();
-                                }; break;
-                            case TableEnum.TrainerInfo:
-                                {
-                                    cmd.CommandText = TableInsertCommands[i];
-                                    cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                    cmd.Parameters.AddWithValue("@ot", users[u].OTName == "" ? "Carp" : users[u].OTName);
-                                    cmd.Parameters.AddWithValue("@ot_gender", users[u].OTGender == "" ? "Male" : users[u].OTGender);
-                                    cmd.Parameters.AddWithValue("@tid", users[u].TID);
-                                    cmd.Parameters.AddWithValue("@sid", users[u].SID);
-                                    cmd.Parameters.AddWithValue("@language", users[u].Language == "" ? "English" : users[u].Language);
-                                    cmd.ExecuteNonQuery();
-                                }; break;
-                            case TableEnum.Dex:
-                                {
-                                    cmd.CommandText = TableInsertCommands[i];
-                                    cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                    cmd.Parameters.AddWithValue("@dex_count", users[u].DexCompletionCount);
-                                    cmd.Parameters.AddWithValue("@entries", dexStr);
-                                    cmd.ExecuteNonQuery();
-                                }; break;
-                            case TableEnum.Perks:
-                                {
-                                    cmd.CommandText = TableInsertCommands[i];
-                                    cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                    cmd.Parameters.AddWithValue("@perks", perkStr);
-                                    cmd.Parameters.AddWithValue("@species_boost", users[u].SpeciesBoost);
-                                    cmd.ExecuteNonQuery();
-                                }; break;
-                            case TableEnum.Daycare:
-                                {
-                                    cmd.CommandText = TableInsertCommands[i];
-                                    cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                    cmd.Parameters.AddWithValue("@shiny1", users[u].Daycare1.Shiny);
-                                    cmd.Parameters.AddWithValue("@id1", users[u].Daycare1.ID);
-                                    cmd.Parameters.AddWithValue("@species1", users[u].Daycare1.Species);
-                                    cmd.Parameters.AddWithValue("@form1", users[u].Daycare1.Form);
-                                    cmd.Parameters.AddWithValue("@ball1", users[u].Daycare1.Ball);
-
-                                    cmd.Parameters.AddWithValue("@shiny2", users[u].Daycare2.Shiny);
-                                    cmd.Parameters.AddWithValue("@id2", users[u].Daycare2.ID);
-                                    cmd.Parameters.AddWithValue("@species2", users[u].Daycare2.Species);
-                                    cmd.Parameters.AddWithValue("@form2", users[u].Daycare2.Form);
-                                    cmd.Parameters.AddWithValue("@ball2", users[u].Daycare2.Ball);
-                                    cmd.ExecuteNonQuery();
-                                }; break;
-                            case TableEnum.Buddy:
-                                {
-                                    cmd.CommandText = TableInsertCommands[i];
-                                    cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                    cmd.Parameters.AddWithValue("@id", users[u].Buddy.ID);
-                                    cmd.Parameters.AddWithValue("@name", users[u].Buddy.Nickname);
-                                    cmd.Parameters.AddWithValue("@ability", users[u].Buddy.Ability);
-                                    cmd.ExecuteNonQuery();
-                                }; break;
-                            case TableEnum.Items:
-                                {
-                                    if (itemList.Count > 0)
-                                    {
-                                        for (int it = 0; it < itemList.Count; it++)
-                                        {
-                                            if (itemList[it].Item == TCItems.ShinyCharm)
-                                                continue;
-
-                                            cmd.CommandText = TableInsertCommands[i];
-                                            cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                            cmd.Parameters.AddWithValue("@id", (int)itemList[it].Item);
-                                            cmd.Parameters.AddWithValue("@count", itemList[it].ItemCount);
-                                            cmd.ExecuteNonQuery();
-                                        }
-                                    }
-
-                                    var sc = itemList.FirstOrDefault(x => x.Item == TCItems.ShinyCharm);
-                                    var count = users[u].DexCompletionCount + users[u].ActivePerks.Count + (sc != default ? sc.ItemCount : 0);
-                                    if (count > 0)
-                                    {
-                                        cmd.CommandText = TableInsertCommands[i];
-                                        cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                        cmd.Parameters.AddWithValue("@id", (int)TCItems.ShinyCharm);
-                                        cmd.Parameters.AddWithValue("@count", count);
-                                        cmd.ExecuteNonQuery();
-                                    }
-                                }; break;
-                            case TableEnum.Catches:
-                                {
-                                    var catches = users[u].Catches.ToList();
-                                    if (catches.Count > 0)
-                                    {
-                                        for (int c = 0; c < catches.Count; c++)
-                                        {
-                                            bool dupe = catches.FindAll(x => x.ID == catches[c].ID).Count > 1;
-                                            if (dupe)
-                                            {
-                                                var array = Directory.GetFiles(dir).Where(x => x.Contains(".pk")).Select(x => int.Parse(x.Split('\\')[2].Split('-', '_')[0].Replace("★", "").Trim())).ToArray();
-                                                array = array.OrderBy(x => x).ToArray();
-                                                catches[c].ID = Indexing(array);
-                                            }
-
-                                            T? pk = null;
-                                            if (File.Exists(catches[c].Path))
-                                                pk = (T?)PKMConverter.GetPKMfromBytes(File.ReadAllBytes(catches[c].Path));
-                                            if (pk == null)
-                                                continue;
-
-                                            ShowdownSet? set = ShowdownUtil.ConvertToShowdown(ShowdownParsing.GetShowdownText(pk));
-                                            if (set == null)
-                                                continue;
-
-                                            cmd.CommandText = "insert into binary_catches(user_id, id, data) values(@user_id, @id, @data)";
-                                            cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                            cmd.Parameters.AddWithValue("@id", catches[c].ID);
-                                            cmd.Parameters.AddWithValue("@data", pk.DecryptedPartyData);
-                                            cmd.ExecuteNonQuery();
-
-                                            cmd.CommandText = TableInsertCommands[i];
-                                            cmd.Parameters.AddWithValue("@user_id", users[u].UserID);
-                                            cmd.Parameters.AddWithValue("@is_shiny", catches[c].Shiny);
-                                            cmd.Parameters.AddWithValue("@id", catches[c].ID);
-                                            cmd.Parameters.AddWithValue("@ball", catches[c].Ball);
-                                            cmd.Parameters.AddWithValue("@nickname", pk.Nickname);
-                                            cmd.Parameters.AddWithValue("@species", catches[c].Species);
-                                            cmd.Parameters.AddWithValue("@form", catches[c].Form);
-                                            cmd.Parameters.AddWithValue("@is_egg", catches[c].Egg);
-                                            cmd.Parameters.AddWithValue("@is_favorite", favArr.Contains(catches[c].ID));
-                                            cmd.Parameters.AddWithValue("@was_traded", catches[c].Traded);
-                                            cmd.Parameters.AddWithValue("@is_legendary", IsLegendaryOrMythical(pk.Species));
-                                            cmd.Parameters.AddWithValue("@is_event", pk.FatefulEncounter);
-                                            cmd.Parameters.AddWithValue("@is_gmax", set.CanGigantamax);
-                                            cmd.ExecuteNonQuery();
-                                        }
-                                    }
-                                }; break;
-                            default: throw new NotImplementedException();
-                        };
-                    }
-                }
-
-                for (int i = 0; i < IndexCreateCommands.Length; i++)
-                {
-                    var cmd = Connection.CreateCommand();
-                    cmd.Transaction = tran;
-                    cmd.CommandText = IndexCreateCommands[i];
-                    cmd.ExecuteNonQuery();
-                }
-                tran.Commit();
-
-                var dirs = Directory.GetDirectories("TradeCord");
-                for (int i = 0; i < dirs.Length; i++)
-                    Directory.Delete(dirs[i], true);
-
-                if (File.Exists("TradeCord/UserInfo_sqlbackup.json"))
-                    File.Delete("TradeCord/UserInfo_sqlbackup.json");
-                File.Move("TradeCord/UserInfo.json", "TradeCord/UserInfo_sqlbackup.json");
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Base.LogUtil.LogError($"Failed to migrate database.\n{ex.Message}\n{ex.InnerException}\n{ex.StackTrace}", "[SQLite Migration]");
-                return false;
-            }
-        }
-
         private string DexText(int species, int form, bool gmax)
         {
             bool patterns = form > 0 && species is (int)Arceus or (int)Unown or (int)Deoxys or (int)Burmy or (int)Wormadam or (int)Mothim or (int)Vivillon or (int)Furfrou;
@@ -930,6 +679,7 @@ namespace SysBot.Pokemon
         private int[] GetPokedex()
         {
             List<int> dex = new();
+            var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             for (int i = 1; i < (Game == GameVersion.BDSP ? 494 : 899); i++)
             {
                 var entry = Game == GameVersion.SWSH ? PersonalTable.SWSH.GetFormEntry(i, 0) : PersonalTable.BDSP.GetFormEntry(i, 0);
@@ -937,9 +687,14 @@ namespace SysBot.Pokemon
                     continue;
 
                 var species = SpeciesName.GetSpeciesNameGeneration(i, 2, 8);
-                var set = new ShowdownSet($"{species}{(i == (int)NidoranF ? "-F" : i == (int)NidoranM ? "-M" : "")}");
+                if (i is (int)NidoranF or (int)NidoranM)
+                {
+                    species = species.Remove(species.Length - 1);
+                    species += i is (int)NidoranF ? "-F" : "-M";
+                }
+
+                var set = new ShowdownSet(species);
                 var template = AutoLegalityWrapper.GetTemplate(set);
-                var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
                 _ = (T)sav.GetLegal(template, out string result);
 
                 if (result == "Regenerated")
@@ -1548,6 +1303,7 @@ namespace SysBot.Pokemon
 
         public class TCTrainerInfo
         {
+            public string[] ToStringArray() => new string[] { $"OT: {OTName}\n", $"OTGender: {OTGender}\n", $"TID: {TID}\n", $"SID: {SID}\n", $"Language: {Language}\n" };
             public string OTName { get; set; } = "Carp";
             public string OTGender { get; set; } = "Male";
             public int TID { get; set; } = 12345;
@@ -1608,78 +1364,6 @@ namespace SysBot.Pokemon
         {
             public int DexCompletionCount { get; set; }
             public List<int> Entries { get; set; } = new();
-        }
-
-        // Deprecated JSON class structure, needed for migration to SQLite.
-        protected class TCUserInfoRoot
-        {
-            public List<TCUserInfo> Users { get; set; } = new();
-
-            public class TCUserInfo
-            {
-                public string Username { get; set; } = string.Empty;
-                public ulong UserID { get; set; }
-                public int TimeZoneOffset { get; set; }
-                public int CatchCount { get; set; }
-                public int SpeciesBoost { get; set; }
-                public int DexCompletionCount { get; set; }
-                public HashSet<int> Dex { get; set; } = new();
-                public List<DexPerks> ActivePerks { get; set; } = new();
-                public HashSet<int> Favorites { get; set; } = new();
-                public string OTName { get; set; } = "";
-                public string OTGender { get; set; } = "";
-                public int TID { get; set; }
-                public int SID { get; set; }
-                public string Language { get; set; } = "";
-                public Daycare1 Daycare1 { get; set; } = new();
-                public Daycare2 Daycare2 { get; set; } = new();
-                public HashSet<Catch> Catches { get; set; } = new();
-                public Buddy Buddy { get; set; } = new();
-                public HashSet<Items> Items { get; set; } = new();
-            }
-
-            public class Catch
-            {
-                public bool Shiny { get; set; }
-                public int ID { get; set; }
-                public string Ball { get; set; } = "None";
-                public string Species { get; set; } = "None";
-                public string Form { get; set; } = "";
-                public bool Egg { get; set; }
-                public string Path { get; set; } = "";
-                public bool Traded { get; set; }
-            }
-
-            public class Daycare1
-            {
-                public bool Shiny { get; set; }
-                public int ID { get; set; }
-                public int Species { get; set; }
-                public string Form { get; set; } = "";
-                public int Ball { get; set; }
-            }
-
-            public class Daycare2
-            {
-                public bool Shiny { get; set; }
-                public int ID { get; set; }
-                public int Species { get; set; }
-                public string Form { get; set; } = "";
-                public int Ball { get; set; }
-            }
-
-            public class Buddy
-            {
-                public int ID { get; set; }
-                public Ability Ability { get; set; }
-                public string Nickname { get; set; } = "";
-            }
-
-            public class Items
-            {
-                public TCItems Item { get; set; }
-                public int ItemCount { get; set; }
-            }
         }
 
         // Taken from ALM.

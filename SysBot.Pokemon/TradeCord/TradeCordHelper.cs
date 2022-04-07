@@ -173,6 +173,7 @@ namespace SysBot.Pokemon
                 {
                     EmbedName = "Oops!",
                     Message = $"Something went wrong when executing command `{ctx.Context}` for user {ctx.Username}({ctx.ID})!",
+                    Success = false,
                 };
             }
             finally
@@ -236,16 +237,6 @@ namespace SysBot.Pokemon
             bool FuncCatch()
             {
                 PerkBoostApplicator(user);
-                List<string> trainerInfo = new();
-                trainerInfo.AddRange(new string[]
-                {
-                    $"OT: {user.TrainerInfo.OTName}",
-                    $"OTGender: {user.TrainerInfo.OTGender}",
-                    $"TID: {user.TrainerInfo.TID}",
-                    $"SID: {user.TrainerInfo.SID}",
-                    $"Language: {user.TrainerInfo.Language}",
-                });
-
                 var buddyAbil = user.Buddy.Ability;
                 if (buddyAbil == Ability.FlameBody || buddyAbil == Ability.SteamEngine)
                     Rng.EggRNG += 10;
@@ -260,9 +251,10 @@ namespace SysBot.Pokemon
                     result.SQLCommands.Add(DBCommandConstructor("daycare", "id1 = ?, species1 = ?, form1 = ?, ball1 = ?, shiny1 = ?, id2 = ?, species2 = ?, form2 = ?, ball2 = ?, shiny2 = ?", "where user_id = ?", names, obj, SQLTableContext.Update));
                 }
 
+                var trainerInfo = user.TrainerInfo.ToStringArray();
                 if (Rng.EggRNG >= 100 - Settings.EggRate && canGenerate)
                 {
-                    result.EggPoke = EggProcess(user.Daycare, evos, balls, 8, string.Join("\n", trainerInfo), out eggMsg);
+                    result.EggPoke = EggProcess(user.Daycare, evos, balls, 8, trainerInfo, out eggMsg);
                     if (!new LegalityAnalysis(result.EggPoke).Valid)
                     {
                         result.Message = $"Oops, something went wrong when generating an egg!\nEgg 1: {(Species)evos[0].Species}-{evos[0].Form}" +
@@ -1906,7 +1898,7 @@ namespace SysBot.Pokemon
             Rng.EggShinyRNG += count;
         }
 
-        private T EggProcess(TCDaycare dc, IReadOnlyList<EvoCriteria> evos, int[] balls, int generation, string trainerInfo, out string msg)
+        private T EggProcess(TCDaycare dc, IReadOnlyList<EvoCriteria> evos, int[] balls, int generation, string[] trainerInfo, out string msg)
         {
             msg = string.Empty;
             if (evos.Any(x => x.Species == 0))
@@ -1920,7 +1912,7 @@ namespace SysBot.Pokemon
             else if (Rng.EggShinyRNG + (dc.Shiny1 && dc.Shiny2 ? 5 : 0) >= 200 - Settings.StarShinyRate)
                 shiny = Shiny.AlwaysStar;
 
-            var pk = EggRngRoutine(evos, balls, generation, trainerInfo, shiny);
+            var pk = EggRngRoutine(evos, balls, generation, string.Join("", trainerInfo), shiny);
             var eggSpeciesName = SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8);
             var eggForm = TradeExtensions<T>.FormOutput(pk.Species, pk.Form, out _);
             var finalEggName = eggSpeciesName + eggForm;
@@ -1930,7 +1922,7 @@ namespace SysBot.Pokemon
             return pk;
         }
 
-        private T SetProcessSWSH(string speciesName, List<string> trainerInfo, int eventForm)
+        private T SetProcessSWSH(string speciesName, string[] trainerInfo, int eventForm)
         {
             string formHack = string.Empty;
             var formEdgeCaseRng = Random.Next(11);
@@ -1984,9 +1976,9 @@ namespace SysBot.Pokemon
             };
 
             if (Rng.SpeciesRNG == (int)Species.Mew && gameVer == mewOverride[1])
-                trainerInfo.RemoveAll(x => x.Contains("Language"));
+                trainerInfo[4] = "";
 
-            var showdown = $"{speciesName}{formHack}{shinyType}\n{string.Join("\n", trainerInfo)}{gameVer}";
+            var showdown = $"{speciesName}{formHack}{shinyType}\n{string.Join("", trainerInfo)}{gameVer}";
             var balls = TradeExtensions<T>.GetLegalBalls(showdown);
             string ball = balls.Length > 0 ? $"\nBall: {balls[Random.Next(balls.Length)]}" : "";
 
@@ -2003,7 +1995,7 @@ namespace SysBot.Pokemon
             else return RngRoutineSWSH(pk, template, shiny);
         }
 
-        private T SetProcessBDSP(string speciesName, List<string> trainerInfo, int eventForm)
+        private T SetProcessBDSP(string speciesName, string[] trainerInfo, int eventForm)
         {
             Shiny shiny = Rng.ShinyRNG >= 200 - Settings.SquareShinyRate ? Shiny.AlwaysSquare : Rng.ShinyRNG >= 200 - Settings.StarShinyRate ? Shiny.AlwaysStar : Shiny.Never;
             string shinyType = shiny != Shiny.Never ? "\nShiny: Yes" : "";
@@ -2030,7 +2022,7 @@ namespace SysBot.Pokemon
                 shiny = Shiny.Never;
             }
 
-            var showdown = $"{speciesName}{formHack}{shinyType}\n{string.Join("\n", trainerInfo)}";
+            var showdown = $"{speciesName}{formHack}{shinyType}\n{string.Join("", trainerInfo)}";
             var balls = TradeExtensions<T>.GetLegalBalls(showdown);
             var ball = balls.Length > 0 ? $"\nBall: {balls[Random.Next(balls.Length)]}" : "";
 

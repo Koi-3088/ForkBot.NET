@@ -33,17 +33,17 @@ namespace SysBot.Pokemon
         {
             if (ShinyLock.Contains(species))
                 return true;
-            else if (form != "" && (species is (int)Species.Zapdos or (int)Species.Moltres or (int)Species.Articuno))
+            else if (form is not "" && (species is (int)Species.Zapdos or (int)Species.Moltres or (int)Species.Articuno))
                 return true;
             else if (ball.Contains("Beast") && (species is (int)Species.Poipole or (int)Species.Naganadel))
                 return true;
             else if (typeof(T) == typeof(PB8) && (species is (int)Species.Manaphy or (int)Species.Mew or (int)Species.Jirachi))
                 return true;
-            else if (species is (int)Species.Pikachu && form != "" && form != "-Partner")
+            else if (species is (int)Species.Pikachu && form is not "" && form is not "-Partner")
                 return true;
-            else if (species is (int)Species.Zacian or (int)Species.Zamazenta && !ball.Contains("Cherish") && ball != "")
+            else if ((species is (int)Species.Zacian or (int)Species.Zamazenta) && !ball.Contains("Cherish") && ball is not "")
                 return true;
-            else return false;
+            return false;
         }
 
         public static Ball[] GetLegalBalls(string showdown)

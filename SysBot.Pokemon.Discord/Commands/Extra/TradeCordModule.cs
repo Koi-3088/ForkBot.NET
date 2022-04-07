@@ -166,12 +166,19 @@ namespace SysBot.Pokemon.Discord
 
             if (!result.Success)
             {
+                TradeCordCooldown(id, true);
+                var folder = "TradeCordFailedCatches";
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+
                 if (result.Poke.Species != 0)
                 {
                     var la = new LegalityAnalysis(result.Poke);
                     if (!la.Valid)
                     {
-                        await Context.Channel.SendPKMAsync(result.Poke, $"{result.Message}\n{ReusableActions.GetFormattedShowdownText(result.Poke)}").ConfigureAwait(false);
+                        await Context.Channel.SendMessageAsync(result.Message).ConfigureAwait(false);
+                        var path = Path.Combine(folder, PKHeX.Core.Util.CleanFileName(result.Poke.FileName));
+                        File.WriteAllBytes(path, result.Poke.DecryptedPartyData);
                         return;
                     }
                 }
@@ -181,7 +188,9 @@ namespace SysBot.Pokemon.Discord
                     var la = new LegalityAnalysis(result.EggPoke);
                     if (!la.Valid)
                     {
-                        await Context.Channel.SendPKMAsync(result.EggPoke, $"{result.Message}\n{ReusableActions.GetFormattedShowdownText(result.EggPoke)}").ConfigureAwait(false);
+                        await Context.Channel.SendMessageAsync(result.Message).ConfigureAwait(false);
+                        var path = Path.Combine(folder, PKHeX.Core.Util.CleanFileName(result.EggPoke.FileName));
+                        File.WriteAllBytes(path, result.EggPoke.DecryptedPartyData);
                         return;
                     }
                 }
@@ -1022,13 +1031,19 @@ namespace SysBot.Pokemon.Discord
             await Util.EmbedUtil(Context, result.EmbedName, result.Message).ConfigureAwait(false);
         }
 
-        private void TradeCordCooldown(ulong id)
+        private void TradeCordCooldown(ulong id, bool clear = false)
         {
             if (Info.Hub.Config.TradeCord.TradeCordCooldown > 0)
             {
                 if (!TradeCordHelper<T>.TradeCordCooldownDict.ContainsKey(id))
                     TradeCordHelper<T>.TradeCordCooldownDict.Add(id, DateTime.Now);
-                else TradeCordHelper<T>.TradeCordCooldownDict[id] = DateTime.Now;
+
+                if (clear)
+                {
+                    TradeCordHelper<T>.TradeCordCooldownDict.Remove(id);
+                    return;
+                }
+                TradeCordHelper<T>.TradeCordCooldownDict[id] = DateTime.Now;
             }
         }
 
