@@ -14,7 +14,7 @@ namespace SysBot.Pokemon.Discord
     {
         private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
         private readonly PokeTradeHub<T> Hub = SysCord<T>.Runner.Hub;
-        private readonly ExtraCommandUtil<T> Util = new();     
+        private readonly ExtraCommandUtil<T> Util = new();
         private readonly TradeCordHelper<T> Helper = new(SysCord<T>.Runner.Hub.Config.TradeCord);
 
         [Command("TradeCordList")]
@@ -194,6 +194,7 @@ namespace SysBot.Pokemon.Discord
                         return;
                     }
                 }
+                return;
             }
             else if (result.FailedCatch)
             {
@@ -202,7 +203,7 @@ namespace SysBot.Pokemon.Discord
                 var imgRng = rng.Next(5);
                 string[] sketchyCatches = { "https://i.imgur.com/BOb6IbW.png", "https://i.imgur.com/oSUQhYv.png", "https://i.imgur.com/81hlmGV.png", "https://i.imgur.com/7LBHLmf.png", "https://i.imgur.com/NEWEVtm.png" };
                 var ball = (Ball)rng.Next(2, 26);
-                var speciesRand = TradeCordHelper<T>.Dex[rng.Next(TradeCordHelper<T>.Dex.Length)];
+                var speciesRand = TradeCordHelper<T>.Dex.Keys.ToArray()[rng.Next(TradeCordHelper<T>.Dex.Count)];
                 var descF = $"You threw {(ball == Ball.Ultra ? "an" : "a")} {ball} Ball at a wild {(spookyRng >= 90 ? "...whatever that thing is" : SpeciesName.GetSpeciesNameGeneration(speciesRand, 2, 8))}...";
                 msg = $"{(spookyRng >= 90 ? "One wiggle... Two... It breaks free and stares at you, smiling. You run for dear life." : "...but it managed to escape!")}";
 

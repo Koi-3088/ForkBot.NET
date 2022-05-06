@@ -58,6 +58,9 @@ namespace SysBot.Pokemon
         [Category(Raid), Description("[RollingRaidBot] Extra time in milliseconds between A button clicks when collecting watts. More than 250ms shouldn't be needed.")]
         public int ExtraTimeAButtonClickAR { get; set; } = 0;
 
+        [Category(Raid), Description("[RollingRaidBot] Extra scroll down duration in milliseconds for accessing date/time settings during rollover correction. [Default: 750ms]")]
+        public int ExtraTimeScrollDownAR { get; set; } = 0;
+
         // Miscellaneous settings.
         [Category(Misc), Description("[SWSH] Extra time in milliseconds to wait after clicking + to reconnect to Y-Comm.")]
         public int ExtraTimeReconnectYComm { get; set; } = 0;

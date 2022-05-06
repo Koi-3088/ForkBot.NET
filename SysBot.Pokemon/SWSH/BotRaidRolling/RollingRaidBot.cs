@@ -190,7 +190,7 @@ namespace SysBot.Pokemon
             // Because my internet is hot garbage and timings vary between 20 seconds and 3 minutes to connect. Yes, really.
             while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
             {
-                await Click(B, 0_500, token).ConfigureAwait(false);
+                await Click(B, 1_250, token).ConfigureAwait(false);
                 if (await IsInBattle(token).ConfigureAwait(false))
                 {
                     Log("We unexpectedly entered a battle! Trying to escape...");
@@ -707,7 +707,7 @@ namespace SysBot.Pokemon
             await PressAndHold(DDOWN, 2_000, 0_250, token).ConfigureAwait(false); // Scroll to system settings
             await Click(A, 1_250, token).ConfigureAwait(false);
 
-            await PressAndHold(DDOWN, 0_750, 0_250, token).ConfigureAwait(false); // Scroll to date/time settings
+            await PressAndHold(DDOWN, 0_750 + Hub.Config.Timings.ExtraTimeScrollDownAR, 0_250, token).ConfigureAwait(false); // Scroll to date/time settings
             await Click(DDOWN, 0_150, token).ConfigureAwait(false);
 
             await Click(A, 1_250, token).ConfigureAwait(false);

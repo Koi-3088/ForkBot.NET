@@ -11,7 +11,7 @@ namespace SysBot.Pokemon
     {
         protected T RngRoutineSWSH(T pkm, IBattleTemplate template, Shiny shiny)
         {
-            if (pkm.Species == (int)Species.Alcremie)
+            if (pkm.Species is (int)Species.Alcremie)
             {
                 var data = pkm.Data;
                 var deco = (uint)Random.Next(7);
@@ -52,21 +52,21 @@ namespace SysBot.Pokemon
             if (!GalarFossils.Contains(pkm.Species) && !pkm.FatefulEncounter)
             {
                 if (enc is EncounterSlot8 slot8)
-                    pkm.SetAbilityIndex(slot8.Ability == AbilityPermission.Any12H ? Random.Next(3) : slot8.Ability == AbilityPermission.Any12 ? Random.Next(2) : slot8.Ability == AbilityPermission.OnlyFirst ? 0 : slot8.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(slot8.Ability is AbilityPermission.Any12H ? Random.Next(3) : slot8.Ability is AbilityPermission.Any12 ? Random.Next(2) : slot8.Ability is AbilityPermission.OnlyFirst ? 0 : slot8.Ability is AbilityPermission.OnlySecond ? 1 : 2);
                 else if (enc is EncounterStatic8 static8)
-                    pkm.SetAbilityIndex(static8.Ability == AbilityPermission.Any12H ? Random.Next(3) : static8.Ability == AbilityPermission.Any12 ? Random.Next(2) : static8.Ability == AbilityPermission.OnlyFirst ? 0 : static8.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(static8.Ability is AbilityPermission.Any12H ? Random.Next(3) : static8.Ability is AbilityPermission.Any12 ? Random.Next(2) : static8.Ability is AbilityPermission.OnlyFirst ? 0 : static8.Ability is AbilityPermission.OnlySecond ? 1 : 2);
                 else if (enc is EncounterStatic8N static8N)
-                    pkm.SetAbilityIndex(static8N.Ability == AbilityPermission.Any12H ? Random.Next(3) : static8N.Ability == AbilityPermission.Any12 ? Random.Next(2) : static8N.Ability == AbilityPermission.OnlyFirst ? 0 : static8N.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(static8N.Ability is AbilityPermission.Any12H ? Random.Next(3) : static8N.Ability is AbilityPermission.Any12 ? Random.Next(2) : static8N.Ability is AbilityPermission.OnlyFirst ? 0 : static8N.Ability is AbilityPermission.OnlySecond ? 1 : 2);
                 else if (enc is EncounterStatic8NC static8NC)
-                    pkm.SetAbilityIndex(static8NC.Ability == AbilityPermission.Any12H ? Random.Next(3) : static8NC.Ability == AbilityPermission.Any12 ? Random.Next(2) : static8NC.Ability == AbilityPermission.OnlyFirst ? 0 : static8NC.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(static8NC.Ability is AbilityPermission.Any12H ? Random.Next(3) : static8NC.Ability is AbilityPermission.Any12 ? Random.Next(2) : static8NC.Ability is AbilityPermission.OnlyFirst ? 0 : static8NC.Ability is AbilityPermission.OnlySecond ? 1 : 2);
                 else if (enc is EncounterStatic8ND static8ND)
-                    pkm.SetAbilityIndex(static8ND.Ability == AbilityPermission.Any12H ? Random.Next(3) : static8ND.Ability == AbilityPermission.Any12 ? Random.Next(2) : static8ND.Ability == AbilityPermission.OnlyFirst ? 0 : static8ND.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(static8ND.Ability is AbilityPermission.Any12H ? Random.Next(3) : static8ND.Ability is AbilityPermission.Any12 ? Random.Next(2) : static8ND.Ability is AbilityPermission.OnlyFirst ? 0 : static8ND.Ability is AbilityPermission.OnlySecond ? 1 : 2);
                 else if (enc is EncounterStatic8U static8U)
-                    pkm.SetAbilityIndex(static8U.Ability == AbilityPermission.Any12H ? Random.Next(3) : static8U.Ability == AbilityPermission.Any12 ? Random.Next(2) : static8U.Ability == AbilityPermission.OnlyFirst ? 0 : static8U.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(static8U.Ability is AbilityPermission.Any12H ? Random.Next(3) : static8U.Ability is AbilityPermission.Any12 ? Random.Next(2) : static8U.Ability is AbilityPermission.OnlyFirst ? 0 : static8U.Ability is AbilityPermission.OnlySecond ? 1 : 2);
             }
 
-            bool goMew = pkm.Species == (int)Species.Mew && enc.Version == GameVersion.GO && pkm.IsShiny;
-            bool goOther = (pkm.Species == (int)Species.Victini || pkm.Species == (int)Species.Jirachi || pkm.Species == (int)Species.Celebi || pkm.Species == (int)Species.Genesect) && enc.Version == GameVersion.GO;
+            bool goMew = pkm.Species is (int)Species.Mew && enc.Version is GameVersion.GO && pkm.IsShiny;
+            bool goOther = (pkm.Species is (int)Species.Victini or (int)Species.Jirachi or (int)Species.Celebi or (int)Species.Genesect) && enc.Version is GameVersion.GO;
             if (enc is EncounterSlotGO slotGO && !goMew && !goOther)
                 pkm.SetRandomIVsGO(slotGO.Type.GetMinIV());
             else if (enc is EncounterStatic8N static8N)
@@ -115,7 +115,7 @@ namespace SysBot.Pokemon
                     else pk8.SetRandomIVs(4);
                 }
             }
-            else if (enc.Version != GameVersion.GO && enc.Generation >= 6)
+            else if (enc.Version is not GameVersion.GO && enc.Generation >= 6)
                 pkm.SetRandomIVs(enc.EggEncounter ? Random.Next(7) : 4);
 
             pkm = (T)TradeExtensions<T>.TrashBytes(pkm);
@@ -152,12 +152,12 @@ namespace SysBot.Pokemon
                 pkm.Nature = Random.Next(25);
                 pkm.StatNature = pkm.Nature;
                 if (enc is EncounterSlot8b slot8)
-                    pkm.SetAbilityIndex(slot8.Ability == AbilityPermission.Any12H && slot8.CanUseRadar ? Random.Next(3) : slot8.Ability == AbilityPermission.Any12 ? Random.Next(2) : slot8.Ability == AbilityPermission.OnlyFirst ? 0 : slot8.Ability == AbilityPermission.OnlySecond ? 1 : 2);
+                    pkm.SetAbilityIndex(slot8.Ability is AbilityPermission.Any12H && slot8.CanUseRadar && !slot8.EggEncounter ? Random.Next(3) : slot8.Ability is AbilityPermission.Any12 ? Random.Next(2) : slot8.Ability is AbilityPermission.OnlyFirst ? 0 : slot8.Ability is AbilityPermission.OnlySecond ? 1 : 2);
                 else if (!IsLegendaryOrMythical(pkm.Species))
                     pkm.SetAbilityIndex(Random.Next(2));
 
                 pkm.IVs = pkm.SetRandomIVs(Random.Next(3, 7));
-                if (shiny == Shiny.AlwaysSquare)
+                if (shiny is Shiny.AlwaysSquare)
                     CommonEdits.SetShiny(pkm, shiny);
             }
 
@@ -186,7 +186,8 @@ namespace SysBot.Pokemon
                 }
             }
 
-            int speciesID = random ? Dex[Random.Next(Dex.Length)] : baseSpecies;
+            var keys = Dex.Keys.ToArray();
+            int speciesID = random ? keys[Random.Next(Dex.Count)] : baseSpecies;
             string formName = string.Empty;
             if (random)
             {
@@ -200,7 +201,7 @@ namespace SysBot.Pokemon
                         speciesID = baseSpecies;
                         break;
                     }
-                    speciesID = Dex[Random.Next(Dex.Length)];
+                    speciesID = keys[Random.Next(Dex.Count)];
                 }
             }
             else formName = TradeExtensions<T>.FormOutput(speciesID, formID, out _);
@@ -684,10 +685,11 @@ namespace SysBot.Pokemon
         protected List<string> GetMissingDexEntries(List<int> dex)
         {
             List<string> missing = new();
-            foreach (var entry in Dex)
+            var keys = Dex.Keys.ToArray();
+            for (int s = 0; s < keys.Length; s++)
             {
-                if (!dex.Contains(entry))
-                    missing.Add(SpeciesName.GetSpeciesNameGeneration(entry, 2, 8));
+                if (!dex.Contains(keys[s]))
+                    missing.Add(SpeciesName.GetSpeciesNameGeneration(keys[s], 2, 8));
             }
             return missing;
         }
@@ -695,33 +697,38 @@ namespace SysBot.Pokemon
         protected void EventHandler(TradeCordSettings settings, out MysteryGift? mg, out int form)
         {
             string type = string.Empty;
-            var eventType = $"{settings.PokeEventType}";
-            mg = default;
+            bool match = false;
             form = -1;
-            bool bdsp = Game == GameVersion.BDSP;
+            mg = default;
+            var eventType = $"{settings.PokeEventType}";
+            var keys = Dex.Keys.ToArray();
 
-            bool match;
-            do
+            while (!match)
             {
+                Rng.SpeciesRNG = keys[Random.Next(Dex.Count)];
+                var formIDs = Dex[Rng.SpeciesRNG].ToArray();
+                form = -1;
+
                 if (settings.PokeEventType == PokeEventType.EventPoke)
                     mg = MysteryGiftRng(settings);
                 else if ((int)settings.PokeEventType <= 17)
                 {
-                    var personal = GameData.GetPersonal(Game).GetFormEntry(Rng.SpeciesRNG, 0);
-                    for (int i = 0; i < personal.FormCount; i++)
+                    for (int i = 0; i < formIDs.Length; i++)
                     {
-                        var blank = new T { Species = Rng.SpeciesRNG, Form = i };
+                        var blank = new T { Species = Rng.SpeciesRNG, Form = formIDs[i] };
                         var type1 = GameInfo.Strings.Types[blank.PersonalInfo.Type1];
                         var type2 = GameInfo.Strings.Types[blank.PersonalInfo.Type2];
                         type = type1 == eventType ? type1 : type2 == eventType ? type2 : "";
-                        form = type != "" ? blank.Form : -1;
-                        if (form != -1)
+                        if (type != "")
+                        {
+                            form = blank.Form;
                             break;
+                        }
                     }
                 }
                 else if (settings.PokeEventType == PokeEventType.Halloween)
                 {
-                    if (!bdsp && (Rng.SpeciesRNG == (int)Species.Corsola || Rng.SpeciesRNG == (int)Species.Marowak || Rng.SpeciesRNG == (int)Species.Moltres))
+                    if (Rng.SpeciesRNG is (int)Species.Corsola or (int)Species.Marowak or (int)Species.Moltres)
                         form = 1;
                 }
                 else if (settings.PokeEventType == PokeEventType.Babies)
@@ -730,10 +737,7 @@ namespace SysBot.Pokemon
                     Rng.SpeciesRNG = baseSpecies;
                 }
                 else if (settings.PokeEventType == PokeEventType.CottonCandy)
-                {
-                    TradeExtensions<T>.FormOutput(Rng.SpeciesRNG, 0, out string[] forms);
-                    form = Random.Next(forms.Length);
-                }
+                    form = formIDs[Random.Next(formIDs.Length)];
 
                 match = settings.PokeEventType switch
                 {
@@ -747,13 +751,7 @@ namespace SysBot.Pokemon
                     PokeEventType.EventPoke => mg != default,
                     _ => type == eventType,
                 };
-
-                if (!match)
-                {
-                    Rng.SpeciesRNG = Dex[Random.Next(Dex.Length)];
-                    form = -1;
-                }
-            } while (!match);
+            }
         }
 
         private bool IsCottonCandy(int species, int form)

@@ -16,7 +16,7 @@ namespace SysBot.Pokemon
     public abstract class TradeCordBase<T> where T : PKM, new()
     {
         protected static readonly List<EvolutionTemplate> Evolutions = EvolutionRequirements();
-        public static int[] Dex { get; private set; } = new int[] { };
+        public static Dictionary<int, IReadOnlyCollection<int>> Dex { get; private set; } = new();
         protected TCRng Rng { get; private set; }
         private static bool Connected { get; set; }
 
@@ -25,14 +25,14 @@ namespace SysBot.Pokemon
         private static SQLiteConnection Connection = new();
         protected static readonly Random Random = new();
 
-        protected readonly string[] PartnerPikachuHeadache = { "-Original", "-Partner", "-Hoenn", "-Sinnoh", "-Unova", "-Alola", "-Kalos", "-World" };
-        protected readonly string[] LGPEBalls = { "Poke", "Premier", "Great", "Ultra", "Master" };
         protected readonly string[] SilvallyMemory = { "", " @ Fighting Memory"," @ Flying Memory", " @ Poison Memory", " @ Ground Memory", " @ Rock Memory",
             " @ Bug Memory", " @ Ghost Memory", " @ Steel Memory", " @ Fire Memory", " @ Water Memory", " @ Grass Memory", " @ Electric Memory", " @ Psychic Memory",
             " @ Ice Memory", " @ Dragon Memory", " @ Dark Memory", " @ Fairy Memory" };
         protected readonly string[] GenesectDrives = { "", " @ Douse Drive", " @ Shock Drive", " @ Burn Drive", " @ Chill Drive" };
+        protected readonly string[] ArceusPlates = { "", " @ Fist Plate", " @ Sky Plate", " @ Toxic Plate", " @ Earth Plate", " @ Stone Plate", " @ Insect Plate",
+            " @ Spooky Plate", " @ Iron Plate", " @ Flame Plate", " @ Splash Plate", " @ Meadow Plate", " @ Zap Plate", " @ Mind Plate", " @ Icicle Plate",
+            " @ Draco Plate", " @ Dread Plate", " @ Pixie Plate", " @ Legend Plate" };
         protected readonly int[] CherishOnly = { 719, 721, 801, 802, 807, 893 };
-        protected readonly int[] TradeEvo = { (int)Machoke, (int)Haunter, (int)Boldore, (int)Gurdurr, (int)Phantump, (int)Gourgeist };
 
         protected readonly int[] UMWormhole = { 144, 145, 146, 150, 244, 245, 249, 380, 382, 384, 480, 481, 482, 484, 487, 488, 644, 645, 646, 642, 717, 793, 795, 796, 797, 799 };
         protected readonly int[] USWormhole = { 144, 145, 146, 150, 245, 250, 381, 383, 384, 480, 481, 482, 487, 488, 645, 646, 793, 794, 796, 799, 483, 485, 641, 643, 716, 798 };
@@ -65,7 +65,7 @@ namespace SysBot.Pokemon
 
         public TradeCordBase()
         {
-            if (Dex.Length == 0)
+            if (Dex.Count == 0)
                 Dex = GetPokedex();
             Rng = RandomScramble();
         }
@@ -80,7 +80,7 @@ namespace SysBot.Pokemon
                 EggShinyRNG = Random.Next(201),
                 GmaxRNG = Random.Next(101),
                 CherishRNG = Random.Next(101),
-                SpeciesRNG = Dex[Random.Next(Dex.Length)],
+                SpeciesRNG = Dex.Keys.ToArray()[Random.Next(Dex.Count)],
                 SpeciesBoostRNG = Random.Next(101),
                 ItemRNG = Random.Next(101),
                 ShinyCharmRNG = Random.Next(4097),
@@ -131,7 +131,15 @@ namespace SysBot.Pokemon
             if (!gift)
             {
                 user.UserInfo.LastPlayed = DateTime.Now;
-                UpdateRows(id, "users", $"last_played = '{DateTime.Now}'{(name != "" && name != user.UserInfo.Username ? $", username = '{name}'" : "")}");
+                if (name != user.UserInfo.Username)
+                    user.UserInfo.Username = name;
+
+                string[] names = new string[] { "@last_played", "@username", "@user_id" };
+                object[] values = new object[] { user.UserInfo.LastPlayed, user.UserInfo.Username, id };
+                var txt = "update users set last_played = ?, username = ? where user_id = ?";
+                var cmd = new SQLCommand() { CommandText = txt, Names = names, Values = values };
+                List<SQLCommand> list = new() { cmd };
+                ProcessBulkCommands(list);
             }
             return user;
         }
@@ -484,22 +492,25 @@ namespace SysBot.Pokemon
                 }
 
                 var dex = GetPokedex();
-                for (int i = 0; i < dex.Length; i++)
+                var keys = dex.Keys.ToArray();
+                var values = dex.Values.ToArray();
+                for (int i = 0; i < dex.Count; i++)
                 {
-                    var species = dex[i];
+                    var species = keys[i];
+                    var forms = values[i].ToArray();
                     cmd.CommandText = "insert into dex_flavor(species) values(@species)";
                     cmd.Parameters.AddWithValue("@species", species);
                     cmd.ExecuteNonQuery();
 
-                    TradeExtensions<PK8>.FormOutput(species, 0, out string[] forms);
                     for (int f = 0; f < forms.Length; f++)
                     {
+                        var form = TradeExtensions<T>.FormOutput(species, forms[f], out _);
                         var name = SpeciesName.GetSpeciesNameGeneration(species, 2, 8);
-                        bool gmax = Game == GameVersion.SWSH && new ShowdownSet($"{name}{forms[f]}").CanToggleGigantamax(species, f);
-                        string gmaxFlavor = gmax ? DexText(species, f, true) : "";
-                        string flavor = DexText(species, f, false);
+                        bool gmax = Game == GameVersion.SWSH && new ShowdownSet($"{name}{form}").CanToggleGigantamax(species, forms[f]);
+                        string gmaxFlavor = gmax ? DexText(species, forms[f], true) : "";
+                        string flavor = DexText(species, forms[f], false);
 
-                        var vals = gmax && f > 0 ? $"set gmax = '{gmaxFlavor}', form{f} = '{flavor}'" : gmax ? $"set base = '{flavor}', gmax = '{gmaxFlavor}'" : f == 0 ? $"set base = '{flavor}'" : $"set form{f} = '{flavor}'";
+                        var vals = gmax && f > 0 ? $"set gmax = '{gmaxFlavor}', form{f} = '{flavor}'" : gmax ? $"set base = '{flavor}', gmax = '{gmaxFlavor}'" : f == 0 ? $"set base = '{flavor}'" : $"set form{forms[f]} = '{flavor}'";
                         cmd.CommandText = $"update dex_flavor {vals} where species = {species}";
                         cmd.ExecuteNonQuery();
                     }
@@ -656,7 +667,7 @@ namespace SysBot.Pokemon
         private string DexText(int species, int form, bool gmax)
         {
             bool patterns = form > 0 && species is (int)Arceus or (int)Unown or (int)Deoxys or (int)Burmy or (int)Wormadam or (int)Mothim or (int)Vivillon or (int)Furfrou;
-            if (FormInfo.IsBattleOnlyForm(species, form, 8) || FormInfo.IsFusedForm(species, form, 8) || FormInfo.IsTotemForm(species, form, 8) || patterns)
+            if (FormInfo.IsBattleOnlyForm(species, form, 8) || FormInfo.IsFusedForm(species, form, 8) || FormInfo.IsTotemForm(species, form, 8) || FormInfo.IsLordForm(species, form, 8) || patterns)
                 return "";
 
             var resourcePath = "SysBot.Pokemon.TradeCord.Resources.DexFlavor.txt";
@@ -676,31 +687,27 @@ namespace SysBot.Pokemon
             return str[^1].Replace("'", "''");
         }
 
-        private int[] GetPokedex()
+        private Dictionary<int, IReadOnlyCollection<int>> GetPokedex()
         {
-            List<int> dex = new();
-            var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
-            for (int i = 1; i < (Game == GameVersion.BDSP ? 494 : 899); i++)
-            {
-                var entry = Game == GameVersion.SWSH ? PersonalTable.SWSH.GetFormEntry(i, 0) : PersonalTable.BDSP.GetFormEntry(i, 0);
-                if ((Game == GameVersion.SWSH && entry is PersonalInfoSWSH { IsPresentInGame: false }) || (Game == GameVersion.BDSP && entry is PersonalInfoBDSP { IsPresentInGame: false }))
-                    continue;
+            Dictionary<int, IReadOnlyCollection<int>> dex = new();
+            var livingDex = Game is GameVersion.SWSH ? new SAV8SWSH().GetLivingDex().OrderBySpecies() : new SAV8BS().GetLivingDex().OrderBySpecies();
+            var groups = livingDex.GroupBy(p => p.Species).ToArray();
 
-                var species = SpeciesName.GetSpeciesNameGeneration(i, 2, 8);
-                if (i is (int)NidoranF or (int)NidoranM)
+            for (int i = 0; i < groups.Length; i++)
+            {
+                List<int> forms = new();
+                var group = groups[i].ToArray();
+
+                for (int g = 0; g < group.Length; g++)
                 {
-                    species = species.Remove(species.Length - 1);
-                    species += i is (int)NidoranF ? "-F" : "-M";
+                    var pk = group[g];
+                    if (!FormInfo.IsFusedForm(pk.Species, pk.Form, pk.Format) && !FormInfo.IsBattleOnlyForm(pk.Species, pk.Form, pk.Format))
+                        forms.Add(pk.Form);
                 }
 
-                var set = new ShowdownSet(species);
-                var template = AutoLegalityWrapper.GetTemplate(set);
-                _ = (T)sav.GetLegal(template, out string result);
-
-                if (result == "Regenerated")
-                    dex.Add(i);
+                dex.Add(group[0].Species, forms);
             }
-            return dex.ToArray();
+            return dex;
         }
 
         protected bool BaseCanBeEgg(int species, int form, out int baseForm, out int baseSpecies)

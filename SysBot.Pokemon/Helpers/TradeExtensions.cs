@@ -48,21 +48,22 @@ namespace SysBot.Pokemon
 
         public static Ball[] GetLegalBalls(string showdown)
         {
-            var showdownList = showdown.Replace("\r", "").Split('\n').ToList();
-            showdownList.RemoveAll(x => x.Contains("Level") || x.Contains("- "));
-            showdown = string.Join("\r\n", showdownList);
+            var showdownList = showdown.Split('\n').ToList();
+            showdownList.RemoveAll(x => x.Contains("Level") || x.Contains("- ") || x == "");
+            var newShowdown = string.Join("\n", showdownList);
 
-            var set = new ShowdownSet(showdown);
+            var set = new ShowdownSet(newShowdown);
             var templ = AutoLegalityWrapper.GetTemplate(set);
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             var pk = (T)sav.GetLegal(templ, out string res);
             
             if (res != "Regenerated")
             {
-                Base.LogUtil.LogError($"Failed to generate a template for legal Poke Balls: \n{showdown}", "[GetLegalBalls]");
+                Base.LogUtil.LogError($"Failed to generate a template for legal Poke Balls: \n{newShowdown}", "[GetLegalBalls]");
                 return new Ball[1];
             }
 
+            var clone = pk.Clone();
             var legalBalls = BallApplicator.GetLegalBalls(pk).ToList();
             if (!legalBalls.Contains(Ball.Master))
             {
@@ -70,7 +71,7 @@ namespace SysBot.Pokemon
                 set = new ShowdownSet(string.Join("\n", showdownList));
                 templ = AutoLegalityWrapper.GetTemplate(set);
                 pk = (T)sav.GetLegal(templ, out res);
-                if (res == "Regenerated")
+                if (res == "Regenerated" && pk.Species == clone.Species)
                     legalBalls.Add(Ball.Master);
             }
             return legalBalls.ToArray();
@@ -80,7 +81,7 @@ namespace SysBot.Pokemon
 
         public static bool HasAdName(T pk, out string ad)
         {
-            string pattern = @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*$)|(TV$)|(PKHeX)|(FB:)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(\ org)|(\ net)|(2DOS3)|(PPorg)|(Tik\wok$)|(YouTube)|(IG:)|(TTV\ )|(Tools)|(JokersWrath)|(bot$)|(PKMGen)|(\.gg)";
+            string pattern = @"(YT$)|(YT\w*$)|(Lab$)|(\.\w*$)|(TV$)|(PKHeX)|(FB:)|(AuSLove)|(ShinyMart)|(Blainette)|(\ com)|(\ org)|(\ net)|(2DOS3)|(PPorg)|(Tik\wok$)|(YouTube)|(IG:)|(TTV\ )|(Tools)|(JokersWrath)|(bot$)|(PKMGen)|(\.gg)|(\.ly)";
             bool ot = Regex.IsMatch(pk.OT_Name, pattern, RegexOptions.IgnoreCase);
             bool nick = Regex.IsMatch(pk.Nickname, pattern, RegexOptions.IgnoreCase);
             ad = ot ? pk.OT_Name : nick ? pk.Nickname : "";
@@ -327,15 +328,14 @@ namespace SysBot.Pokemon
         public static string FormOutput(int species, int form, out string[] formString)
         {
             var strings = GameInfo.GetStrings("en");
-            var list = FormConverter.GetFormList(species, strings.Types, strings.forms, GameInfo.GenderSymbolASCII, typeof(T) == typeof(PK8) ? 8 : 4).ToList();
-            list[0] = "";
-            list.RemoveAll(x => x.Contains("Mega"));
-            if (typeof(T) != typeof(PA8))
-                list.RemoveAll(x => x.Contains("Hisui") || x.Contains("Lord") || x.Contains("White") || x.Contains("Lady") || (x.Contains("Origin") && species != (int)Species.Giratina));
+            formString = FormConverter.GetFormList(species, strings.Types, strings.forms, GameInfo.GenderSymbolASCII, typeof(T) == typeof(PK8) ? 8 : 4);
+            if (formString.Length == 0)
+                return string.Empty;
 
-            formString = list.ToArray();
+            formString[0] = "";
             if (form >= formString.Length)
                 form = formString.Length - 1;
+
             return formString[form].Contains("-") ? formString[form] : formString[form] == "" ? "" : $"-{formString[form]}";
         }
     }
