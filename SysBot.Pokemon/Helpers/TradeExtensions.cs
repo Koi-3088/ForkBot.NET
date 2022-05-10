@@ -260,7 +260,7 @@ namespace SysBot.Pokemon
         public static T CherishHandler(MysteryGift mg, ITrainerInfo info, int format)
         {
             var mgPkm = mg.ConvertToPKM(info);
-            mgPkm = PKMConverter.IsConvertibleToFormat(mgPkm, format) ? PKMConverter.ConvertToType(mgPkm, typeof(T), out _) : mgPkm;
+            mgPkm = EntityConverter.IsConvertibleToFormat(mgPkm, format) ? EntityConverter.ConvertToType(mgPkm, typeof(T), out _) : mgPkm;
             if (mgPkm != null)
             {
                 mgPkm.SetHandlerandMemory(info);

@@ -386,7 +386,7 @@ namespace SysBot.Pokemon
                 {
                     await Task.Delay(0_100, token).ConfigureAwait(false);
                     var pkData = await SwitchConnection.ReadBytesAbsoluteAsync(pkOfs + (player * 0xD90), 0x158, token).ConfigureAwait(false);
-                    pk = (PK8?)PKMConverter.GetPKMfromBytes(pkData);
+                    pk = (PK8?)EntityFormat.GetFromBytes(pkData);
                     if (pk != null && pk.Species > 0 && pk.Species < 899)
                     {
                         var la = new LegalityAnalysis(pk);

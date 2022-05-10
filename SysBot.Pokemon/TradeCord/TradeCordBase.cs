@@ -301,7 +301,7 @@ namespace SysBot.Pokemon
         {
             T? pk = null;
             if (reader.Read())
-                pk = (T?)PKMConverter.GetPKMfromBytes((byte[])reader["data"]);
+                pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"]);
             return pk ?? new();
         }
 
@@ -620,7 +620,7 @@ namespace SysBot.Pokemon
                 {
                     ulong id = ulong.Parse(reader["user_id"].ToString());
                     int catchID = (int)reader["id"];
-                    var pk = (T?)PKMConverter.GetPKMfromBytes((byte[])reader["data"]);
+                    var pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"]);
                     if (pk == null)
                         continue;
 
@@ -753,7 +753,7 @@ namespace SysBot.Pokemon
                 bool write = false;
                 ulong user_id = ulong.Parse(reader["user_id"].ToString());
                 int catch_id = (int)reader["id"];
-                var pk = (T?)PKMConverter.GetPKMfromBytes((byte[])reader["data"]) ?? new();
+                var pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"]) ?? new();
 
                 var la = new LegalityAnalysis(pk);
                 if (!la.Valid)
@@ -869,7 +869,7 @@ namespace SysBot.Pokemon
                 ulong user_id = ulong.Parse(reader["user_id"].ToString());
                 int catch_id = (int)reader["id"];
                 string nickname = reader["nickname"].ToString();
-                var pk = (T?)PKMConverter.GetPKMfromBytes((byte[])reader["data"]) ?? new();
+                var pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"]) ?? new();
                 var nick = pk.Language switch
                 {
                     1 => "タマゴ",
@@ -941,7 +941,7 @@ namespace SysBot.Pokemon
                 bool write = false;
                 ulong user_id = ulong.Parse(reader["user_id"].ToString());
                 int catch_id = (int)reader["id"];
-                var pk = (T?)PKMConverter.GetPKMfromBytes((byte[])reader["data"], 8) ?? new();
+                var pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"], 8) ?? new();
 
                 var la = new LegalityAnalysis(pk);
                 if (!la.Valid)
@@ -1154,18 +1154,18 @@ namespace SysBot.Pokemon
                     var preEvos = evoTree.GetValidPreEvolutions(blank, 100, 8, true);
                     var evos = evoTree.GetEvolutions(blank.Species, blank.Form);
 
-                    if (preEvos.Count >= 2 && evos.Count() == 0)
+                    if (preEvos.Length >= 2 && evos.Count() == 0)
                     {
-                        for (int c = 0; c < preEvos.Count; c++)
+                        for (int c = 0; c < preEvos.Length; c++)
                         {
-                            var evoType = (EvolutionType)preEvos[c].Method;
+                            var evoType = preEvos[c].Method;
                             TCItems item = TCItems.None;
                             bool baseSp = c - 1 < 0;
 
                             if (evoType is EvolutionType.LevelUpElectric or EvolutionType.LevelUpForest or EvolutionType.LevelUpCold or EvolutionType.LevelUpSummit or EvolutionType.LevelUpWeather or EvolutionType.LevelUpWithTeammate or EvolutionType.LevelUpBeauty)
                                 evoType = EvolutionType.LevelUp;
 
-                            if (evoType == EvolutionType.TradeHeldItem || evoType == EvolutionType.UseItem || evoType == EvolutionType.UseItemFemale || evoType == EvolutionType.UseItemMale || evoType == EvolutionType.LevelUpHeldItemDay || evoType == EvolutionType.LevelUpHeldItemNight || evoType == EvolutionType.Spin)
+                            if (evoType is EvolutionType.TradeHeldItem or EvolutionType.UseItem or EvolutionType.UseItemFemale or EvolutionType.UseItemMale or EvolutionType.LevelUpHeldItemDay or EvolutionType.LevelUpHeldItemNight or EvolutionType.Spin)
                                 item = GetEvoItem(baseSp ? -1 : preEvos[c - 1].Species, f);
 
                             var template = new EvolutionTemplate
@@ -1174,7 +1174,7 @@ namespace SysBot.Pokemon
                                 BaseForm = preEvos[c].Form,
                                 EvolvesInto = baseSp ? -1 : preEvos[c - 1].Species,
                                 EvolvedForm = baseSp ? -1 : preEvos[c - 1].Form,
-                                EvolvesAtLevel = baseSp ? -1 : preEvos[c - 1].MinLevel,
+                                EvolvesAtLevel = baseSp ? -1 : preEvos[c - 1].LevelMin,
                                 EvoType = (int)evoType == 255 ? EvolutionType.None : evoType,
                                 Item = item,
                                 DayTime = GetEvoTime(evoType),

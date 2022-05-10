@@ -37,7 +37,7 @@ namespace SysBot.Pokemon
 
             var enc = la.Info.EncounterMatch;
             var evoChain = la.Info.EvoChainsAllGens[pkm.Format].FirstOrDefault(x => x.Species == pkm.Species);
-            pkm.CurrentLevel = enc.LevelMin < evoChain.MinLevel ? evoChain.MinLevel : enc.LevelMin;
+            pkm.CurrentLevel = enc.LevelMin < evoChain.LevelMin ? evoChain.LevelMin : enc.LevelMin;
             while (!new LegalityAnalysis(pkm).Valid)
             {
                 pkm.CurrentLevel += 1;
@@ -132,7 +132,7 @@ namespace SysBot.Pokemon
             var la = new LegalityAnalysis(pkm);
             var enc = la.Info.EncounterMatch;
             var evoChain = la.Info.EvoChainsAllGens[pkm.Format].FirstOrDefault(x => x.Species == pkm.Species);
-            pkm.CurrentLevel = enc.LevelMin < evoChain.MinLevel ? evoChain.MinLevel : enc.LevelMin;
+            pkm.CurrentLevel = enc.LevelMin < evoChain.LevelMin ? evoChain.LevelMin : enc.LevelMin;
             while (!new LegalityAnalysis(pkm).Valid)
             {
                 pkm.CurrentLevel += 1;
@@ -670,8 +670,8 @@ namespace SysBot.Pokemon
                 if (list[i].Species == (int)Species.Rotom && list[i].Form > 0)
                     list[i].Form = 0;
 
-                EvoCriteria? evo = default;
-                var preEvos = EvolutionTree.GetEvolutionTree(8).GetValidPreEvolutions(list[i], 100, 8, true).FindAll(x => x.MinLevel == 1);
+                EvoCriteria evo = default;
+                var preEvos = EvolutionTree.GetEvolutionTree(8).GetValidPreEvolutions(list[i], 100, 8, true).ToList().FindAll(x => x.LevelMin == 1);
                 if (preEvos.Count == 0)
                     continue;
                 else evo = preEvos.LastOrDefault(x => x.Form == form);
