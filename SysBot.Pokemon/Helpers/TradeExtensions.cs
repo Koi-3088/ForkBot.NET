@@ -338,5 +338,18 @@ namespace SysBot.Pokemon
 
             return formString[form].Contains("-") ? formString[form] : formString[form] == "" ? "" : $"-{formString[form]}";
         }
+
+        public static bool SameFamily(IReadOnlyList<T> pkms)
+        {
+            var criteriaList = new List<EvoCriteria>();
+            for (int i = 0; i < pkms.Count; i++)
+            {
+                var tree = EvolutionTree.GetEvolutionTree(pkms[i], 8);
+                criteriaList.Add(tree.GetValidPreEvolutions(pkms[i], 100, 8, true).Last());
+            }
+
+            bool different = criteriaList.Skip(1).Any(x => x.Species != criteriaList.First().Species);
+            return different;
+        }
     }
 }

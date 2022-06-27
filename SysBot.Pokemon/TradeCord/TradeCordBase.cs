@@ -111,8 +111,11 @@ namespace SysBot.Pokemon
 
         protected TCUser GetCompleteUser(ulong id, string name, bool gift = false)
         {
-            TCUser user = new();
-            user.UserInfo = GetLookupAsClassObject<TCUserInfo>(id, "users");
+            TCUser user = new()
+            {
+                UserInfo = GetLookupAsClassObject<TCUserInfo>(id, "users")
+            };
+
             if (user.UserInfo.UserID == 0)
             {
                 user.UserInfo.UserID = id;
@@ -270,19 +273,22 @@ namespace SysBot.Pokemon
             Dictionary<int, TCCatch> catches = new();
             while (reader.Read())
             {
-                TCCatch entry = new();
-                entry.ID = (int)reader["id"];
-                entry.Shiny = (int)reader["is_shiny"] != 0;
-                entry.Ball = reader["ball"].ToString();
-                entry.Nickname = reader["nickname"].ToString();
-                entry.Species = reader["species"].ToString();
-                entry.Form = reader["form"].ToString();
-                entry.Egg = (int)reader["is_egg"] != 0;
-                entry.Favorite = (int)reader["is_favorite"] != 0;
-                entry.Traded = (int)reader["was_traded"] != 0;
-                entry.Legendary = (int)reader["is_legendary"] != 0;
-                entry.Event = (int)reader["is_event"] != 0;
-                entry.Gmax = (int)reader["is_gmax"] != 0;
+                TCCatch entry = new()
+                {
+                    ID = (int)reader["id"],
+                    Shiny = (int)reader["is_shiny"] != 0,
+                    Ball = reader["ball"].ToString(),
+                    Nickname = reader["nickname"].ToString(),
+                    Species = reader["species"].ToString(),
+                    Form = reader["form"].ToString(),
+                    Egg = (int)reader["is_egg"] != 0,
+                    Favorite = (int)reader["is_favorite"] != 0,
+                    Traded = (int)reader["was_traded"] != 0,
+                    Legendary = (int)reader["is_legendary"] != 0,
+                    Event = (int)reader["is_event"] != 0,
+                    Gmax = (int)reader["is_gmax"] != 0
+                };
+
                 try
                 {
                     catches.Add(entry.ID, entry);
@@ -310,9 +316,12 @@ namespace SysBot.Pokemon
             List<TCItem> items = new();
             while (reader.Read())
             {
-                TCItem item = new();
-                item.Item = (TCItems)reader["id"];
-                item.ItemCount = (int)reader["count"];
+                TCItem item = new()
+                {
+                    Item = (TCItems)reader["id"],
+                    ItemCount = (int)reader["count"]
+                };
+
                 items.Add(item);
             }
             return items;

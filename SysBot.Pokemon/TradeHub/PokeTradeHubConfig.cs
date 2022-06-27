@@ -93,6 +93,10 @@ namespace SysBot.Pokemon
         [TypeConverter(typeof(ExpandableObjectConverter))]
         public RollingRaidSettings RollingRaid { get; set; } = new();
 
+        [Category(Bots)]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public EtumrepDumpSettings EtumrepDump { get; set; } = new();
+
         // Integration
 
         [Category(Integration)]

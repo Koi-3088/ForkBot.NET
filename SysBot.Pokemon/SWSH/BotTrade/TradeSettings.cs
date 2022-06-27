@@ -61,6 +61,7 @@ namespace SysBot.Pokemon
         private int _completedSeedChecks;
         private int _completedClones;
         private int _completedDumps;
+        private int _completedEtumrepDumps;
         private int _completedFixOTs;
         private int _completedSupportTrades;
         private int _completedTradeCords;
@@ -107,21 +108,28 @@ namespace SysBot.Pokemon
             set => _completedDumps = value;
         }
 
-        [Category(Counts), Description("Completed Dump Trades (Specific User)")]
+        [Category(Counts), Description("Completed Etumrep Dump Trades (Specific User)")]
+        public int CompletedEtumrepDumps
+        {
+            get => _completedEtumrepDumps;
+            set => _completedEtumrepDumps = value;
+        }
+
+        [Category(Counts), Description("Completed FixOT Trades (Specific User)")]
         public int CompletedFixOTs
         {
             get => _completedFixOTs;
             set => _completedFixOTs = value;
         }
 
-        [Category(Counts), Description("Completed Dump Trades (Specific User)")]
+        [Category(Counts), Description("Completed Support Trades (Specific User)")]
         public int CompletedSupportTrades
         {
             get => _completedSupportTrades;
             set => _completedSupportTrades = value;
         }
 
-        [Category(Counts), Description("Completed Dump Trades (Specific User)")]
+        [Category(Counts), Description("Completed TradeCord Trades (Specific User)")]
         public int CompletedTradeCords
         {
             get => _completedTradeCords;
@@ -136,6 +144,7 @@ namespace SysBot.Pokemon
         public void AddCompletedSurprise() =>Interlocked.Increment(ref _completedSurprise);
         public void AddCompletedDistribution() => Interlocked.Increment(ref _completedDistribution);
         public void AddCompletedDumps() => Interlocked.Increment(ref _completedDumps);
+        public void AddCompletedEtumrepDumps() => Interlocked.Increment(ref _completedEtumrepDumps);
         public void AddCompletedClones() => Interlocked.Increment(ref _completedClones);
         public void AddCompletedFixOTs() => Interlocked.Increment(ref _completedFixOTs);
         public void AddCompletedSupportTrades() => Interlocked.Increment(ref _completedSupportTrades);
@@ -157,6 +166,8 @@ namespace SysBot.Pokemon
                 yield return $"Distribution Trades: {CompletedDistribution}";
             if (CompletedSurprise != 0)
                 yield return $"Surprise Trades: {CompletedSurprise}";
+            if (CompletedEtumrepDumps != 0)
+                yield return $"Etumrep Dump Trades: {CompletedEtumrepDumps}";
             if (CompletedFixOTs != 0)
                 yield return $"FixOT Trades: {CompletedFixOTs}";
             if (CompletedSupportTrades != 0)

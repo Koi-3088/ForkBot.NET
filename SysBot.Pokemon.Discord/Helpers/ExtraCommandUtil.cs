@@ -62,7 +62,7 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        private async Task DictWipeMonitor()
+        private static async Task DictWipeMonitor()
         {
             DictWipeRunning = true;
             while (true)
@@ -92,7 +92,7 @@ namespace SysBot.Pokemon.Discord
                 var channels = instance.Discord.EchoChannels.List;
                 for (int i = 0; i < channels.Count; i++)
                 {
-                    ISocketMessageChannel channel = (ISocketMessageChannel)guild.Channels.FirstOrDefault(x => x.Id == channels[i].ID);
+                    ISocketMessageChannel? channel = (ISocketMessageChannel?)guild.Channels.FirstOrDefault(x => x.Id == channels[i].ID);
                     if (channel == default)
                         continue;
 
@@ -261,11 +261,41 @@ namespace SysBot.Pokemon.Discord
             await ctx.Message.Channel.SendMessageAsync(embed: embed.Build()).ConfigureAwait(false);
         }
 
+        public static Task ButtonExecuted(SocketMessageComponent component)
+        {
+            _ = Task.Run(async () =>
+            {
+                var id = component.Data.CustomId;
+                if (id.Contains("etumrep"))
+                {
+                    await component.DeferAsync().ConfigureAwait(false);
+                    await EtumrepUtil.HandleEtumrepRequestAsync(component, id).ConfigureAwait(false);
+                }
+                else if (id.Contains("permute"))
+                    await PermuteUtil.HandlePermuteRequestAsync(component, id).ConfigureAwait(false);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public static Task ModalSubmitted(SocketModal modal)
+        {
+            _ = Task.Run(async () =>
+            {
+                await modal.DeferAsync().ConfigureAwait(false);
+                var id = modal.Data.CustomId;
+                if (id.Contains("permute_json"))
+                    await PermuteUtil.DoPermutationsAsync(modal).ConfigureAwait(false);
+            });
+
+            return Task.CompletedTask;
+        }
+
         private static List<string> SpliceAtWord(string entry, int start, int length)
         {
             int counter = 0;
             List<string> list = new();
-            var temp = entry.Contains(",") ? entry.Split(',').Skip(start) : entry.Contains("|") ? entry.Split('|').Skip(start) : entry.Split('\n').Skip(start);
+            var temp = entry.Contains(',') ? entry.Split(',').Skip(start) : entry.Contains('|') ? entry.Split('|').Skip(start) : entry.Split('\n').Skip(start);
 
             if (entry.Length < length)
             {
@@ -296,7 +326,7 @@ namespace SysBot.Pokemon.Discord
                         break;
 
                     index += splice.Count;
-                    pageContent.Add(string.Join(entry.Contains(",") ? ", " : entry.Contains("|") ? " | " : "\n", splice));
+                    pageContent.Add(string.Join(entry.Contains(',') ? ", " : entry.Contains('|') ? " | " : "\n", splice));
                 }
             }
             else pageContent.Add(entry == "" ? "No results found." : entry);

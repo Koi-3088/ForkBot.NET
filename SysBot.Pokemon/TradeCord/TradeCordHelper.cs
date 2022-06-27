@@ -124,8 +124,11 @@ namespace SysBot.Pokemon
 
                 if (ctx.Context == TCCommandContext.EventVote)
                 {
-                    Results res = new();
-                    res.UsersToPing = GetUsersToPing();
+                    Results res = new()
+                    {
+                        UsersToPing = GetUsersToPing()
+                    };
+
                     res.Success = res.UsersToPing != null && res.UsersToPing.Length > 0;
                     return res;
                 }
@@ -451,8 +454,11 @@ namespace SysBot.Pokemon
 
         private Results ListHandler(TCUser user, string input)
         {
-            Results result = new();
-            result.EmbedName = $"{user.UserInfo.Username}'s List";
+            Results result = new()
+            {
+                EmbedName = $"{user.UserInfo.Username}'s List"
+            };
+
             bool FuncList()
             {
                 List<string> filters = input.Contains("=") ? input.Split('=').ToList() : new();
@@ -538,8 +544,11 @@ namespace SysBot.Pokemon
 
         private Results InfoHandler(TCUser user, string input)
         {
-            Results result = new();
-            result.EmbedName = $"{user.UserInfo.Username}'s Pokémon Info";
+            Results result = new()
+            {
+                EmbedName = $"{user.UserInfo.Username}'s Pokémon Info"
+            };
+
             bool FuncInfo()
             {
                 if (!int.TryParse(input, out int id))
@@ -725,8 +734,11 @@ namespace SysBot.Pokemon
 
         private Results DaycareHandler(TCUser user, string action, string id)
         {
-            Results result = new();
-            result.EmbedName = $"{user.UserInfo.Username}'s Daycare";
+            Results result = new()
+            {
+                EmbedName = $"{user.UserInfo.Username}'s Daycare"
+            };
+
             bool FuncDaycare()
             {
                 id = id.ToLower();
@@ -969,8 +981,11 @@ namespace SysBot.Pokemon
 
         private Results FavoritesHandler(TCUser user, string input)
         {
-            Results result = new();
-            result.EmbedName = $"{user.UserInfo.Username}'s Favorite";
+            Results result = new()
+            {
+                EmbedName = $"{user.UserInfo.Username}'s Favorite"
+            };
+
             bool FuncFavorites()
             {
                 var arg = input.ToLower();
@@ -1873,8 +1888,11 @@ namespace SysBot.Pokemon
 
         private Results DeleteUserData(string input)
         {
-            Results result = new();
-            result.EmbedName = "User Deletion";
+            Results result = new()
+            {
+                EmbedName = "User Deletion"
+            };
+
             bool FuncDelete()
             {
                 var id = ulong.Parse(input);
