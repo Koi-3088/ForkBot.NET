@@ -16,7 +16,7 @@ namespace SysBot.Pokemon
 
         public DenBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
-            Settings = hub.Config.Den;
+            Settings = hub.Config.DenSWSH;
         }
 
         protected override async Task EncounterLoop(SAV8SWSH sav, CancellationToken token)

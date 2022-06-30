@@ -15,8 +15,8 @@ namespace SysBot.Pokemon.Discord
     {
         private static TradeQueueInfo<T> Info => SysCord<T>.Runner.Hub.Queues.Info;
         private readonly ExtraCommandUtil<T> Util = new();
-        private readonly LairBotSettings LairSettings = SysCord<T>.Runner.Hub.Config.Lair;
-        private readonly RollingRaidSettings RollingRaidSettings = SysCord<T>.Runner.Hub.Config.RollingRaid;
+        private readonly LairBotSettings LairSettings = SysCord<T>.Runner.Hub.Config.LairSWSH;
+        private readonly RollingRaidSettings RollingRaidSettings = SysCord<T>.Runner.Hub.Config.RollingRaidSWSH;
 
         [Command("giveawayqueue")]
         [Alias("gaq")]

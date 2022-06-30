@@ -65,12 +65,12 @@ namespace SysBot.Pokemon
 
         public LairBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
-            Settings = Hub.Config.Lair;
+            Settings = Hub.Config.LairSWSH;
             DumpSetting = Hub.Config.Folder;
             OffsetValues = ValueParse();
             LairUtils = new LairUtil();
             MoveInfo = LairUtils.LoadMoves();
-            StopConditionSettings.InitializeTargetIVs(Hub, out DesiredMinIVs, out DesiredMaxIVs);
+            StopConditionSettings.InitializeTargetIVs(Hub.Config, out DesiredMinIVs, out DesiredMaxIVs);
         }
 
         private class LairUtil : LairBotUtil { }
@@ -133,7 +133,7 @@ namespace SysBot.Pokemon
                 if (Settings.EnableOHKO) // Enable dirty OHKO.
                     await SwitchConnection.WriteBytesAbsoluteAsync(BitConverter.GetBytes(0x7900E81F), MainNsoBase + DamageOutputOffset, token).ConfigureAwait(false);
 
-                switch (Hub.Config.Lair.SelectPath) // Choose a path to take.
+                switch (Settings.SelectPath) // Choose a path to take.
                 {
                     case SelectPath.GoLeft: await Click(A, 1_000, token).ConfigureAwait(false); break;
                     case SelectPath.GoRight: await Click(DRIGHT, 1_000, token).ConfigureAwait(false); break;

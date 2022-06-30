@@ -73,7 +73,7 @@ namespace SysBot.Pokemon
                 pkm.SetRandomIVs(static8N.FlawlessIVCount + 1);
             else if (pkm is PK8 pk8 && enc is IOverworldCorrelation8 ow)
             {
-                var criteria = EncounterCriteria.GetCriteria(template);
+                var criteria = EncounterCriteria.GetCriteria(template, pk8.PersonalInfo);
                 List<int> IVs = new() { 0, 0, 0, 0, 0, 0 };
                 if (enc is EncounterStatic8 static8)
                 {
@@ -156,7 +156,7 @@ namespace SysBot.Pokemon
                 else if (!IsLegendaryOrMythical(pkm.Species))
                     pkm.SetAbilityIndex(Random.Next(2));
 
-                pkm.IVs = pkm.SetRandomIVs(Random.Next(3, 7));
+                pkm.SetRandomIVs(Random.Next(3, 7));
                 if (shiny is Shiny.AlwaysSquare)
                     CommonEdits.SetShiny(pkm, shiny);
             }
@@ -230,12 +230,12 @@ namespace SysBot.Pokemon
             if (!pk.ValidBall())
                 pk.Ball = BallApplicator.ApplyBallLegalRandom(pk);
 
-            TradeExtensions<T>.EggTrade(pk);
+            TradeExtensions<T>.EggTrade(pk, template);
             pk.SetAbilityIndex(Random.Next(Game == GameVersion.SWSH ? 3 : 2));
 
             pk.Nature = Random.Next(25);
             pk.StatNature = pk.Nature;
-            pk.IVs = pk.SetRandomIVs(Random.Next(2, 7));
+            pk.SetRandomIVs(Random.Next(2, 7));
             return pk;
         }
 
@@ -334,7 +334,7 @@ namespace SysBot.Pokemon
         {
             msg = string.Empty;
             shedinja = null;
-            var tree = EvolutionTree.GetEvolutionTree(pk, 8);
+            var tree = EvolutionTree.GetEvolutionTree(pk.Context);
             var evos = tree.GetEvolutions(pk.Species, pk.Form).ToArray();
 
             bool hasEvo = evos.Length > 0;
@@ -637,12 +637,12 @@ namespace SysBot.Pokemon
 
         private bool SameEvoTree(PKM pkm1, PKM pkm2)
         {
-            var tree = EvolutionTree.GetEvolutionTree(pkm1, 8);
+            var tree = EvolutionTree.GetEvolutionTree(pkm1.Context);
             var evos = tree.GetValidPreEvolutions(pkm1, 100, 8, true);
             var encs = EncounterEggGenerator.GenerateEggs(pkm1, evos, 8, false).ToArray();
             var base1 = encs.Length > 0 ? encs[^1].Species : -1;
 
-            tree = EvolutionTree.GetEvolutionTree(pkm2, 8);
+            tree = EvolutionTree.GetEvolutionTree(pkm2.Context);
             evos = tree.GetValidPreEvolutions(pkm2, 100, 8, true);
             encs = EncounterEggGenerator.GenerateEggs(pkm2, evos, 8, false).ToArray();
             var base2 = encs.Length > 0 ? encs[^1].Species : -2;
@@ -671,7 +671,7 @@ namespace SysBot.Pokemon
                     list[i].Form = 0;
 
                 EvoCriteria evo = default;
-                var preEvos = EvolutionTree.GetEvolutionTree(8).GetValidPreEvolutions(list[i], 100, 8, true).ToList().FindAll(x => x.LevelMin == 1);
+                var preEvos = EvolutionTree.GetEvolutionTree(list[i].Context).GetValidPreEvolutions(list[i], 100, 8, true).ToList().FindAll(x => x.LevelMin == 1);
                 if (preEvos.Count == 0)
                     continue;
                 else evo = preEvos.LastOrDefault(x => x.Form == form);

@@ -103,7 +103,7 @@ namespace SysBot.Pokemon
             TrashBytes(pkm, new LegalityAnalysis(pkm));
         }
 
-        public static void EggTrade(PKM pk)
+        public static void EggTrade(PKM pk, IBattleTemplate template)
         {
             pk.IsNicknamed = true;
             pk.Nickname = pk.Language switch
@@ -133,8 +133,15 @@ namespace SysBot.Pokemon
             pk.HT_Friendship = 0;
             pk.ClearMemories();
             pk.StatNature = pk.Nature;
-            pk.EVs = new int[] { 0, 0, 0, 0, 0, 0 };
-            pk.Markings = new int[] { 0, 0, 0, 0, 0, 0, 0, 0 };
+            pk.SetEVs(new int[] { 0, 0, 0, 0, 0, 0 });
+
+            pk.SetMarking(0, 0);
+            pk.SetMarking(1, 0);
+            pk.SetMarking(2, 0);
+            pk.SetMarking(3, 0);
+            pk.SetMarking(4, 0);
+            pk.SetMarking(5, 0);
+
             pk.ClearRelearnMoves();
 
             if (pk is PK8 pk8)
@@ -165,7 +172,7 @@ namespace SysBot.Pokemon
             pk.Move1_PPUps = pk.Move2_PPUps = pk.Move3_PPUps = pk.Move4_PPUps = 0;
             pk.SetMaximumPPCurrent(pk.Moves);
             pk.SetSuggestedHyperTrainingData();
-            pk.SetSuggestedRibbons(la.EncounterMatch);
+            pk.SetSuggestedRibbons(template, enc);
         }
 
         public static void EncounterLogs(PKM pk, string filepath = "")
@@ -344,7 +351,7 @@ namespace SysBot.Pokemon
             var criteriaList = new List<EvoCriteria>();
             for (int i = 0; i < pkms.Count; i++)
             {
-                var tree = EvolutionTree.GetEvolutionTree(pkms[i], 8);
+                var tree = EvolutionTree.GetEvolutionTree(pkms[i].Context);
                 criteriaList.Add(tree.GetValidPreEvolutions(pkms[i], 100, 8, true).Last());
             }
 

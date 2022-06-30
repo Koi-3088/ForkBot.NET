@@ -735,7 +735,7 @@ namespace SysBot.Pokemon
             if (result != "Regenerated")
                 return false;
 
-            var table = EvolutionTree.GetEvolutionTree(pkm, 8);
+            var table = EvolutionTree.GetEvolutionTree(pkm.Context);
             var evos = table.GetValidPreEvolutions(pkm, 100, 8, true);
             var encs = EncounterEggGenerator.GenerateEggs(pkm, evos, 8, true).ToArray();
             if (encs.Length == 0 || !Breeding.CanHatchAsEgg(species) || !Breeding.CanHatchAsEgg(species, form, 8))
@@ -950,7 +950,7 @@ namespace SysBot.Pokemon
                 bool write = false;
                 ulong user_id = ulong.Parse(reader["user_id"].ToString());
                 int catch_id = (int)reader["id"];
-                var pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"], 8) ?? new();
+                var pk = (T?)EntityFormat.GetFromBytes((byte[])reader["data"]) ?? new();
 
                 var la = new LegalityAnalysis(pk);
                 if (!la.Valid)
@@ -1159,7 +1159,7 @@ namespace SysBot.Pokemon
                     if (result != "Regenerated")
                         continue;
 
-                    var evoTree = EvolutionTree.GetEvolutionTree(blank, 8);
+                    var evoTree = EvolutionTree.GetEvolutionTree(blank.Context);
                     var preEvos = evoTree.GetValidPreEvolutions(blank, 100, 8, true);
                     var evos = evoTree.GetEvolutions(blank.Species, blank.Form);
 

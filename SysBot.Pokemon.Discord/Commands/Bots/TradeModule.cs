@@ -65,7 +65,7 @@ namespace SysBot.Pokemon.Discord
                     TradeExtensions<T>.DittoTrade(pkm);
 
                 if (pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
-                    TradeExtensions<T>.EggTrade(pkm);
+                    TradeExtensions<T>.EggTrade(pkm, template);
 
                 var la = new LegalityAnalysis(pkm);
                 var spec = GameInfo.Strings.Species[template.Species];

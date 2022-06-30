@@ -23,7 +23,7 @@ namespace SysBot.Pokemon
         public RollingRaidBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg)
         {
             Hub = hub;
-            Settings = hub.Config.RollingRaid;
+            Settings = hub.Config.RollingRaidSWSH;
         }
 
         public static CancellationTokenSource RaidEmbedSource = new();

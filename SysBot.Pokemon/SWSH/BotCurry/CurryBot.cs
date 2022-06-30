@@ -29,7 +29,7 @@ namespace SysBot.Pokemon
 
         public CurryBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
-            Settings = Hub.Config.Curry;
+            Settings = Hub.Config.CurrySWSH;
             StopSettings = Hub.Config.StopConditions;
         }
 

@@ -41,7 +41,7 @@ namespace SysBot.Pokemon.Twitch
 
                 var nickname = pkm.Nickname.ToLower();
                 if (nickname == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
-                    TradeExtensions<T>.EggTrade(pkm);
+                    TradeExtensions<T>.EggTrade(pkm, template);
 
                 if (pkm.Species == 132 && (nickname.Contains("atk") || nickname.Contains("spa") || nickname.Contains("spe") || nickname.Contains("6iv")))
                     TradeExtensions<T>.DittoTrade(pkm);
