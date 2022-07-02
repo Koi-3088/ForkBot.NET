@@ -172,6 +172,7 @@ namespace SysBot.Pokemon.Discord
             _client.ReactionAdded += ExtraCommandUtil<T>.HandleReactionAsync;
             _client.UserBanned += ExtraCommandUtil<T>.TCUserBanned;
             _client.ButtonExecuted += ExtraCommandUtil<T>.ButtonExecuted;
+            _client.SelectMenuExecuted += ExtraCommandUtil<T>.SelectMenuExecuted;
             _client.ModalSubmitted += ExtraCommandUtil<T>.ModalSubmitted;
         }
 

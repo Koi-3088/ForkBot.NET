@@ -306,7 +306,7 @@ namespace SysBot.Pokemon.Discord
             else
             {
                 var components = new ComponentBuilder();
-                var buttonYes = new ButtonBuilder() { CustomId = $"permute_yes;{seed}", Label = "Yes", Style = ButtonStyle.Primary };
+                var buttonYes = new ButtonBuilder() { CustomId = "permute_yes", Label = "Yes", Style = ButtonStyle.Primary };
                 components.WithButton(buttonYes);
 
                 var buttonNo = new ButtonBuilder() { CustomId = "permute_no", Label = "No", Style = ButtonStyle.Secondary };

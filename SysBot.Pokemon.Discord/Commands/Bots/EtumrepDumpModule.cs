@@ -3,7 +3,7 @@ using Discord.Commands;
 using PKHeX.Core;
 using System.Threading.Tasks;
 
-namespace SysBot.Pokemon.Discord.Commands.Bots
+namespace SysBot.Pokemon.Discord.Commands
 {
     public class EtumrepDumpModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
     {

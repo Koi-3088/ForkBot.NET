@@ -266,13 +266,28 @@ namespace SysBot.Pokemon.Discord
             _ = Task.Run(async () =>
             {
                 var id = component.Data.CustomId;
-                if (id.Contains("etumrep"))
+                if (id.Contains("etumrep") && !component.HasResponded)
                 {
                     await component.DeferAsync().ConfigureAwait(false);
                     await EtumrepUtil.HandleEtumrepRequestAsync(component, id).ConfigureAwait(false);
                 }
-                else if (id.Contains("permute"))
+                else if (id.Contains("permute") && !component.HasResponded)
                     await PermuteUtil.HandlePermuteRequestAsync(component, id).ConfigureAwait(false);
+            });
+
+            return Task.CompletedTask;
+        }
+
+        public static Task SelectMenuExecuted(SocketMessageComponent component)
+        {
+            _ = Task.Run(async () =>
+            {
+                var id = component.Data.CustomId;
+                if (id is "permute_json_filter" && !component.HasResponded)
+                {
+                    await component.DeferAsync().ConfigureAwait(false);
+                    await PermuteUtil.GetPermuteFilterAsync(component).ConfigureAwait(false);
+                }
             });
 
             return Task.CompletedTask;
@@ -285,7 +300,7 @@ namespace SysBot.Pokemon.Discord
                 await modal.DeferAsync().ConfigureAwait(false);
                 var id = modal.Data.CustomId;
                 if (id.Contains("permute_json"))
-                    await PermuteUtil.DoPermutationsAsync(modal).ConfigureAwait(false);
+                    await PermuteUtil.VerifyAndRunPermuteAsync(modal).ConfigureAwait(false);
             });
 
             return Task.CompletedTask;

@@ -14,35 +14,30 @@ namespace SysBot.Pokemon.Discord
     {
         public static async Task HandlePermuteRequestAsync(SocketMessageComponent component, string id)
         {
-            if (id.Contains("permute_yes"))
+            if (id is "permute_yes")
             {
-                var msg = $"{component.User.Username}#{component.User.Discriminator} ({component.User.Id}) wants to use PermuteMMO. Waiting for JSON input...";
+                var msg = $"{component.User.Username}#{component.User.Discriminator} ({component.User.Id}) wants to use PermuteMMO. Waiting for the user to choose a filter...";
                 LogUtil.LogInfo(msg, "[PermuteMMO Request]");
 
                 var emb = component.Message.Embeds.First();
-                await UpdatePermuteEmbed(component.Message, emb.Description, Color.Gold, null, MessageFlags.None, emb.Author?.Name).ConfigureAwait(false);
-
-                var seed = id.Split(';')[1];
-                var buttonReady = new ButtonBuilder() { CustomId = $"permute_ready;{seed}", Label = "Ready", Style = ButtonStyle.Success };
-                var components = new ComponentBuilder().WithButton(buttonReady);
-                var desc = "Please configure and generate your JSON by clicking [this link](https://shinyhunter.club/tools/permutemmo-spawners). Once done, click the button to let me know you're ready!";
-
+                var selectMenuBuilder = GetPermuteSelectMenu();
+                var menu = new ComponentBuilder().WithSelectMenu(selectMenuBuilder).Build();
                 var embed = new EmbedBuilder
                 {
-                    Color = Color.Blue,
-                    Description = desc,
-                }.WithAuthor(x => { x.Name = "PermuteMMO Service"; });
+                    Color = Color.Gold,
+                    Description = "Please select your shiny path filter for PermuteMMO!",
+                }.WithAuthor(x => { x.Name = emb.Author?.Name ?? "PermuteMMO Service"; }).Build();
 
-                await component.Message.ReplyAsync(null, false, embed.Build(), null, null, components.Build()).ConfigureAwait(false);
+                await component.RespondAsync(null, null, false, false, null, menu, embed).ConfigureAwait(false);
             }
             else if (id.Contains("permute_ready"))
             {
-                var seed = id.Split(';')[1];
-                var box = new TextInputBuilder() { CustomId = $"permute_json;{seed}", Label = "PermuteMMO JSON", Placeholder = "Paste the JSON output here...", Required = true, MinLength = 165 }.WithStyle(TextInputStyle.Paragraph);
-                var mod = new ModalBuilder() { Title = "PermuteMMO Service", CustomId = $"permute_json;{seed}" }.AddTextInput(box);
+                var filter = component.Data.CustomId.Split(';')[1];
+                var box = new TextInputBuilder() { CustomId = $"permute_json;{filter}", Label = "PermuteMMO JSON", Placeholder = "Paste the JSON output here...", Required = true, MinLength = 165 }.WithStyle(TextInputStyle.Paragraph);
+                var mod = new ModalBuilder() { Title = "PermuteMMO Service", CustomId = $"permute_json;{filter}" }.AddTextInput(box);
                 await component.RespondWithModalAsync(mod.Build()).ConfigureAwait(false);
             }
-            else if (id.Contains("permute_no"))
+            else if (id is "permute_no")
             {
                 var msg = component.Message.Embeds.First().Description.Split('\n').First();
                 await UpdatePermuteEmbed(component.Message, msg, Color.LightOrange).ConfigureAwait(false);
@@ -52,11 +47,10 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        public static async Task DoPermutationsAsync(SocketModal modal)
+        public static async Task VerifyAndRunPermuteAsync(SocketModal modal)
         {
-            var id = modal.Data.CustomId;
-            var seed = ulong.Parse(id.Split(';')[1]);
-            var json = modal.Data.Components.First().Value;
+            var data = modal.Data;
+            var json = data.Components.First().Value;
 
             var name = $"{modal.User.Username}#{modal.User.Discriminator} ({modal.User.Id})";
             var msg = $"{name} has submitted their JSON. Running PermuteMMO...";
@@ -72,7 +66,8 @@ namespace SysBot.Pokemon.Discord
                 info = null;
             }
 
-            if (info is null)
+            var seed = info is not null ? info.GetSeed() : 0;
+            if (info is null || seed is 0)
             {
                 msg = "Provided JSON is invalid.";
                 LogUtil.LogInfo($"{name}: {msg}", "[PermuteMMO]");
@@ -80,10 +75,54 @@ namespace SysBot.Pokemon.Discord
                 return;
             }
 
-            // Split into another interaction for customizable filters?
-            PermuteMeta.SatisfyCriteria = (result, advances) => result.IsShiny;
+            var filter = modal.Data.CustomId.Split(';')[1];
+            await DoPermutationsAsync(modal, info, filter, name).ConfigureAwait(false);
+        }
+
+        public static async Task GetPermuteFilterAsync(SocketMessageComponent component)
+        {
+            var filter = component.Data.Values.First();
+            var msg = $"{component.User.Username}#{component.User.Discriminator} ({component.User.Id}) has selected a filter: {filter}. Waiting for JSON input...";
+            LogUtil.LogInfo(msg, "[PermuteMMO Request]");
+
+            var buttonReady = new ButtonBuilder() { CustomId = $"permute_ready;{filter}", Label = "Ready", Style = ButtonStyle.Success };
+            var components = new ComponentBuilder().WithButton(buttonReady);
+            var desc = "Please configure and generate your JSON by clicking [this link](https://shinyhunter.club/tools/permutemmo-spawners). Once done, click the button to let me know you're ready!";
+
+            var embed = new EmbedBuilder
+            {
+                Color = Color.Blue,
+                Description = desc,
+            }.WithAuthor(x => { x.Name = "PermuteMMO Service"; });
+
+            await component.Message.ModifyAsync(x =>
+            {
+                x.Embed = embed.Build();
+                x.Components = components.Build();
+            }).ConfigureAwait(false);
+        }
+
+        private static async Task DoPermutationsAsync(SocketModal modal, UserEnteredSpawnInfo info, string filter, string name)
+        {
+            string msg = string.Empty;
+            PermuteMeta.SatisfyCriteria = (result, advances) => filter switch
+            {
+                "shiny" => result.IsShiny,
+                "shalpha" => result.IsShiny && result.IsAlpha,
+                _ => result.IsShiny,
+            };
+
+            string path = filter switch
+            {
+                "shiny" => "all shiny paths",
+                "shalpha" => "shiny alphas",
+                _ => "all shiny paths",
+            };
+
+            var seed = info.GetSeed();
             var spawner = info.GetSpawn();
-            var meta = Permuter.Permute(spawner, seed);            
+            var meta = Permuter.Permute(spawner, seed);
+
             if (!meta.HasResults)
             {
                 msg = "No shiny path results found.";
@@ -109,7 +148,7 @@ namespace SysBot.Pokemon.Discord
             var embed = new EmbedBuilder
             {
                 Color = Color.Gold,
-                Description = "**Here are your shiny path results!**",
+                Description = $"**Here are your results for {path}!**",
             }.WithAuthor(x => { x.Name = "PermuteMMO Service"; });
 
             var res = string.Join("\n", meta.GetLines());
@@ -150,6 +189,14 @@ namespace SysBot.Pokemon.Discord
             }.WithAuthor(x => { x.Name = "PermuteMMO Service"; });
 
             await modal.FollowupAsync(null, null, false, false, null, null, embed: embed.Build()).ConfigureAwait(false);
+        }
+
+        public static SelectMenuBuilder GetPermuteSelectMenu()
+        {
+            var shiny = new SelectMenuOptionBuilder("Shiny", "shiny", "All shiny paths.");
+            var shalpha = new SelectMenuOptionBuilder("Shiny AND alpha", "shalpha", "Only shiny alpha paths.");
+            var component = new SelectMenuBuilder() { CustomId = "permute_json_filter", MinValues = 1, MaxValues = 1, Placeholder = "Select your shiny path filter for PermuteMMO...", Options = new() { shiny, shalpha } };
+            return component;
         }
     }
 }
