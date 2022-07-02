@@ -109,13 +109,15 @@ namespace SysBot.Pokemon.Discord
             {
                 "shiny" => result.IsShiny,
                 "shalpha" => result.IsShiny && result.IsAlpha,
+                "alpha" => result.IsAlpha || (result.IsShiny && result.IsAlpha),
                 _ => result.IsShiny,
             };
 
             string path = filter switch
             {
                 "shiny" => "all shiny paths",
-                "shalpha" => "shiny alphas",
+                "shalpha" => "all shiny alpha paths",
+                "alpha" => "all alpha paths",
                 _ => "all shiny paths",
             };
 
@@ -195,7 +197,8 @@ namespace SysBot.Pokemon.Discord
         {
             var shiny = new SelectMenuOptionBuilder("Shiny", "shiny", "All shiny paths.");
             var shalpha = new SelectMenuOptionBuilder("Shiny AND alpha", "shalpha", "Only shiny alpha paths.");
-            var component = new SelectMenuBuilder() { CustomId = "permute_json_filter", MinValues = 1, MaxValues = 1, Placeholder = "Select your shiny path filter for PermuteMMO...", Options = new() { shiny, shalpha } };
+            var alpha = new SelectMenuOptionBuilder("Alpha", "alpha", "Only alpha paths, including non-shiny.");
+            var component = new SelectMenuBuilder() { CustomId = "permute_json_filter", MinValues = 1, MaxValues = 1, Placeholder = "Select your shiny path filter for PermuteMMO...", Options = new() { shiny, shalpha, alpha } };
             return component;
         }
     }
