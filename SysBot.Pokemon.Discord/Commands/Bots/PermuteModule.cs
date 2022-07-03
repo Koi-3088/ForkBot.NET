@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Discord.Net;
 using Discord.Commands;
 using PKHeX.Core;
 using System.Threading.Tasks;
@@ -16,7 +17,18 @@ namespace SysBot.Pokemon.Discord.Commands
             var ch = await Context.User.CreateDMChannelAsync().ConfigureAwait(false);
             var selectMenuBuilder = PermuteUtil.GetPermuteSelectMenu();
             var component = new ComponentBuilder().WithSelectMenu(selectMenuBuilder).Build();
-            await ch.SendMessageAsync(null, false, null, null, null, null, component).ConfigureAwait(false);
+
+            try
+            {
+                await ch.SendMessageAsync("**Permute Command Service**", false, null, null, null, null, component).ConfigureAwait(false);
+            }
+            catch (HttpException ex)
+            {
+                await Context.Message.ReplyAsync($"Could not send a DM: {ex.Message}").ConfigureAwait(false);
+            }
+
+            IEmote reaction = new Emoji("👍");
+            await Context.Message.AddReactionAsync(reaction).ConfigureAwait(false);
         }
     }
 }
