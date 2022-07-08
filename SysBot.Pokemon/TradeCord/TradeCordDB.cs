@@ -384,7 +384,8 @@ namespace SysBot.Pokemon
                         var clone = pk.Clone();
                         clone.OT_Name = "Nishikigoi";
                         var trainer = new PokeTrainerDetails(clone);
-                        pk.SetHandlerandMemory(trainer);
+                        var encShelm = new LegalityAnalysis(pk).EncounterMatch;
+                        pk.SetHandlerandMemory(trainer, encShelm);
                     }; break;
                 case EvolutionType.Spin:
                     {
@@ -446,6 +447,7 @@ namespace SysBot.Pokemon
             }
 
             bool applyMoves = false;
+            var enc = new LegalityAnalysis(pk).EncounterMatch;
             var sav = new SimpleTrainerInfo() { OT = pk.OT_Name, Gender = pk.OT_Gender, Generation = pk.Version, Language = pk.Language, SID = pk.TrainerSID7, TID = pk.TrainerID7 };
             if (typeof(T) == typeof(PK8) && pk.Generation == 8 && ((pk.Species == (int)Species.Koffing && result.EvolvedForm == 0) || ((pk.Species == (int)Species.Exeggcute || pk.Species == (int)Species.Pikachu || pk.Species == (int)Species.Cubone) && result.EvolvedForm > 0)))
             {
@@ -456,7 +458,8 @@ namespace SysBot.Pokemon
                 pk.Met_Level = 1;
                 pk.SetEggMetData(GameVersion.UM, (GameVersion)version);
                 sav.Generation = version;
-                pk.SetHandlerandMemory(sav);
+                enc = new LegalityAnalysis(pk).EncounterMatch;
+                pk.SetHandlerandMemory(sav, enc);
                 if (pk is PK8 pk8)
                 {
                     pk8.HeightScalar = 0;
@@ -466,7 +469,7 @@ namespace SysBot.Pokemon
                 if (pk.Ball == (int)Ball.Sport || (pk.WasEgg && pk.Ball == (int)Ball.Master))
                     pk.SetSuggestedBall(true);
             }
-            else pk.SetHandlerandMemory(sav);
+            else pk.SetHandlerandMemory(sav, enc);
 
             var index = pk.PersonalInfo.GetAbilityIndex(pk.Ability);
             pk.Species = result.EvolvesInto;

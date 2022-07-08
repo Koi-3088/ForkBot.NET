@@ -270,7 +270,8 @@ namespace SysBot.Pokemon
             mgPkm = EntityConverter.IsConvertibleToFormat(mgPkm, format) ? EntityConverter.ConvertToType(mgPkm, typeof(T), out _) : mgPkm;
             if (mgPkm != null)
             {
-                mgPkm.SetHandlerandMemory(info);
+                var enc = new LegalityAnalysis(mgPkm).EncounterMatch;
+                mgPkm.SetHandlerandMemory(info, enc);
                 if (mgPkm.TID == 0 && mgPkm.SID == 0)
                 {
                     mgPkm.TID = info.TID;

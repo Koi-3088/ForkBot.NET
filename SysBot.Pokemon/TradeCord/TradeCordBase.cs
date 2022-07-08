@@ -769,7 +769,8 @@ namespace SysBot.Pokemon
                 {
                     var sav = new SimpleTrainerInfo() { OT = pk.OT_Name, Gender = pk.OT_Gender, Generation = pk.Generation, Language = pk.Language, SID = pk.TrainerSID7, TID = pk.TrainerID7 };
                     var results = la.Results.FirstOrDefault(x => !x.Valid && x.Identifier != CheckIdentifier.Memory);
-                    pk.SetHandlerandMemory(sav);
+                    var enc = new LegalityAnalysis(pk).EncounterMatch;
+                    pk.SetHandlerandMemory(sav, enc);
                     if (results != default)
                     {
                         switch (results.Identifier)
@@ -805,7 +806,9 @@ namespace SysBot.Pokemon
                                         if (mgPkm.IsNicknamed)
                                             pk.SetNickname(mgPkm.Nickname);
                                         else pk.SetDefaultNickname(la);
-                                        pk.SetHandlerandMemory(sav);
+
+                                        enc = new LegalityAnalysis(pk).EncounterMatch;
+                                        pk.SetHandlerandMemory(sav, enc);
                                     }
                                     else pk.SetDefaultNickname(la);
                                 }; break;
