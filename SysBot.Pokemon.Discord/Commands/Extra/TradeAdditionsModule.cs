@@ -390,26 +390,53 @@ namespace SysBot.Pokemon.Discord
             }
 
             List<ulong> channels = new();
-            foreach (var channel in RollingRaidSettings.RollingRaidEmbedChannels.Split(',', ' '))
+            List<ITextChannel> embedChannels = new();
+            if (!RollingRaidBot.RollingRaidEmbedsInitialized)
             {
-                if (ulong.TryParse(channel, out ulong result) && !channels.Contains(result))
-                    channels.Add(result);
+                var chStrings = RollingRaidSettings.RollingRaidEmbedChannels.Split(',');
+                foreach (var channel in chStrings)
+                {
+                    if (ulong.TryParse(channel, out ulong result) && !channels.Contains(result))
+                        channels.Add(result);
+                }
+
+                if (channels.Count == 0)
+                {
+                    await ReplyAsync("No valid channels found.").ConfigureAwait(false);
+                    return;
+                }
+
+                foreach (var guild in Context.Client.Guilds)
+                {
+                    foreach (var id in channels)
+                    {
+                        var channel = guild.Channels.FirstOrDefault(x => x.Id == id);
+                        if (channel is not null && channel is ITextChannel ch)
+                            embedChannels.Add(ch);
+                    }
+                }
+
+                if (embedChannels.Count == 0)
+                {
+                    await ReplyAsync("No matching guild channels found.").ConfigureAwait(false);
+                    return;
+                }
             }
 
-            if (channels.Count == 0)
+            RollingRaidBot.RollingRaidEmbedsInitialized ^= true;
+            await ReplyAsync(!RollingRaidBot.RollingRaidEmbedsInitialized ? "RollingRaid Embed task stopped!" : "RollingRaid Embed task started!").ConfigureAwait(false);
+
+            if (!RollingRaidBot.RollingRaidEmbedsInitialized)
             {
-                await ReplyAsync("No valid channels found.").ConfigureAwait(false);
+                RollingRaidBot.RaidEmbedSource.Cancel();
                 return;
             }
 
-            await ReplyAsync(!RollingRaidBot.RollingRaidEmbedsInitialized ? "RollingRaid Embed task started!" : "RollingRaid Embed task stopped!").ConfigureAwait(false);
-            if (RollingRaidBot.RollingRaidEmbedsInitialized)
-                RollingRaidBot.RaidEmbedSource.Cancel();
-            else _ = Task.Run(async () => await RollingRaidEmbedLoop(channels, RollingRaidBot.RaidEmbedSource.Token));
-            RollingRaidBot.RollingRaidEmbedsInitialized ^= true;
+            RollingRaidBot.RaidEmbedSource = new();
+            _ = Task.Run(async () => await RollingRaidEmbedLoop(embedChannels).ConfigureAwait(false));
         }
 
-        private async Task RollingRaidEmbedLoop(List<ulong> channels, CancellationToken token)
+        private static async Task RollingRaidEmbedLoop(List<ITextChannel> channels)
         {
             while (!RollingRaidBot.RaidEmbedSource.IsCancellationRequested)
             {
@@ -424,17 +451,17 @@ namespace SysBot.Pokemon.Discord
                         ThumbnailUrl = url,
                     };
 
-                    foreach (var guild in Context.Client.Guilds)
+                    foreach (var channel in channels)
                     {
-                        var channel = guild.Channels.FirstOrDefault(x => channels.Contains(x.Id));
-                        if (channel is not null && channel is IMessageChannel ch)
-                            await ch.SendMessageAsync(null, false, embed: embed.Build()).ConfigureAwait(false);
+                        try
+                        {
+                            await channel.SendMessageAsync(null, false, embed: embed.Build()).ConfigureAwait(false);
+                        }
+                        catch { }
                     }
                 }
-                else await Task.Delay(0_500, token).ConfigureAwait(false);
+                else await Task.Delay(0_500).ConfigureAwait(false);
             }
-            RollingRaidBot.RollingRaidEmbedsInitialized = false;
-            RollingRaidBot.RaidEmbedSource = new();
         }
 
         public static async Task<bool> TrollAsync(SocketCommandContext context, bool invalid, PKM pkm, bool itemTrade = false)
