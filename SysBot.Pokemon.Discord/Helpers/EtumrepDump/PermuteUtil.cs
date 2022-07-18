@@ -33,7 +33,7 @@ namespace SysBot.Pokemon.Discord
             else if (id.Contains("permute_ready"))
             {
                 var filter = component.Data.CustomId.Split(';')[1];
-                var box = new TextInputBuilder() { CustomId = $"permute_json;{filter}", Label = "PermuteMMO JSON", Placeholder = "Paste the JSON output here...", Required = true, MinLength = 165 }.WithStyle(TextInputStyle.Paragraph);
+                var box = new TextInputBuilder() { CustomId = $"permute_json;{filter}", Label = "PermuteMMO JSON", Placeholder = "Paste the JSON output here...", Required = true }.WithStyle(TextInputStyle.Paragraph);
                 var mod = new ModalBuilder() { Title = "PermuteMMO Service", CustomId = $"permute_json;{filter}" }.AddTextInput(box);
                 await component.RespondWithModalAsync(mod.Build()).ConfigureAwait(false);
             }
@@ -66,17 +66,35 @@ namespace SysBot.Pokemon.Discord
                 info = null;
             }
 
-            var seed = info is not null ? info.GetSeed() : 0;
-            if (info is null || seed is 0)
+            msg = "Provided JSON is invalid: ";
+            if (info is null)
             {
-                msg = "Provided JSON is invalid.";
+                msg += "Invalid JSON format.";
+                LogUtil.LogInfo($"{name}: {msg}", "[PermuteMMO]");
+                await ModalEmbedFollowup(modal, msg, Color.Red);
+                return;
+            }
+
+            bool invalidBonus = (info.BonusCount is not 0 and not 6 and not 7) || (info.BonusTable == "0x0000000000000000" && info.BonusCount != 0);
+            if (invalidBonus)
+            {
+                msg += "Incorrect second wave spawn count specified, or no second wave provided with a non-zero second wave count.";
+                LogUtil.LogInfo($"{name}: {msg}", "[PermuteMMO]");
+                await ModalEmbedFollowup(modal, msg, Color.Red);
+                return;
+            }
+
+            bool invalidBase = info.BaseCount is < 8 or > 15;
+            if (invalidBase)
+            {
+                msg += "Incorrect first wave count specified.";
                 LogUtil.LogInfo($"{name}: {msg}", "[PermuteMMO]");
                 await ModalEmbedFollowup(modal, msg, Color.Red);
                 return;
             }
 
             var filter = modal.Data.CustomId.Split(';')[1];
-            await DoPermutationsAsync(modal, info, filter, name).ConfigureAwait(false);
+            await DoPermutationsAsync(modal, info!, filter, name).ConfigureAwait(false);
         }
 
         public static async Task GetPermuteFilterAsync(SocketMessageComponent component)
@@ -121,9 +139,21 @@ namespace SysBot.Pokemon.Discord
                 _ => "all shiny paths",
             };
 
-            var seed = info.GetSeed();
-            var spawner = info.GetSpawn();
-            var meta = Permuter.Permute(spawner, seed);
+            ulong seed;
+            PermuteMeta meta;
+            try
+            {
+                seed = info.GetSeed();
+                var spawner = info.GetSpawn();
+                meta = Permuter.Permute(spawner, seed);
+            }
+            catch
+            {
+                msg += "Failed to calculate shiny paths due to an unexpected error: is the provided JSON filled out with valid parameters?";
+                LogUtil.LogInfo($"{name}: {msg}", "[PermuteMMO]");
+                await ModalEmbedFollowup(modal, msg, Color.Red);
+                return;
+            }
 
             if (!meta.HasResults)
             {
