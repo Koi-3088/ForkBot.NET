@@ -268,8 +268,16 @@ namespace SysBot.Pokemon.Discord
                 var id = component.Data.CustomId;
                 if (id.Contains("etumrep") && !component.HasResponded)
                 {
-                    await component.DeferAsync().ConfigureAwait(false);
-                    await EtumrepUtil.HandleEtumrepRequestAsync(component, id).ConfigureAwait(false);
+                    try
+                    {
+                        await component.DeferAsync().ConfigureAwait(false);
+                        await EtumrepUtil.HandleEtumrepRequestAsync(component, id).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        var msg = $"{ex.Message}\n{ex.StackTrace}\n{ex.InnerException}";
+                        Base.LogUtil.LogError(msg, "[ButtonExecuted Event]");
+                    }
                 }
                 else if (id.Contains("permute") && !component.HasResponded)
                     await PermuteUtil.HandlePermuteRequestAsync(component, id).ConfigureAwait(false);

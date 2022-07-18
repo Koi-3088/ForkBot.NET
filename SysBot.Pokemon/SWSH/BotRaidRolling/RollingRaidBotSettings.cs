@@ -13,6 +13,9 @@ namespace SysBot.Pokemon
         private const string FeatureToggle = nameof(FeatureToggle);
         public override string ToString() => "Rolling Raid Bot Settings";
 
+        [Category(Hosting), Description("Enable to test the rollover prevention routine.")]
+        public bool RolloverPreventionTest { get; set; } = false;
+
         [Category(Hosting), Description("Den ID (1 - 100 if Vanilla, 1 - 90 if IoA, 1 - 86 if CT).")]
         public uint DenID { get; set; } = 1;
 

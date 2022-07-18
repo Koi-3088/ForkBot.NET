@@ -79,11 +79,28 @@ namespace SysBot.Pokemon
                 RaidInfo.TrainerInfo = await IdentifyTrainer(token).ConfigureAwait(false);
                 await InitializeHardware(Settings, token).ConfigureAwait(false);
 
-                Log("Reading den data.");
-                if (await ReadDenData(token).ConfigureAwait(false))
+                if (Settings.RolloverPreventionTest)
                 {
-                    Log("Starting main RollingRaidBot loop.");
-                    await InnerLoop(token).ConfigureAwait(false);
+                    Log("Testing rollover prevention... Bot should detect watts, fix the rollover, then stop the routine.");
+                    if (await ReadDenData(true, token).ConfigureAwait(false))
+                    {
+                        await DaySkip(token).ConfigureAwait(false);
+                        bool failed = await CheckIfDayRolled(true, token).ConfigureAwait(false);
+                        await ResetTime(token).ConfigureAwait(false);
+
+                        if (failed)
+                            Log("Failed to correct rollover; please adjust your timings and delays, then try again.");
+                        else Log("Rollover prevention successful! Disable the test routine, then run the bot!");
+                    }
+                }
+                else
+                {
+                    Log("Reading den data.");
+                    if (await ReadDenData(false, token).ConfigureAwait(false))
+                    {
+                        Log("Starting main RollingRaidBot loop.");
+                        await InnerLoop(token).ConfigureAwait(false);
+                    }
                 }
             }
             catch (Exception e)
@@ -106,7 +123,7 @@ namespace SysBot.Pokemon
                 addFriends = false;
                 deleteFriends = false;
 
-                if (await CheckIfDayRolled(token).ConfigureAwait(false))
+                if (await CheckIfDayRolled(false, token).ConfigureAwait(false))
                     return;
 
                 // If they set this to 0, they want to add and remove friends before hosting any raids.
@@ -179,7 +196,7 @@ namespace SysBot.Pokemon
             bool rehost = await HostRaidAsync(code, token).ConfigureAwait(false);
             while (rehost)
             {
-                if (await CheckIfDayRolled(token).ConfigureAwait(false))
+                if (await CheckIfDayRolled(false, token).ConfigureAwait(false))
                     return false;
 
                 rehost = await HostRaidAsync(code, token).ConfigureAwait(false);
@@ -668,9 +685,9 @@ namespace SysBot.Pokemon
             }
         }
 
-        private async Task<bool> CheckIfDayRolled(CancellationToken token)
+        private async Task<bool> CheckIfDayRolled(bool test, CancellationToken token)
         {
-            if (!Settings.RolloverPrevention || encounterCount is 0)
+            if (!test && (!Settings.RolloverPrevention || encounterCount is 0))
                 return false;
 
             await Task.Delay(2_000, token).ConfigureAwait(false);
@@ -798,14 +815,14 @@ namespace SysBot.Pokemon
             return unexpectedBattle;
         }
 
-        private async Task<bool> ReadDenData(CancellationToken token)
+        private async Task<bool> ReadDenData(bool test, CancellationToken token)
         {
             denOfs = DenUtil.GetDenOffset(Settings.DenID, Settings.DenType, out uint denID);
             RaidInfo.DenID = denID;
 
             var denData = await Connection.ReadBytesAsync(denOfs, 0x18, token).ConfigureAwait(false);
             RaidInfo.Den = new RaidSpawnDetail(denData, 0);
-            if (!RaidInfo.Den.WattsHarvested)
+            if (!test && !RaidInfo.Den.WattsHarvested)
             {
                 Log("For correct operation, start the bot with Watts cleared. If Watts are cleared and you see this message, make sure you've entered the correct den ID. Stopping routine...");
                 return false;

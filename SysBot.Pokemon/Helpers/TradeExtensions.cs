@@ -321,7 +321,6 @@ namespace SysBot.Pokemon
                 (int)Species.Sinistea or (int)Species.Polteageist or (int)Species.Rockruff or (int)Species.Mothim => 0,
                 (int)Species.Alcremie when pkm.IsShiny || canGmax => 0,
                 _ => pkm.Form,
-
             };
 
             baseLink[2] = pkm.Species < 10 ? $"000{pkm.Species}" : pkm.Species < 100 && pkm.Species > 9 ? $"00{pkm.Species}" : $"0{pkm.Species}";

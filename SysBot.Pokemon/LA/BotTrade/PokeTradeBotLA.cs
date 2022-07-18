@@ -840,8 +840,10 @@ namespace SysBot.Pokemon
             var start = DateTime.Now;
 
             var dumps = new List<PA8>();
+            var hashes = new List<string>();
             var pkprev = new PA8();
             var bctr = 0;
+
             while (ctr < 4 && DateTime.Now - start < time)
             {
                 if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
@@ -851,11 +853,16 @@ namespace SysBot.Pokemon
 
                 // Wait for user input... Needs to be different from the previously offered Pokémon.
                 var pk = await ReadUntilPresentPointer(Offsets.LinkTradePartnerPokemonPointer, 3_000, 0_050, BoxFormatSlotSize, token).ConfigureAwait(false);
-                if (pk == null || pk.Species < 1 || !pk.ChecksumValid || SearchUtil.HashByDetails(pk) == SearchUtil.HashByDetails(pkprev))
+                if (pk == null || pk.Species < 1 || !pk.ChecksumValid)
                     continue;
 
-                // Save the new Pokémon for comparison next round.
+                var hash = SearchUtil.HashByDetails(pk);
+                if (hash == SearchUtil.HashByDetails(pkprev) || hashes.Contains(hash))
+                    continue;
+
+                // Save the new Pokémon and hash for comparison next round.
                 pkprev = pk;
+                hashes.Add(hash);
 
                 // Send results from separate thread; the bot doesn't need to wait for things to be calculated.
                 if (DumpSetting.Dump)
