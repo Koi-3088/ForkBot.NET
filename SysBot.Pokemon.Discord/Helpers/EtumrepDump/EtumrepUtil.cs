@@ -135,7 +135,13 @@ namespace SysBot.Pokemon.Discord
                     }
 
                     await PrepareData(user).ConfigureAwait(false);
-                    await EtumrepRequest(user).ConfigureAwait(false);
+                    bool success = await EtumrepRequest(user).ConfigureAwait(false);
+                    if (!success)
+                    {
+                        DisposeStream(user);
+                        continue;
+                    }
+
                     break;
                 }
             }
@@ -260,7 +266,7 @@ namespace SysBot.Pokemon.Discord
             user.Data = data;
         }
 
-        private static async Task EtumrepRequest(EtumrepUser user)
+        private static async Task<bool> EtumrepRequest(EtumrepUser user)
         {
 
             var msg = "Sending data to server, beginning seed calculation. Please wait...";
@@ -276,8 +282,8 @@ namespace SysBot.Pokemon.Discord
                 DisposeStream(user);
                 var msgE = $"Data communication with the server failed.\n{ex.Message}";
                 await UpdateEtumrepEmbed(user.Component.Message, msgE, Color.Red).ConfigureAwait(false);
-                LogUtil.LogInfo($"{user.BotName}: {msgE}", "[EtumrepMMO Queue]");
-                return;
+                LogUtil.LogInfo($"{user.BotName}: {msgE} ({user.SeedCheckerName} - {user.SeedCheckerID})", "[EtumrepMMO Queue]");
+                return false;
             }
 
             byte[] buffer = new byte[8];
@@ -290,8 +296,8 @@ namespace SysBot.Pokemon.Discord
                 DisposeStream(user);
                 var msgE = $"Failed to retrieve the result from the server.\n{ex.Message}";
                 await UpdateEtumrepEmbed(user.Component.Message, msgE, Color.Red).ConfigureAwait(false);
-                LogUtil.LogInfo($"{user.BotName}: {msgE}", "[EtumrepMMO Queue]");
-                return;
+                LogUtil.LogInfo($"{user.BotName}: {msgE} ({user.SeedCheckerName} - {user.SeedCheckerID})", "[EtumrepMMO Queue]");
+                return false;
             }
 
             DisposeStream(user);
@@ -317,6 +323,8 @@ namespace SysBot.Pokemon.Discord
                 await UpdateEtumrepEmbed(user.Component.Message, msg, Color.Gold, components.Build(), seedMsg).ConfigureAwait(false);
                 LogUtil.LogInfo($"{user.BotName}: Seed calculation for {user.SeedCheckerName} completed successfully.", "[EtumrepMMO Queue]");
             }
+
+            return true;
         }
 
         private static async Task UpdateEtumrepEmbed(SocketUserMessage message, string desc, Color color, MessageComponent? components = null, string? seed = null)
