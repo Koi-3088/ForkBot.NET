@@ -177,10 +177,13 @@ namespace SysBot.Pokemon.Discord
             msg = $"Permutation complete! Sending {name} their results!";
             LogUtil.LogInfo(msg, "[PermuteMMO]");
 
+            var interpretUrl = "https://github.com/kwsch/PermuteMMO/wiki#interpreting-output";
+            var shinyRollUrl = "https://cdn.discordapp.com/attachments/958046779750875146/998925407745220678/IMG_4793-1.png";
             var embed = new EmbedBuilder
             {
                 Color = Color.Gold,
-                Description = $"**Here are your results for {path}!**",
+                Description = $"**Here are your results for {path}!**\n[Check this link]({interpretUrl}) to learn more about path notations! Make sure you have enough shiny rolls for the path you choose!",
+                ImageUrl = shinyRollUrl,
             }.WithAuthor(x => { x.Name = "PermuteMMO Service"; });
 
             var res = string.Join("\n", meta.GetLines());
