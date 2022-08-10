@@ -922,7 +922,7 @@ namespace SysBot.Pokemon
             var ball = $"\n{(Ball)offered.Ball}";
             var extraInfo = $"OT: {name}{ball}{shiny}";
             var set = ShowdownParsing.GetShowdownText(offered).Split('\n').ToList();
-            set.Remove(set.Find(x => x.Contains("Shiny")));
+            set.Remove(set.Find(x => x.Contains("Shiny")) ?? "");
             set.InsertRange(1, extraInfo.Split('\n'));
 
             if (!laInit.Valid)

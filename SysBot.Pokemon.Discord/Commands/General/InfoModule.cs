@@ -34,7 +34,7 @@ namespace SysBot.Pokemon.Discord
 
             builder.AddField("Info",
                 $"- [Original Source Code]({repo})\n" +
-                $"- [Fork's Source Code]({fork})\n" +
+                $"- [This Fork's Source Code]({fork})\n" +
                 $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
                 $"- {Format.Bold("Library")}: Discord.Net ({DiscordConfig.Version})\n" +
                 $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
@@ -50,7 +50,7 @@ namespace SysBot.Pokemon.Discord
                 $"- {Format.Bold("Guilds")}: {Context.Client.Guilds.Count}\n" +
                 $"- {Format.Bold("Channels")}: {Context.Client.Guilds.Sum(g => g.Channels.Count)}\n" +
                 $"- {Format.Bold("Users")}: {Context.Client.Guilds.Sum(g => g.MemberCount)}\n" +
-                $"{Format.Bold("\nThank you, Project Pokémon, for making Pokémon sprites and images used here publicly available!")}\n"
+                $"{Format.Bold("\nThank you, [Project Pokémon](https://projectpokemon.org), for making Pokémon sprites and images used here publicly available!")}\n"
                 );
 
             await ReplyAsync("Here's a bit about me!", embed: builder.Build()).ConfigureAwait(false);
@@ -61,7 +61,7 @@ namespace SysBot.Pokemon.Discord
 
         private static string GetBuildTime()
         {
-            var assembly = Assembly.GetEntryAssembly();
+            var assembly = Assembly.GetEntryAssembly()!;
             return File.GetLastWriteTime(assembly.Location).ToString(@"yy-MM-dd\.hh\:mm");
         }
 
@@ -70,7 +70,7 @@ namespace SysBot.Pokemon.Discord
 
         private static string GetDateOfDll(string dll)
         {
-            var folder = Path.GetDirectoryName(Assembly.GetEntryAssembly().Location);
+            var folder = Path.GetDirectoryName(Assembly.GetEntryAssembly()?.Location);
             var path = Path.Combine(folder ?? "", dll);
             var date = File.GetLastWriteTime(path);
             return date.ToString(@"yy-MM-dd\.hh\:mm");

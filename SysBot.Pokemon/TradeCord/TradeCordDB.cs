@@ -766,8 +766,12 @@ namespace SysBot.Pokemon
 
         protected MysteryGift? MysteryGiftRng(TradeCordSettings settings)
         {
-            var mg = EncounterEvent.GetAllEvents().Where(x => x.Species == Rng.SpeciesRNG).ToList();
+            var type = typeof(T);
+            var forms = Dex[Rng.SpeciesRNG];
+            var events = EncounterEvent.GetAllEvents().Where(x => x.Species == Rng.SpeciesRNG);
+            var mg = events.Where(x => forms.Contains(x.Form)).ToList();
             mg.RemoveAll(x => x.GetDescription().Count() < 3);
+
             MysteryGift? mgRng = default;
             if (mg.Count > 0)
             {

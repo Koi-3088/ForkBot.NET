@@ -253,7 +253,7 @@ namespace SysBot.Pokemon
             }
 
             var linkcodemsg = code < 0 ? "no Link Code" : $"code **{code:0000 0000}**";
-            string raiddescmsg = string.IsNullOrEmpty(Settings.RaidDescription) ? raidBossString : "\"" + Settings.RaidDescription + "\"";
+            string raiddescmsg = string.IsNullOrEmpty(Settings.RaidDescription) ? raidBossString : Settings.RaidDescription;
             var raidMsg = $"Raid lobby for {raiddescmsg} is open with {linkcodemsg}.";
             info.EmbedString += $"\n\n{raidMsg}";
 

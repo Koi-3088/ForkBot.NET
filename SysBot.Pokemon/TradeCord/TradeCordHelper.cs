@@ -302,7 +302,7 @@ namespace SysBot.Pokemon
                         Rng.SpeciesRNG = user.Perks.SpeciesBoost;
 
                     var speciesName = SpeciesName.GetSpeciesNameGeneration(Rng.SpeciesRNG, 2, 8);
-                    if (Game == GameVersion.SWSH && (CherishOnly.Contains(Rng.SpeciesRNG) || Rng.CherishRNG >= 100 - Settings.CherishRate || mg != default))
+                    if (CherishOnly.Contains(Rng.SpeciesRNG) || Rng.CherishRNG >= 100 - Settings.CherishRate || mg != default)
                     {
                         var mgRng = mg == default ? MysteryGiftRng(Settings) : mg;
                         if (mgRng != default)

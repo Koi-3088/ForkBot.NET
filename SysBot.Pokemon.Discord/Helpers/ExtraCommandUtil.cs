@@ -102,78 +102,82 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-        public static async Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, Cacheable<IMessageChannel, ulong> ch, SocketReaction reaction)
+        public static Task HandleReactionAsync(Cacheable<IUserMessage, ulong> cachedMsg, Cacheable<IMessageChannel, ulong> ch, SocketReaction reaction)
         {
-            IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
-            if (!reactions.Contains(reaction.Emote))
-                return;
-
-            var tc = SysCord<T>.Runner.Hub.Config.Discord.TradeCordChannels.List;
-            if (!ch.HasValue || ch.Value is IDMChannel || (tc.Count != 0 && tc.FirstOrDefault(x => x.ID == ch.Id || x.Name == ch.Value.Name) == default))
-                return;
-
-            IUserMessage msg;
-            if (!cachedMsg.HasValue)
-                msg = await cachedMsg.GetOrDownloadAsync().ConfigureAwait(false);
-            else msg = cachedMsg.Value;
-
-            bool process = msg.Embeds.Count > 0 && (TradeCordHelper<T>.TCInitialized || msg.Embeds.First().Fields[0].Name.Contains("Giveaway Pool"));
-            if (!process || !reaction.User.IsSpecified)
-                return;
-
-            var user = reaction.User.Value;
-            if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
-                return;
-
-            bool invoker = msg.Embeds.First().Fields[0].Name == ReactMessageDict[user.Id].Embed.Fields[0].Name;
-            if (!invoker)
-                return;
-
-            var contents = ReactMessageDict[user.Id];
-            bool oldMessage = msg.Id != contents.MessageID;
-            if (oldMessage)
-                return;
-
-            int page = contents.Pages.IndexOf((string)contents.Embed.Fields[0].Value);
-            if (page == -1)
-                return;
-
-            if (reaction.Emote.Name == reactions[0].Name || reaction.Emote.Name == reactions[1].Name)
+            _ = Task.Run(async () =>
             {
-                if (reaction.Emote.Name == reactions[0].Name)
-                {
-                    if (page == 0)
-                        page = contents.Pages.Count - 1;
-                    else page--;
-                }
-                else
-                {
-                    if (page + 1 == contents.Pages.Count)
-                        page = 0;
-                    else page++;
-                }
+                IEmote[] reactions = { new Emoji("⬅️"), new Emoji("➡️"), new Emoji("⬆️"), new Emoji("⬇️") };
+                if (!reactions.Contains(reaction.Emote))
+                    return;
 
-                contents.Embed.Fields[0].Value = contents.Pages[page];
-                contents.Embed.Footer.Text = $"Page {page + 1} of {contents.Pages.Count}";
-                await msg.RemoveReactionAsync(reactions[reaction.Emote.Name == reactions[0].Name ? 0 : 1], user).ConfigureAwait(false);
-                await msg.ModifyAsync(msg => msg.Embed = contents.Embed.Build()).ConfigureAwait(false);
-            }
-            else if (reaction.Emote.Name == reactions[2].Name || reaction.Emote.Name == reactions[3].Name)
-            {
-                List<string> tempList = new();
-                foreach (var p in contents.Pages)
-                {
-                    var split = p.Replace(", ", ",").Split(',');
-                    tempList.AddRange(split);
-                }
+                var tc = SysCord<T>.Runner.Hub.Config.Discord.TradeCordChannels.List;
+                if (!ch.HasValue || ch.Value is IDMChannel || (tc.Count != 0 && tc.FirstOrDefault(x => x.ID == ch.Id || x.Name == ch.Value.Name) == default))
+                    return;
 
-                var tempEntry = string.Join(", ", reaction.Emote.Name == reactions[2].Name ? tempList.OrderBy(x => x.Split(' ')[1]) : tempList.OrderByDescending(x => x.Split(' ')[1]));
-                contents.Pages = ListUtilPrep(tempEntry);
-                contents.Embed.Fields[0].Value = contents.Pages[page];
-                contents.Embed.Footer.Text = $"Page {page + 1} of {contents.Pages.Count}";
-                await msg.RemoveReactionAsync(reactions[reaction.Emote.Name == reactions[2].Name ? 2 : 3], user).ConfigureAwait(false);
-                await msg.ModifyAsync(msg => msg.Embed = contents.Embed.Build()).ConfigureAwait(false);
-            }
+                IUserMessage msg;
+                if (!cachedMsg.HasValue)
+                    msg = await cachedMsg.GetOrDownloadAsync().ConfigureAwait(false);
+                else msg = cachedMsg.Value;
+
+                bool process = msg.Embeds.Count > 0 && (TradeCordHelper<T>.TCInitialized || msg.Embeds.First().Fields[0].Name.Contains("Giveaway Pool"));
+                if (!process || !reaction.User.IsSpecified)
+                    return;
+
+                var user = reaction.User.Value;
+                if (user.IsBot || !ReactMessageDict.ContainsKey(user.Id))
+                    return;
+
+                bool invoker = msg.Embeds.First().Fields[0].Name == ReactMessageDict[user.Id].Embed.Fields[0].Name;
+                if (!invoker)
+                    return;
+
+                var contents = ReactMessageDict[user.Id];
+                bool oldMessage = msg.Id != contents.MessageID;
+                if (oldMessage)
+                    return;
+
+                int page = contents.Pages.IndexOf((string)contents.Embed.Fields[0].Value);
+                if (page == -1)
+                    return;
+
+                if (reaction.Emote.Name == reactions[0].Name || reaction.Emote.Name == reactions[1].Name)
+                {
+                    if (reaction.Emote.Name == reactions[0].Name)
+                    {
+                        if (page == 0)
+                            page = contents.Pages.Count - 1;
+                        else page--;
+                    }
+                    else
+                    {
+                        if (page + 1 == contents.Pages.Count)
+                            page = 0;
+                        else page++;
+                    }
+
+                    contents.Embed.Fields[0].Value = contents.Pages[page];
+                    contents.Embed.Footer.Text = $"Page {page + 1} of {contents.Pages.Count}";
+                    await msg.RemoveReactionAsync(reactions[reaction.Emote.Name == reactions[0].Name ? 0 : 1], user).ConfigureAwait(false);
+                    await msg.ModifyAsync(msg => msg.Embed = contents.Embed.Build()).ConfigureAwait(false);
+                }
+                else if (reaction.Emote.Name == reactions[2].Name || reaction.Emote.Name == reactions[3].Name)
+                {
+                    List<string> tempList = new();
+                    foreach (var p in contents.Pages)
+                    {
+                        var split = p.Replace(", ", ",").Split(',');
+                        tempList.AddRange(split);
+                    }
+
+                    var tempEntry = string.Join(", ", reaction.Emote.Name == reactions[2].Name ? tempList.OrderBy(x => x.Split(' ')[1]) : tempList.OrderByDescending(x => x.Split(' ')[1]));
+                    contents.Pages = ListUtilPrep(tempEntry);
+                    contents.Embed.Fields[0].Value = contents.Pages[page];
+                    contents.Embed.Footer.Text = $"Page {page + 1} of {contents.Pages.Count}";
+                    await msg.RemoveReactionAsync(reactions[reaction.Emote.Name == reactions[2].Name ? 2 : 3], user).ConfigureAwait(false);
+                    await msg.ModifyAsync(msg => msg.Embed = contents.Embed.Build()).ConfigureAwait(false);
+                }
+            });
+            return Task.CompletedTask;
         }
 
         public async Task<bool> ReactionVerification(SocketCommandContext ctx)
@@ -244,11 +248,10 @@ namespace SysBot.Pokemon.Discord
 
         public async Task EmbedUtil(SocketCommandContext ctx, string name, string value, EmbedBuilder? embed = null)
         {
-            if (embed == null)
-                embed = new EmbedBuilder { Color = GetBorderColor(false) };
-
+            embed ??= new EmbedBuilder { Color = GetBorderColor(false) };
             var splitName = name.Split(new string[] { "&^&" }, StringSplitOptions.None);
             var splitValue = value.Split(new string[] { "&^&" }, StringSplitOptions.None);
+
             for (int i = 0; i < splitName.Length; i++)
             {
                 embed.AddField(x =>
