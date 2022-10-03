@@ -785,10 +785,10 @@ namespace SysBot.Pokemon
             else RaidInfo.RaidEncounter = DenUtil.GetSpawnShort(RaidInfo);
 
             var species = (Species)(isEvent ? RaidInfo.RaidDistributionEncounter.Species : RaidInfo.RaidEncounter.Species);
-            var speciesStr = SpeciesName.GetSpeciesNameGeneration((int)species, 2, 8);
+            var speciesStr = SpeciesName.GetSpeciesNameGeneration((ushort)species, 2, 8);
 
-            var form = isEvent ? RaidInfo.RaidDistributionEncounter.AltForm : RaidInfo.RaidEncounter.AltForm;
-            var formStr = TradeExtensions<PK8>.FormOutput((int)species, (int)form, out _);
+            var form = (byte)(isEvent ? RaidInfo.RaidDistributionEncounter.AltForm : RaidInfo.RaidEncounter.AltForm);
+            var formStr = TradeExtensions<PK8>.FormOutput((ushort)species, form, out _);
             bool gmax = isEvent ? RaidInfo.RaidDistributionEncounter.IsGigantamax : RaidInfo.RaidEncounter.IsGigantamax;
 
             var flawless = (uint)(isEvent ? RaidInfo.RaidDistributionEncounter.FlawlessIVs : RaidInfo.RaidEncounter.FlawlessIVs);

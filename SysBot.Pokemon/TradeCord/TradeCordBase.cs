@@ -16,7 +16,7 @@ namespace SysBot.Pokemon
     public abstract class TradeCordBase<T> where T : PKM, new()
     {
         protected static readonly List<EvolutionTemplate> Evolutions = EvolutionRequirements();
-        public static Dictionary<int, IReadOnlyCollection<int>> Dex { get; private set; } = new();
+        public static Dictionary<ushort, IReadOnlyCollection<byte>> Dex { get; private set; } = new();
         protected TCRng Rng { get; private set; }
         private static bool Connected { get; set; }
 
@@ -65,7 +65,7 @@ namespace SysBot.Pokemon
 
         public TradeCordBase()
         {
-            if (Dex.Count == 0)
+            if (Dex.Count is 0)
                 Dex = GetPokedex();
             Rng = RandomScramble();
         }
@@ -74,17 +74,17 @@ namespace SysBot.Pokemon
         {
             return new TCRng()
             {
-                CatchRNG = Random.Next(101),
-                ShinyRNG = Random.Next(201),
-                EggRNG = Random.Next(101),
-                EggShinyRNG = Random.Next(201),
-                GmaxRNG = Random.Next(101),
-                CherishRNG = Random.Next(101),
+                CatchRNG = (ushort)Random.Next(101),
+                ShinyRNG = (ushort)Random.Next(201),
+                EggRNG = (ushort)Random.Next(101),
+                EggShinyRNG = (ushort)Random.Next(201),
+                GmaxRNG = (ushort)Random.Next(101),
+                CherishRNG = (ushort)Random.Next(101),
                 SpeciesRNG = Dex.Keys.ToArray()[Random.Next(Dex.Count)],
-                SpeciesBoostRNG = Random.Next(101),
-                ItemRNG = Random.Next(101),
-                ShinyCharmRNG = Random.Next(4097),
-                LegendaryRNG = Random.Next(101),
+                SpeciesBoostRNG = (ushort)Random.Next(101),
+                ItemRNG = (ushort)Random.Next(101),
+                ShinyCharmRNG = (ushort)Random.Next(4097),
+                LegendaryRNG = (ushort)Random.Next(101),
             };
         }
 
@@ -158,7 +158,7 @@ namespace SysBot.Pokemon
             return userIDs.ToArray();
         }
 
-        protected bool IsLegendaryOrMythical(int species) => Legal.Legends.Contains(species) || Legal.SubLegends.Contains(species) || Legal.Mythicals.Contains(species);
+        protected bool IsLegendaryOrMythical(ushort species) => Legal.Legends.Contains(species) || Legal.SubLegends.Contains(species) || Legal.Mythicals.Contains(species);
 
         protected A GetLookupAsClassObject<A>(ulong id, string table, string filter = "", bool tableJoin = false)
         {
@@ -220,10 +220,10 @@ namespace SysBot.Pokemon
             return sqParams;
         }
 
-        protected string GetDexFlavorFromTable(int species, int form, bool gmax)
+        protected string GetDexFlavorFromTable(ushort species, byte form, bool gmax)
         {
             var cmd = Connection.CreateCommand();
-            var selection = gmax ? "gmax" : form == 0 ? "base" : $"form{form}";
+            var selection = gmax ? "gmax" : form is 0 ? "base" : $"form{form}";
             cmd.CommandText = $"select {selection} from dex_flavor where species = {species}";
             using SQLiteDataReader reader = cmd.ExecuteReader();
             if (reader.Read())
@@ -333,7 +333,7 @@ namespace SysBot.Pokemon
             if (reader.Read())
             {
                 var perkArr = reader["perks"].ToString().Split(',');
-                var boost = (int)reader["species_boost"];
+                var boost = (ushort)(int)reader["species_boost"];
                 if (perkArr[0] != "")
                 {
                     for (int i = 0; i < perkArr.Length; i++)
@@ -366,7 +366,7 @@ namespace SysBot.Pokemon
                 if (dexEntries[0] != "")
                 {
                     for (int i = 0; i < dexEntries.Length; i++)
-                        dex.Entries.Add(int.Parse(dexEntries[i]));
+                        dex.Entries.Add(ushort.Parse(dexEntries[i]));
                 }
                 dex.DexCompletionCount = count;
             }
@@ -393,13 +393,13 @@ namespace SysBot.Pokemon
             if (reader.Read())
             {
                 dc.ID1 = (int)reader["id1"];
-                dc.Species1 = (int)reader["species1"];
+                dc.Species1 = (ushort)(int)reader["species1"];
                 dc.Form1 = reader["form1"].ToString();
                 dc.Ball1 = (int)reader["ball1"];
                 dc.Shiny1 = (int)reader["shiny1"] != 0;
 
                 dc.ID2 = (int)reader["id2"];
-                dc.Species2 = (int)reader["species2"];
+                dc.Species2 = (ushort)(int)reader["species2"];
                 dc.Form2 = reader["form2"].ToString();
                 dc.Ball2 = (int)reader["ball2"];
                 dc.Shiny2 = (int)reader["shiny2"] != 0;
@@ -673,9 +673,9 @@ namespace SysBot.Pokemon
             return true;
         }
 
-        private string DexText(int species, int form, bool gmax)
+        private string DexText(ushort species, byte form, bool gmax)
         {
-            bool patterns = form > 0 && species is (int)Arceus or (int)Unown or (int)Deoxys or (int)Burmy or (int)Wormadam or (int)Mothim or (int)Vivillon or (int)Furfrou;
+            bool patterns = form > 0 && species is (ushort)Arceus or (ushort)Unown or (ushort)Deoxys or (ushort)Burmy or (ushort)Wormadam or (ushort)Mothim or (ushort)Vivillon or (ushort)Furfrou;
             if (FormInfo.IsBattleOnlyForm(species, form, 8) || FormInfo.IsFusedForm(species, form, 8) || FormInfo.IsTotemForm(species, form, 8) || FormInfo.IsLordForm(species, form, 8) || patterns)
                 return "";
 
@@ -686,7 +686,7 @@ namespace SysBot.Pokemon
 
             if (!gmax)
             {
-                var index = species == (int)Slowbro && form == 2 ? 0 : form - 1;
+                var index = species is (ushort)Slowbro && form is 2 ? 0 : form - 1;
                 if (form > 0)
                     return reader.ReadToEnd().Split('_')[1].Split('\n')[species].Split('|')[index].Replace("'", "''");
                 else return reader.ReadToEnd().Split('\n')[species].Replace("'", "''");
@@ -696,15 +696,15 @@ namespace SysBot.Pokemon
             return str[^1].Replace("'", "''");
         }
 
-        private Dictionary<int, IReadOnlyCollection<int>> GetPokedex()
+        private Dictionary<ushort, IReadOnlyCollection<byte>> GetPokedex()
         {
-            Dictionary<int, IReadOnlyCollection<int>> dex = new();
+            Dictionary<ushort, IReadOnlyCollection<byte>> dex = new();
             var livingDex = Game is GameVersion.SWSH ? new SAV8SWSH().GetLivingDex().OrderBySpecies() : new SAV8BS().GetLivingDex().OrderBySpecies();
             var groups = livingDex.GroupBy(p => p.Species).ToArray();
 
             for (int i = 0; i < groups.Length; i++)
             {
-                List<int> forms = new();
+                List<byte> forms = new();
                 var group = groups[i].ToArray();
 
                 for (int g = 0; g < group.Length; g++)
@@ -719,16 +719,16 @@ namespace SysBot.Pokemon
             return dex;
         }
 
-        protected bool BaseCanBeEgg(int species, int form, out int baseForm, out int baseSpecies)
+        protected bool BaseCanBeEgg(ushort species, byte form, out byte baseForm, out ushort baseSpecies)
         {
-            baseSpecies = -1;
+            baseSpecies = 0;
             baseForm = 0;
             var name = SpeciesName.GetSpeciesNameGeneration(species, 2, 8);
             var formStr = TradeExtensions<PK8>.FormOutput(species, form, out _);
             if (name.Contains("Nidoran"))
                 name = name.Remove(name.Length - 1);
 
-            var set = new ShowdownSet($"{name}{(species == (int)NidoranF ? "-F" : species == (int)NidoranM ? "-M" : formStr)}");
+            var set = new ShowdownSet($"{name}{(species is (ushort)NidoranF ? "-F" : species is (ushort)NidoranM ? "-M" : formStr)}");
             var template = AutoLegalityWrapper.GetTemplate(set);
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             var pkm = (T)sav.GetLegal(template, out string result);
@@ -738,12 +738,12 @@ namespace SysBot.Pokemon
             var table = EvolutionTree.GetEvolutionTree(pkm.Context);
             var evos = table.GetValidPreEvolutions(pkm, 100, 8, true);
             var encs = EncounterEggGenerator.GenerateEggs(pkm, evos, 8, true).ToArray();
-            if (encs.Length == 0 || !Breeding.CanHatchAsEgg(species) || !Breeding.CanHatchAsEgg(species, form, 8))
+            if (encs.Length is 0 || !Breeding.CanHatchAsEgg(species) || !Breeding.CanHatchAsEgg(species, form, 8))
                 return false;
 
             baseSpecies = encs[^1].Species;
             if (GameData.GetPersonal(Game).GetFormEntry(baseSpecies, form).IsFormWithinRange(form) && Breeding.CanHatchAsEgg(baseSpecies, form, 8))
-                baseForm = species is (int)Darmanitan && form <= 1 ? 0 : form;
+                baseForm = (byte)(species is (ushort)Darmanitan && form <= 1 ? 0 : form);
             else baseForm = encs[^1].Form;
             return true;
         }
@@ -777,12 +777,12 @@ namespace SysBot.Pokemon
                         {
                             case CheckIdentifier.Evolution:
                                 {
-                                    if (pk.Species == (int)Lickilicky && pk.Met_Location != 162 && pk.Met_Location != 244 && !pk.RelearnMoves.Contains(205))
+                                    if (pk.Species is (ushort)Lickilicky && pk.Met_Location is not 162 && pk.Met_Location is not 244 && !pk.RelearnMoves.ToList().Contains(205))
                                         SetMoveOrRelearnByIndex(pk, 205, true);
                                 }; break;
                             case CheckIdentifier.Encounter:
                                 {
-                                    if (pk.Met_Location == 162)
+                                    if (pk.Met_Location is 162)
                                     {
                                         pk.SetAbilityIndex(0);
                                         while (!new LegalityAnalysis(pk).Valid && pk.Met_Level < 60)
@@ -795,7 +795,7 @@ namespace SysBot.Pokemon
                                 }; break;
                             case CheckIdentifier.Form:
                                 {
-                                    if (pk.Species == (int)Keldeo && pk.Form == 1 && !pk.Moves.Contains(548))
+                                    if (pk.Species is (ushort)Keldeo && pk.Form is 1 && !pk.Moves.ToList().Contains(548))
                                         SetMoveOrRelearnByIndex(pk, 548, false);
                                 }; break;
                             case CheckIdentifier.Nickname:
@@ -958,7 +958,7 @@ namespace SysBot.Pokemon
                 var la = new LegalityAnalysis(pk);
                 if (!la.Valid)
                 {
-                    var results = la.Results.ToList().FindAll(x => !x.Valid && x.Identifier == CheckIdentifier.Ball || x.Identifier == CheckIdentifier.Memory || x.Identifier == CheckIdentifier.Encounter);
+                    var results = la.Results.ToList().FindAll(x => !x.Valid && x.Identifier is CheckIdentifier.Ball || x.Identifier is CheckIdentifier.Memory || x.Identifier is CheckIdentifier.Encounter);
                     if (results.Count > 0)
                     {
                         foreach (var result in results)
@@ -967,9 +967,6 @@ namespace SysBot.Pokemon
                             {
                                 case CheckIdentifier.Ball:
                                     {
-                                        if (user_id == 459118697949298689 && catch_id == 2604)
-                                            Thread.Sleep(1);
-
                                         var balls = TradeExtensions<T>.GetLegalBalls(ShowdownParsing.GetShowdownText(pk)).ToList();
                                         if ((balls.Contains(Ball.Master) || balls.Contains(Ball.Cherish)) && (pk.WasEgg || pk.WasTradedEgg))
                                         {
@@ -979,7 +976,7 @@ namespace SysBot.Pokemon
                                         pk.Ball = (int)balls[Random.Next(balls.Count)];
                                     }; break;
                                 case CheckIdentifier.Memory: pk.SetSuggestedMemories(); pk.SetSuggestedContestStats(la.EncounterMatch); break;
-                                case CheckIdentifier.Encounter when results.FirstOrDefault(x => x.Identifier == CheckIdentifier.Ball || x.Identifier == CheckIdentifier.Memory) == default:
+                                case CheckIdentifier.Encounter when results.FirstOrDefault(x => x.Identifier is CheckIdentifier.Ball || x.Identifier is CheckIdentifier.Memory) == default:
                                     {
                                         List<string> extra = new();
                                         extra.AddRange(new string[]
@@ -1070,7 +1067,7 @@ namespace SysBot.Pokemon
             while (reader.Read())
             {
                 string result = string.Empty;
-                if (Game == GameVersion.SWSH)
+                if (Game is GameVersion.SWSH)
                 {
                     var species = reader["species"].ToString();
                     var form = reader["form"].ToString();
@@ -1111,12 +1108,12 @@ namespace SysBot.Pokemon
             Base.EchoUtil.Echo($"Scan complete! Updated {updated} records.");
         }
 
-        private void SetMoveOrRelearnByIndex(T pk, int move, bool relearn)
+        private void SetMoveOrRelearnByIndex(T pk, ushort move, bool relearn)
         {
             int index = relearn ? pk.RelearnMoves.ToList().IndexOf(0) : pk.Moves.ToList().IndexOf(0);
-            if (index == -1 && !relearn)
+            if (index is -1 && !relearn)
                 pk.Move4 = move;
-            else if (index == -1 && relearn)
+            else if (index is -1 && relearn)
                 return;
 
             switch (index)
@@ -1139,20 +1136,20 @@ namespace SysBot.Pokemon
         {
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             var list = new List<EvolutionTemplate>();
-            for (int i = 1; i < (Game == GameVersion.BDSP ? 494 : 899); i++)
+            for (ushort i = 1; i < (Game is GameVersion.BDSP ? 494 : 899); i++)
             {
                 var temp = new T { Species = i };
-                for (int f = 0; f < temp.PersonalInfo.FormCount; f++)
+                for (byte f = 0; f < temp.PersonalInfo.FormCount; f++)
                 {
-                    if (i is (int)Pikachu && f is 8)
+                    if (i is (ushort)Pikachu && f is 8)
                         continue;
 
                     string gender = i switch
                     {
-                        (int)Meowstic or (int)Wormadam when f > 0 => " (F)",
-                        (int)Salazzle or (int)Froslass or (int)Vespiquen => " (F)",
-                        (int)Gallade => "(M)",
-                        (int)Mothim => "(M)",
+                        (ushort)Meowstic or (ushort)Wormadam when f > 0 => " (F)",
+                        (ushort)Salazzle or (ushort)Froslass or (ushort)Vespiquen => " (F)",
+                        (ushort)Gallade => "(M)",
+                        (ushort)Mothim => "(M)",
                         _ => "",
                     };
 
@@ -1166,9 +1163,9 @@ namespace SysBot.Pokemon
                     var preEvos = evoTree.GetValidPreEvolutions(blank, 100, 8, true);
                     var evos = evoTree.GetEvolutions(blank.Species, blank.Form);
 
-                    if (preEvos.Length >= 2 && evos.Count() == 0)
+                    if (preEvos.Length >= 2 && evos.Count() is 0)
                     {
-                        for (int c = 0; c < preEvos.Length; c++)
+                        for (ushort c = 0; c < preEvos.Length; c++)
                         {
                             var evoType = preEvos[c].Method;
                             TCItems item = TCItems.None;
@@ -1184,19 +1181,19 @@ namespace SysBot.Pokemon
                             {
                                 Species = preEvos[c].Species,
                                 BaseForm = preEvos[c].Form,
-                                EvolvesInto = baseSp ? -1 : preEvos[c - 1].Species,
-                                EvolvedForm = baseSp ? -1 : preEvos[c - 1].Form,
-                                EvolvesAtLevel = baseSp ? -1 : preEvos[c - 1].LevelMin,
-                                EvoType = (int)evoType == 255 ? EvolutionType.None : evoType,
+                                EvolvesInto = (ushort)(baseSp ? -1 : preEvos[c - 1].Species),
+                                EvolvedForm = (byte)(baseSp ? -1 : preEvos[c - 1].Form),
+                                EvolvesAtLevel = (ushort)(baseSp ? -1 : preEvos[c - 1].LevelMin),
+                                EvoType = (int)evoType is 255 ? EvolutionType.None : evoType,
                                 Item = item,
                                 DayTime = GetEvoTime(evoType),
                             };
 
-                            if (preEvos[c].Species == (int)Cosmoem)
+                            if (preEvos[c].Species is (ushort)Cosmoem)
                                 template.EvolvesAtLevel = 53;
-                            else if (preEvos[c].Species == (int)Tangrowth)
+                            else if (preEvos[c].Species is (ushort)Tangrowth)
                                 template.EvolvesAtLevel = 24;
-                            else if (preEvos[c].Species == (int)Ambipom)
+                            else if (preEvos[c].Species is (ushort)Ambipom)
                                 template.EvolvesAtLevel = 31;
 
                             list.Add(template);
@@ -1266,11 +1263,11 @@ namespace SysBot.Pokemon
 
         protected class EvolutionTemplate
         {
-            public int Species { get; set; }
-            public int BaseForm { get; set; }
-            public int EvolvesInto { get; set; }
-            public int EvolvedForm { get; set; }
-            public int EvolvesAtLevel { get; set; }
+            public ushort Species { get; set; }
+            public byte BaseForm { get; set; }
+            public ushort EvolvesInto { get; set; }
+            public byte EvolvedForm { get; set; }
+            public ushort EvolvesAtLevel { get; set; }
             public EvolutionType EvoType { get; set; }
             public TCItems Item { get; set; }
             public TimeOfDay DayTime { get; set; }
@@ -1297,17 +1294,17 @@ namespace SysBot.Pokemon
 
         protected class TCRng
         {
-            public int CatchRNG { get; set; }
+            public ushort CatchRNG { get; set; }
             public double ShinyRNG { get; set; }
-            public int EggRNG { get; set; }
+            public ushort EggRNG { get; set; }
             public double EggShinyRNG { get; set; }
-            public int GmaxRNG { get; set; }
-            public int CherishRNG { get; set; }
-            public int SpeciesRNG { get; set; }
-            public int SpeciesBoostRNG { get; set; }
-            public int ItemRNG { get; set; }
-            public int ShinyCharmRNG { get; set; }
-            public int LegendaryRNG { get; set; }
+            public ushort GmaxRNG { get; set; }
+            public ushort CherishRNG { get; set; }
+            public ushort SpeciesRNG { get; set; }
+            public ushort SpeciesBoostRNG { get; set; }
+            public ushort ItemRNG { get; set; }
+            public ushort ShinyCharmRNG { get; set; }
+            public ushort LegendaryRNG { get; set; }
         }
 
         public class TCUserInfo
@@ -1350,12 +1347,12 @@ namespace SysBot.Pokemon
         {
             public bool Shiny1 { get; set; }
             public int ID1 { get; set; }
-            public int Species1 { get; set; }
+            public ushort Species1 { get; set; }
             public string Form1 { get; set; } = "";
             public int Ball1 { get; set; }
             public bool Shiny2 { get; set; }
             public int ID2 { get; set; }
-            public int Species2 { get; set; }
+            public ushort Species2 { get; set; }
             public string Form2 { get; set; } = "";
             public int Ball2 { get; set; }
         }
@@ -1376,13 +1373,13 @@ namespace SysBot.Pokemon
         public class TCPerks
         {
             public List<DexPerks> ActivePerks { get; set; } = new();
-            public int SpeciesBoost { get; set; }
+            public ushort SpeciesBoost { get; set; }
         }
 
         public class TCDex
         {
             public int DexCompletionCount { get; set; }
-            public List<int> Entries { get; set; } = new();
+            public List<ushort> Entries { get; set; } = new();
         }
 
         // Taken from ALM.

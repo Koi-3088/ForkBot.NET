@@ -41,7 +41,7 @@ namespace SysBot.Pokemon.Discord
         public async Task EventVote()
         {
             bool bdsp = typeof(T) == typeof(PB8);
-            DateTime.TryParse(Info.Hub.Config.TradeCord.EventEnd, out DateTime endTime);
+            _ = DateTime.TryParse(Info.Hub.Config.TradeCord.EventEnd, out DateTime endTime);
             bool ended = (Hub.Config.TradeCord.EnableEvent && endTime != default && DateTime.Now > endTime) || !Hub.Config.TradeCord.EnableEvent;
             if (!ended)
             {
@@ -81,7 +81,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.EventVote };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
 
             var t = Task.Run(async () => await Util.EventVoteCalc(Context, events).ConfigureAwait(false));
             var index = t.Result;
@@ -162,7 +162,7 @@ namespace SysBot.Pokemon.Discord
 
             TradeCordCooldown(id);
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.Catch };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
 
             if (!result.Success)
             {
@@ -171,7 +171,7 @@ namespace SysBot.Pokemon.Discord
                 if (!Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
 
-                if (result.Poke.Species != 0)
+                if (result.Poke.Species is not 0)
                 {
                     var la = new LegalityAnalysis(result.Poke);
                     if (!la.Valid)
@@ -183,7 +183,7 @@ namespace SysBot.Pokemon.Discord
                     }
                 }
 
-                if (result.EggPoke.Species != 0)
+                if (result.EggPoke.Species is not 0)
                 {
                     var la = new LegalityAnalysis(result.EggPoke);
                     if (!la.Valid)
@@ -411,7 +411,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.DaycareInfo };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
             await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
         }
 
@@ -541,7 +541,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.TrainerInfo };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
             await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
         }
 
@@ -559,7 +559,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.FavoritesInfo };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
             if (!result.Success)
             {
                 await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
@@ -904,7 +904,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.TakeItem };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
             await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
         }
 
@@ -992,7 +992,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var ctx = new TradeCordHelper<T>.TC_CommandContext { Username = Context.User.Username, ID = Context.User.Id, Context = TCCommandContext.EventPing };
-            var result = await Helper.ProcessTradeCord(ctx, new string[] { }).ConfigureAwait(false);
+            var result = await Helper.ProcessTradeCord(ctx, Array.Empty<string>()).ConfigureAwait(false);
             await Util.EmbedUtil(Context, name, result.Message).ConfigureAwait(false);
         }
 
@@ -1032,7 +1032,7 @@ namespace SysBot.Pokemon.Discord
             await Util.EmbedUtil(Context, result.EmbedName, result.Message).ConfigureAwait(false);
         }
 
-        private void TradeCordCooldown(ulong id, bool clear = false)
+        private static void TradeCordCooldown(ulong id, bool clear = false)
         {
             if (Info.Hub.Config.TradeCord.TradeCordCooldown > 0)
             {

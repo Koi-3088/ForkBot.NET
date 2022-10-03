@@ -1,6 +1,6 @@
 ﻿namespace SysBot.Pokemon
 {
-    public enum GenderDependent : int
+    public enum GenderDependent : ushort
     {
         Venusaur = 3,
         Butterfree = 12,
@@ -102,7 +102,7 @@
         Pyroar = 668,
     }
 
-    public enum GreatMarsh : int
+    public enum GreatMarsh : ushort
     {
         Paras = 46,
         Golduck = 55,
@@ -131,7 +131,7 @@
         ItemBoost,
     }
 
-    public enum Halloween : int
+    public enum Halloween : ushort
     {
         Zubat = 41,
         Golbat = 42,
@@ -222,7 +222,7 @@
         Spectrier = 897,
     }
 
-    public enum PokePets : int
+    public enum PokePets : ushort
     {
         Pidgey = 16,
         Pidgeotto = 17,
@@ -328,7 +328,7 @@
         Urshifu = 892,
     }
 
-    public enum RodentLite : int
+    public enum RodentLite : ushort
     {
         Rattata = 19,
         Raticate = 20,
@@ -374,7 +374,7 @@
         Morpeko = 877,
     }
 
-    public enum Clickbait : int
+    public enum Clickbait : ushort
     {
         Venusaur = 3,
         Charizard = 6,

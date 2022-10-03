@@ -206,7 +206,7 @@ namespace SysBot.Pokemon
             }
         }
 
-        private async Task RentalRoutine(int noteSpecies, CancellationToken token)
+        private async Task RentalRoutine(ushort noteSpecies, CancellationToken token)
         {
             uint[] RentalOfsList = { RentalMon1, RentalMon2, RentalMon3 };
             PK8 lairPk = new() { Species = noteSpecies };
@@ -256,7 +256,7 @@ namespace SysBot.Pokemon
         {
             int[] movePP = new int[] { PlayerPk.Move1_PP, PlayerPk.Move2_PP, PlayerPk.Move3_PP, PlayerPk.Move4_PP };
             var dmgWeight = LairUtils.WeightedDamage(party, PlayerPk, lairMon, MoveInfo, dmax).ToList();
-            var priorityMove = PlayerPk.Moves.ToList().IndexOf(PlayerPk.Moves.Intersect((IEnumerable<int>)Enum.GetValues(typeof(PriorityMoves))).FirstOrDefault());
+            var priorityMove = PlayerPk.Moves.ToList().IndexOf(PlayerPk.Moves.Intersect((IEnumerable<ushort>)Enum.GetValues(typeof(PriorityMoves))).FirstOrDefault());
             bool priority = Settings.EnableOHKO && priorityMove != -1 && dmgWeight[priorityMove] > 0 && lairMon.Ability != (int)Ability.PsychicSurge && lairMon.Ability != (int)Ability.QueenlyMajesty && lairMon.Ability != (int)Ability.Dazzling;
 
             var bestMove = dmgWeight.IndexOf(dmgWeight.Max());
@@ -639,12 +639,12 @@ namespace SysBot.Pokemon
             return true;
         }
 
-        private async Task<int> SetHuntedPokemon(CancellationToken token)
+        private async Task<ushort> SetHuntedPokemon(CancellationToken token)
         {
-            if (HackyNoteCheck == -1 || LairBotUtil.DiscordQueueOverride)
+            if (HackyNoteCheck is -1 || LairBotUtil.DiscordQueueOverride)
             {
                 for (int i = 0; i < 4; i++) // First note shifts due to yet unknown reasons, just clear possible slots, check which note to use on startup and after catching a legendary.
-                    await Connection.WriteBytesAsync(new byte[] { 0 }, i == 0 ? LairSpeciesNote1 : i == 1 ? LairSpeciesNote2 : i == 2 ? LairSpeciesNote3 : LairSpeciesNote4, token);
+                    await Connection.WriteBytesAsync(new byte[] { 0 }, i is 0 ? LairSpeciesNote1 : i is 1 ? LairSpeciesNote2 : i is 2 ? LairSpeciesNote3 : LairSpeciesNote4, token);
 
                 var control = BitConverter.GetBytes((ushort)LairSpecies.Moltres);
                 await Connection.WriteBytesAsync(control, LairSpeciesNote3, token).ConfigureAwait(false);
@@ -654,18 +654,18 @@ namespace SysBot.Pokemon
                 for (int i = 0; i < 3; i++)
                     await Click(B, 0_250, token).ConfigureAwait(false);
 
-                bool firstNoteIsFirst = note1 == (ushort)LairSpecies.Moltres;
+                bool firstNoteIsFirst = note1 is (ushort)LairSpecies.Moltres;
                 await Connection.WriteBytesAsync(new byte[] { 0 }, firstNoteIsFirst ? LairSpeciesNote1 : LairSpeciesNote2, token).ConfigureAwait(false);
                 HackyNoteCheck = firstNoteIsFirst ? 1 : 2;
             }
 
-            if (LegendFound != 0)
+            if (LegendFound is not 0)
             {
                 LegendFound = 0;
                 if (Settings.ResetLegendaryCaughtFlag)
                     await ResetLegendaryFlag(LegendFound, token).ConfigureAwait(false);
 
-                if (Settings.LairSpeciesQueue[0] != LairSpecies.None)
+                if (Settings.LairSpeciesQueue[0] is not LairSpecies.None)
                 {
                     Settings.LairSpeciesQueue[0] = Settings.LairSpeciesQueue[1];
                     Settings.LairSpeciesQueue[1] = Settings.LairSpeciesQueue[2];
@@ -673,27 +673,27 @@ namespace SysBot.Pokemon
                 }
             }
 
-            var note = BitConverter.ToUInt16(await Connection.ReadBytesAsync(HackyNoteCheck == 1 ? LairSpeciesNote1 : LairSpeciesNote2, 2, token).ConfigureAwait(false), 0);
+            var note = BitConverter.ToUInt16(await Connection.ReadBytesAsync(HackyNoteCheck is 1 ? LairSpeciesNote1 : LairSpeciesNote2, 2, token).ConfigureAwait(false), 0);
             if (LairBotUtil.DiscordQueueOverride || ((ushort)Settings.LairSpeciesQueue[0] != note))
             {
                 LairBotUtil.DiscordQueueOverride = false;
                 for (int i = 0; i < Settings.LairSpeciesQueue.Length; i++)
                 {
                     var caughtFlag = await Connection.ReadBytesAsync(GetFlagOffset((int)Settings.LairSpeciesQueue[i]), 2, token).ConfigureAwait(false);
-                    if (caughtFlag[0] != 0 && !Settings.ResetLegendaryCaughtFlag)
+                    if (caughtFlag[0] is not 0 && !Settings.ResetLegendaryCaughtFlag)
                     {
                         Log($"{(int)Settings.LairSpeciesQueue[i]} was caught prior and \"ResetLegendaryCaughtFlag\" is disabled. Skipping this note.");
                         continue;
                     }
                     else await ResetLegendaryFlag((int)Settings.LairSpeciesQueue[i], token).ConfigureAwait(false);
 
-                    if (HackyNoteCheck == 1)
-                        await Connection.WriteBytesAsync(BitConverter.GetBytes((ushort)Settings.LairSpeciesQueue[i]), i == 0 ? LairSpeciesNote1 : i == 1 ? LairSpeciesNote2 : LairSpeciesNote3, token);
-                    else await Connection.WriteBytesAsync(BitConverter.GetBytes((ushort)Settings.LairSpeciesQueue[i]), i == 0 ? LairSpeciesNote2 : i == 1 ? LairSpeciesNote3 : LairSpeciesNote4, token);
+                    if (HackyNoteCheck is 1)
+                        await Connection.WriteBytesAsync(BitConverter.GetBytes((ushort)Settings.LairSpeciesQueue[i]), i is 0 ? LairSpeciesNote1 : i is 1 ? LairSpeciesNote2 : LairSpeciesNote3, token);
+                    else await Connection.WriteBytesAsync(BitConverter.GetBytes((ushort)Settings.LairSpeciesQueue[i]), i is 0 ? LairSpeciesNote2 : i is 1 ? LairSpeciesNote3 : LairSpeciesNote4, token);
                 }
 
                 Log($"Lair Notes set to {string.Join(", ", Settings.LairSpeciesQueue)}!");
-                return (int)Settings.LairSpeciesQueue[0];
+                return (ushort)Settings.LairSpeciesQueue[0];
             }
             else return note;
         }

@@ -124,7 +124,7 @@ namespace SysBot.Pokemon
             for (int i = 0; i < length; i++)
             {
                 var isEvent = raidInfo.Den.IsEvent;
-                var speciesID = (int)(isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.Species : raidInfo.RaidEncounterTable.Entries(i).Value.Species);
+                var speciesID = (ushort)(isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.Species : raidInfo.RaidEncounterTable.Entries(i).Value.Species);
                 var probList = isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.GetProbabilitiesArray().ToList() : raidInfo.RaidEncounterTable.Entries(i).Value.GetProbabilitiesArray().ToList();
                 var flawless = (uint)(isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.FlawlessIVs : raidInfo.RaidEncounterTable.Entries(i).Value.FlawlessIVs);
                 var firstIndex = probList.FindIndex(0, 5, x => x != 0) + 1;
@@ -141,7 +141,7 @@ namespace SysBot.Pokemon
                 var star = $"{((firstIndex == lastIndex) || (firstIndex > lastIndex) ? firstIndex + "★" : firstIndex + "-" + lastIndex + "★")}";
                 var rng = new Xoroshiro128Plus(seed);
                 var gmax = isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.IsGigantamax : raidInfo.RaidEncounterTable.Entries(i).Value.IsGigantamax;
-                var form = (int)(isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.AltForm : raidInfo.RaidEncounterTable.Entries(i).Value.AltForm);
+                var form = (byte)(isEvent ? raidInfo.RaidDistributionEncounterTable.Entries(i).Value.AltForm : raidInfo.RaidEncounterTable.Entries(i).Value.AltForm);
                 var speciesName = SpeciesName.GetSpeciesNameGeneration(speciesID, 2, 8);
                 var formStr = TradeExtensions<PK8>.FormOutput(speciesID, form, out _);
 

@@ -29,19 +29,19 @@ namespace SysBot.Pokemon
         public static readonly int[] ShinyLock = {  (int)Species.Victini, (int)Species.Keldeo, (int)Species.Volcanion, (int)Species.Cosmog, (int)Species.Cosmoem, (int)Species.Magearna, (int)Species.Marshadow, (int)Species.Eternatus,
                                                     (int)Species.Kubfu, (int)Species.Urshifu, (int)Species.Zarude, (int)Species.Glastrier, (int)Species.Spectrier, (int)Species.Calyrex };
 
-        public static bool ShinyLockCheck(int species, string form, string ball = "")
+        public static bool ShinyLockCheck(ushort species, string form, string ball = "")
         {
             if (ShinyLock.Contains(species))
                 return true;
-            else if (form is not "" && (species is (int)Species.Zapdos or (int)Species.Moltres or (int)Species.Articuno))
+            else if (form is not "" && (species is (ushort)Species.Zapdos or (ushort)Species.Moltres or (ushort)Species.Articuno))
                 return true;
-            else if (ball.Contains("Beast") && (species is (int)Species.Poipole or (int)Species.Naganadel))
+            else if (ball.Contains("Beast") && (species is (ushort)Species.Poipole or (ushort)Species.Naganadel))
                 return true;
-            else if (typeof(T) == typeof(PB8) && (species is (int)Species.Manaphy or (int)Species.Mew or (int)Species.Jirachi))
+            else if (typeof(T) == typeof(PB8) && (species is (ushort)Species.Manaphy or (ushort)Species.Mew or (ushort)Species.Jirachi))
                 return true;
-            else if (species is (int)Species.Pikachu && form is not "" && form is not "-Partner")
+            else if (species is (ushort)Species.Pikachu && form is not "" && form is not "-Partner")
                 return true;
-            else if ((species is (int)Species.Zacian or (int)Species.Zamazenta) && !ball.Contains("Cherish") && ball is not "")
+            else if ((species is (ushort)Species.Zacian or (ushort)Species.Zamazenta) && !ball.Contains("Cherish") && ball is not "")
                 return true;
             return false;
         }
@@ -151,6 +151,7 @@ namespace SysBot.Pokemon
                 pk8.HT_Memory = 0;
                 pk8.HT_Feeling = 0;
                 pk8.HT_Intensity = 0;
+                pk8.DynamaxLevel = pk8.GetSuggestedDynamaxLevel(pk8, 0);
             }
             else if (pk is PB8 pb8)
             {
@@ -159,18 +160,19 @@ namespace SysBot.Pokemon
                 pb8.HT_Memory = 0;
                 pb8.HT_Feeling = 0;
                 pb8.HT_Intensity = 0;
+                pb8.DynamaxLevel = pb8.GetSuggestedDynamaxLevel(pb8, 0);
             }
 
             pk = TrashBytes(pk);
-            pk.SetDynamaxLevel();
-
             var la = new LegalityAnalysis(pk);
             var enc = la.EncounterMatch;
             pk.CurrentFriendship = enc is EncounterStatic s ? s.EggCycles : pk.PersonalInfo.HatchCycles;
-            pk.RelearnMoves = MoveBreed.GetExpectedMoves(pk.Moves, la.EncounterMatch);
-            pk.Moves = pk.RelearnMoves;
+
+            MoveBreed.GetExpectedMoves(pk.Moves, la.EncounterMatch, pk.Moves);
+            pk.RelearnMoves = pk.Moves;
             pk.Move1_PPUps = pk.Move2_PPUps = pk.Move3_PPUps = pk.Move4_PPUps = 0;
             pk.SetMaximumPPCurrent(pk.Moves);
+
             pk.SetSuggestedHyperTrainingData();
             pk.SetSuggestedRibbons(template, enc);
         }
@@ -309,17 +311,17 @@ namespace SysBot.Pokemon
                 baseLink = "https://raw.githubusercontent.com/Koi-3088/HomeImages/master/512x512/poke_capture_0001_000_mf_n_00000000_f_n.png".Split('_');
             else baseLink = "https://raw.githubusercontent.com/Koi-3088/HomeImages/master/128x128/poke_capture_0001_000_mf_n_00000000_f_n.png".Split('_');
 
-            if (Enum.IsDefined(typeof(GenderDependent), pkm.Species) && !canGmax && pkm.Form == 0)
+            if (Enum.IsDefined(typeof(GenderDependent), pkm.Species) && !canGmax && pkm.Form is 0)
             {
-                if (pkm.Gender == 0 && pkm.Species != (int)Species.Torchic)
+                if (pkm.Gender is 0 && pkm.Species is not (ushort)Species.Torchic)
                     md = true;
                 else fd = true;
             }
 
             int form = pkm.Species switch
             {
-                (int)Species.Sinistea or (int)Species.Polteageist or (int)Species.Rockruff or (int)Species.Mothim => 0,
-                (int)Species.Alcremie when pkm.IsShiny || canGmax => 0,
+                (ushort)Species.Sinistea or (ushort)Species.Polteageist or (ushort)Species.Rockruff or (ushort)Species.Mothim => 0,
+                (ushort)Species.Alcremie when pkm.IsShiny || canGmax => 0,
                 _ => pkm.Form,
             };
 
@@ -327,21 +329,21 @@ namespace SysBot.Pokemon
             baseLink[3] = pkm.Form < 10 ? $"00{form}" : $"0{form}";
             baseLink[4] = pkm.PersonalInfo.OnlyFemale ? "fo" : pkm.PersonalInfo.OnlyMale ? "mo" : pkm.PersonalInfo.Genderless ? "uk" : fd ? "fd" : md ? "md" : "mf";
             baseLink[5] = canGmax ? "g" : "n";
-            baseLink[6] = "0000000" + (pkm.Species == (int)Species.Alcremie && !canGmax ? pkm.Data[0xE4] : 0);
+            baseLink[6] = "0000000" + (pkm.Species is (ushort)Species.Alcremie && !canGmax ? pkm.Data[0xE4] : 0);
             baseLink[8] = pkm.IsShiny ? "r.png" : "n.png";
             return string.Join("_", baseLink);
         }
 
-        public static string FormOutput(int species, int form, out string[] formString)
+        public static string FormOutput(ushort species, byte form, out string[] formString)
         {
             var strings = GameInfo.GetStrings("en");
-            formString = FormConverter.GetFormList(species, strings.Types, strings.forms, GameInfo.GenderSymbolASCII, typeof(T) == typeof(PK8) ? 8 : 4);
-            if (formString.Length == 0)
+            formString = FormConverter.GetFormList(species, strings.Types, strings.forms, GameInfo.GenderSymbolASCII, typeof(T) == typeof(PK8) ? EntityContext.Gen8 : EntityContext.Gen4);
+            if (formString.Length is 0)
                 return string.Empty;
 
             formString[0] = "";
             if (form >= formString.Length)
-                form = formString.Length - 1;
+                form = (byte)(formString.Length - 1);
 
             return formString[form].Contains("-") ? formString[form] : formString[form] == "" ? "" : $"-{formString[form]}";
         }

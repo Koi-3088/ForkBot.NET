@@ -108,8 +108,8 @@ namespace SysBot.Pokemon
             }
 
             var species = RaidInfo.Den.IsEvent ? RaidInfo.RaidDistributionEncounter.Species : RaidInfo.RaidEncounter.Species;
-            var specName = SpeciesName.GetSpeciesNameGeneration((int)species, 2, 8);
-            var form = TradeExtensions<PK8>.FormOutput((int)(RaidInfo.Den.IsEvent ? RaidInfo.RaidDistributionEncounter.Species : RaidInfo.RaidEncounter.Species), (int)(RaidInfo.Den.IsEvent ? RaidInfo.RaidDistributionEncounter.AltForm : RaidInfo.RaidEncounter.AltForm), out _);
+            var specName = SpeciesName.GetSpeciesNameGeneration((ushort)species, 2, 8);
+            var form = TradeExtensions<PK8>.FormOutput((ushort)(RaidInfo.Den.IsEvent ? RaidInfo.RaidDistributionEncounter.Species : RaidInfo.RaidEncounter.Species), (byte)(RaidInfo.Den.IsEvent ? RaidInfo.RaidDistributionEncounter.AltForm : RaidInfo.RaidEncounter.AltForm), out _);
             var results = $"\n\nDesired species: {(uint)RaidInfo.Den.Stars + 1}★ - {specName}{form}\n" +
                           $"\n{ivSpread}\n" +
                           $"\nStarting seed: {RaidInfo.Den.Seed:X16}\n" +

@@ -36,7 +36,7 @@ namespace SysBot.Pokemon
             pkm.ClearHyperTraining();
 
             var enc = la.Info.EncounterMatch;
-            var evoChain = la.Info.EvoChainsAllGens[pkm.Format].FirstOrDefault(x => x.Species == pkm.Species);
+            var evoChain = la.Info.EvoChainsAllGens.Gen8.FirstOrDefault(x => x.Species == pkm.Species);
             pkm.CurrentLevel = enc.LevelMin < evoChain.LevelMin ? evoChain.LevelMin : enc.LevelMin;
             while (!new LegalityAnalysis(pkm).Valid)
             {
@@ -46,7 +46,7 @@ namespace SysBot.Pokemon
             }
 
             pkm.SetSuggestedMoves();
-            pkm.SetRelearnMoves(pkm.GetSuggestedRelearnMoves(enc));
+            pkm.SetRelearnMoves(la.GetSuggestedRelearnMoves(enc));
             pkm.HealPP();
 
             if (!GalarFossils.Contains(pkm.Species) && !pkm.FatefulEncounter)
@@ -131,8 +131,9 @@ namespace SysBot.Pokemon
 
             var la = new LegalityAnalysis(pkm);
             var enc = la.Info.EncounterMatch;
-            var evoChain = la.Info.EvoChainsAllGens[pkm.Format].FirstOrDefault(x => x.Species == pkm.Species);
+            var evoChain = la.Info.EvoChainsAllGens.Gen8b.FirstOrDefault(x => x.Species == pkm.Species);
             pkm.CurrentLevel = enc.LevelMin < evoChain.LevelMin ? evoChain.LevelMin : enc.LevelMin;
+
             while (!new LegalityAnalysis(pkm).Valid)
             {
                 pkm.CurrentLevel += 1;
@@ -140,10 +141,11 @@ namespace SysBot.Pokemon
                     return pkm;
             }
 
-            if (!new LegalityAnalysis(pkm).Valid)
+            la = new LegalityAnalysis(pkm);
+            if (!la.Valid)
             {
                 pkm.SetSuggestedMoves();
-                pkm.SetRelearnMoves(pkm.GetSuggestedRelearnMoves(enc));
+                pkm.SetRelearnMoves(la.GetSuggestedRelearnMoves(enc));
             }
             pkm.HealPP();
             
@@ -172,8 +174,8 @@ namespace SysBot.Pokemon
             int dittoLoc = DittoSlot(evos[0].Species, evos[1].Species);
             bool random = evos.All(x => x.Species == 132);
 
-            int baseSpecies = 0;
-            int formID = 0;
+            ushort baseSpecies = 0;
+            byte formID = 0;
             if (!random)
             {
                 for (int i = 0; i < evos.Count; i++)
@@ -187,14 +189,14 @@ namespace SysBot.Pokemon
             }
 
             var keys = Dex.Keys.ToArray();
-            int speciesID = random ? keys[Random.Next(Dex.Count)] : baseSpecies;
+            var speciesID = random ? keys[Random.Next(Dex.Count)] : baseSpecies;
             string formName = string.Empty;
             if (random)
             {
                 while (true)
                 {
                     TradeExtensions<PK8>.FormOutput(speciesID, 0, out string[] formsR);
-                    formID = Random.Next(formsR.Length);
+                    formID = (byte)Random.Next(formsR.Length);
                     if (BaseCanBeEgg(speciesID, formID, out formID, out baseSpecies) && baseSpecies > 0)
                     {
                         formName = TradeExtensions<PK8>.FormOutput(baseSpecies, formID, out _);
@@ -212,12 +214,12 @@ namespace SysBot.Pokemon
 
             formName = speciesName switch
             {
-                "Nidoran" => _ = !random && dittoLoc == 1 ? (evos[1].Species == 32 ? "-M" : "-F") : !random && dittoLoc == 2 ? (evos[0].Species == 32 ? "-M" : "-F") : (Random.Next(2) == 0 ? "-M" : "-F"),
-                "Indeedee" => _ = !random && dittoLoc == 1 ? (evos[1].Species == 876 ? "-M" : "-F") : !random && dittoLoc == 2 ? (evos[0].Species == 876 ? "-M" : "-F") : (Random.Next(2) == 0 ? "-M" : "-F"),
+                "Nidoran" => _ = !random && dittoLoc is 1 ? (evos[1].Species is 32 ? "-M" : "-F") : !random && dittoLoc is 2 ? (evos[0].Species is 32 ? "-M" : "-F") : (Random.Next(2) is 0 ? "-M" : "-F"),
+                "Indeedee" => _ = !random && dittoLoc is 1 ? (evos[1].Species is 876 ? "-M" : "-F") : !random && dittoLoc is 2 ? (evos[0].Species is 876 ? "-M" : "-F") : (Random.Next(2) is 0 ? "-M" : "-F"),
                 _ => formName,
             };
 
-            if (speciesID == (int)Species.Rotom || FormInfo.IsBattleOnlyForm(speciesID, formID, generation) || !Breeding.CanHatchAsEgg(speciesID, formID, generation))
+            if (speciesID is (ushort)Species.Rotom || FormInfo.IsBattleOnlyForm(speciesID, formID, generation) || !Breeding.CanHatchAsEgg(speciesID, formID, generation))
                 formName = "";
 
             var set = new ShowdownSet($"Egg({speciesName}{formName}){shinyRng}\n{trainerInfo}");
@@ -226,12 +228,12 @@ namespace SysBot.Pokemon
             var pk = (T)sav.GetLegal(template, out string result);
 
             var ballRngDC = Random.Next(1, 3);
-            pk.Ball = ballRngDC == 1 ? balls[0] : balls[1];
+            pk.Ball = ballRngDC is 1 ? balls[0] : balls[1];
             if (!pk.ValidBall())
                 pk.Ball = BallApplicator.ApplyBallLegalRandom(pk);
 
             TradeExtensions<T>.EggTrade(pk, template);
-            pk.SetAbilityIndex(Random.Next(Game == GameVersion.SWSH ? 3 : 2));
+            pk.SetAbilityIndex(Random.Next(Game is GameVersion.SWSH ? 3 : 2));
 
             pk.Nature = Random.Next(25);
             pk.StatNature = pk.Nature;
@@ -305,7 +307,7 @@ namespace SysBot.Pokemon
         private T? ShedinjaGenerator(T pk, out string msg)
         {
             T? shedinja = (T)pk.Clone();
-            var index = shedinja.PersonalInfo.GetAbilityIndex(shedinja.Ability);
+            var index = shedinja.PersonalInfo.GetIndexOfAbility(shedinja.Ability);
             shedinja.Species = (int)Species.Shedinja;
             shedinja.SetGender(2);
             shedinja.Ball = 4;
@@ -318,7 +320,7 @@ namespace SysBot.Pokemon
 
             var la = new LegalityAnalysis(shedinja);
             var enc = la.Info.EncounterMatch;
-            shedinja.SetRelearnMoves(shedinja.GetSuggestedRelearnMoves(enc));
+            shedinja.SetRelearnMoves(la.GetSuggestedRelearnMoves(enc));
 
             msg = string.Empty;
             la = new LegalityAnalysis(shedinja);
@@ -345,16 +347,16 @@ namespace SysBot.Pokemon
             }
 
             var heldItem = (TCItems)pk.HeldItem;
-            var form = arg != RegionalFormArgument.None && pk.Species != (int)Species.Meowth && (int)arg > 1 ? (int)arg - 1 : (int)arg;
-            var evoList = Evolutions.FindAll(x => x.Species == pk.Species && x.Item == (alcremie != AlcremieForms.None ? TCItems.Sweets : heldItem));
-            if (evoList.Count == 0)
+            byte form = (byte)(arg is not RegionalFormArgument.None && pk.Species is not (ushort)Species.Meowth && (int)arg > 1 ? (int)arg - 1 : (int)arg);
+            var evoList = Evolutions.FindAll(x => x.Species == pk.Species && x.Item == (alcremie is not AlcremieForms.None ? TCItems.Sweets : heldItem));
+            if (evoList.Count is 0)
             {
                 msg = "No evolution results found for this Pokémon or criteria not met.";
                 return false;
             }
 
             var result = EdgeCaseEvolutions(evoList, pk, (int)alcremie, form, (int)heldItem, tod);
-            if (result != default && result.DayTime != TimeOfDay.Any && result.DayTime != tod)
+            if (result != default && result.DayTime is not TimeOfDay.Any && result.DayTime != tod)
             {
                 msg = $"This Pokémon seems to like the {Enum.GetName(typeof(TimeOfDay), result.DayTime).ToLower()}.";
                 return false;
@@ -369,7 +371,7 @@ namespace SysBot.Pokemon
                 msg = $"Current level is too low, needs to be at least level {result.EvolvesAtLevel}.";
                 return false;
             }
-            else if (pk is PK8 pk8 && pk8.CanGigantamax && (pk.Species == (int)Species.Meowth || pk.Species == (int)Species.Pikachu || pk.Species == (int)Species.Eevee))
+            else if (pk is PK8 pk8 && pk8.CanGigantamax && (pk.Species is (ushort)Species.Meowth || pk.Species is (ushort)Species.Pikachu || pk.Species is (ushort)Species.Eevee))
             {
                 msg = $"Gigantamax {SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8)} cannot evolve.";
                 return false;
@@ -415,41 +417,41 @@ namespace SysBot.Pokemon
                 case EvolutionType.UseItemFemale:
                 case EvolutionType.LevelUpFemale:
                     {
-                        if (pk.Gender != 1)
+                        if (pk.Gender is not 1)
                         {
                             msg = "Incompatible gender for evolution type.";
                             return false;
                         }
 
-                        if (result.EvoType == EvolutionType.LevelUpFemale)
+                        if (result.EvoType is EvolutionType.LevelUpFemale)
                             pk.CurrentLevel++;
                     }; break;
                 case EvolutionType.UseItemMale:
                 case EvolutionType.LevelUpMale:
                     {
-                        if (pk.Gender != 0)
+                        if (pk.Gender is not 0)
                         {
                             msg = "Incompatible gender for evolution type.";
                             return false;
                         }
 
-                        if (result.EvoType == EvolutionType.LevelUpMale)
+                        if (result.EvoType is EvolutionType.LevelUpMale)
                             pk.CurrentLevel++;
                     }; break;
                 case EvolutionType.LevelUpKnowMove or EvolutionType.LevelUp: pk.CurrentLevel++; break;
             };
 
-            if (pk.Species == (int)Species.Nincada)
+            if (pk.Species is (ushort)Species.Nincada)
             {
                 shedinja = ShedinjaGenerator(pk, out msg);
-                if (shedinja == null)
+                if (shedinja is null)
                     return false;
             }
 
             bool applyMoves = false;
             var enc = new LegalityAnalysis(pk).EncounterMatch;
             var sav = new SimpleTrainerInfo() { OT = pk.OT_Name, Gender = pk.OT_Gender, Generation = pk.Version, Language = pk.Language, SID = pk.TrainerSID7, TID = pk.TrainerID7 };
-            if (typeof(T) == typeof(PK8) && pk.Generation == 8 && ((pk.Species == (int)Species.Koffing && result.EvolvedForm == 0) || ((pk.Species == (int)Species.Exeggcute || pk.Species == (int)Species.Pikachu || pk.Species == (int)Species.Cubone) && result.EvolvedForm > 0)))
+            if (typeof(T) == typeof(PK8) && pk.Generation is 8 && ((pk.Species is (ushort)Species.Koffing && result.EvolvedForm is 0) || ((pk.Species is (ushort)Species.Exeggcute || pk.Species is (ushort)Species.Pikachu || pk.Species is (ushort)Species.Cubone) && result.EvolvedForm > 0)))
             {
                 applyMoves = true;
                 int version = pk.Version;
@@ -466,26 +468,26 @@ namespace SysBot.Pokemon
                     pk8.WeightScalar = 0;
                 }
 
-                if (pk.Ball == (int)Ball.Sport || (pk.WasEgg && pk.Ball == (int)Ball.Master))
+                if (pk.Ball is (int)Ball.Sport || (pk.WasEgg && pk.Ball is (int)Ball.Master))
                     pk.SetSuggestedBall(true);
             }
             else pk.SetHandlerandMemory(sav, enc);
 
-            var index = pk.PersonalInfo.GetAbilityIndex(pk.Ability);
+            var index = pk.PersonalInfo.GetIndexOfAbility(pk.Ability);
             pk.Species = result.EvolvesInto;
             pk.Form = result.EvolvedForm;
             pk.SetAbilityIndex(index);
             pk.Nickname = pk.IsNicknamed ? pk.Nickname : pk.ClearNickname();
-            if (pk.Species == (int)Species.Runerigus)
+            if (pk.Species is (ushort)Species.Runerigus)
                 pk.SetSuggestedFormArgument((int)Species.Yamask);
 
             var la = new LegalityAnalysis(pk);
             if (!la.Valid)
             {
-                if (result.EvoType == EvolutionType.LevelUpKnowMove || applyMoves)
+                if (result.EvoType is EvolutionType.LevelUpKnowMove || applyMoves)
                     EdgeCaseRelearnMoves(pk, la);
                 else if (pk.FatefulEncounter)
-                    pk.RelearnMoves = (int[])la.EncounterMatch.GetSuggestedRelearn(pk);
+                    pk.RelearnMoves = (ushort[])la.EncounterMatch.GetSuggestedRelearn(pk);
             }
 
             la = new LegalityAnalysis(pk);
@@ -503,20 +505,20 @@ namespace SysBot.Pokemon
 
         private void EdgeCaseRelearnMoves(T pk, LegalityAnalysis la)
         {
-            if (typeof(T) == typeof(PK8) && (pk.Met_Location == 162 || pk.Met_Location == 244))
+            if (typeof(T) == typeof(PK8) && (pk.Met_Location is 162 or 244))
                 return;
 
             pk.Moves = la.GetMoveSet();
-            pk.RelearnMoves = (int[])pk.GetSuggestedRelearnMoves(la.EncounterMatch);
+            pk.RelearnMoves = (ushort[])la.GetSuggestedRelearnMoves(la.EncounterMatch);
             var indexEmpty = pk.RelearnMoves.ToList().IndexOf(0);
-            if (indexEmpty != -1)
+            if (indexEmpty is not -1)
             {
-                int move = pk.Species switch
+                ushort move = pk.Species switch
                 {
-                    (int)Species.Tangrowth or (int)Species.Yanmega when !pk.RelearnMoves.Contains(246) => 246, // Ancient Power
-                    (int)Species.Grapploct when !pk.RelearnMoves.Contains(269) => 269, // Taunt
-                    (int)Species.Lickilicky when !pk.RelearnMoves.Contains(205) => 205, // Rollout
-                    (int)Species.Ambipom when !pk.RelearnMoves.Contains(458) => 458, // Double Hit
+                    (ushort)Species.Tangrowth or (ushort)Species.Yanmega when !pk.RelearnMoves.ToList().Contains(246) => 246, // Ancient Power
+                    (ushort)Species.Grapploct when !pk.RelearnMoves.ToList().Contains(269) => 269, // Taunt
+                    (ushort)Species.Lickilicky when !pk.RelearnMoves.ToList().Contains(205) => 205, // Rollout
+                    (ushort)Species.Ambipom when !pk.RelearnMoves.ToList().Contains(458) => 458, // Double Hit
                     _ => 0,
                 };
 
@@ -531,27 +533,27 @@ namespace SysBot.Pokemon
             pk.HealPP();
         }
 
-        private EvolutionTemplate EdgeCaseEvolutions(List<EvolutionTemplate> evoList, T pk, int alcremieForm, int form, int item, TimeOfDay tod)
+        private EvolutionTemplate EdgeCaseEvolutions(List<EvolutionTemplate> evoList, T pk, int alcremieForm, byte form, int item, TimeOfDay tod)
         {
             EvolutionTemplate result = pk.Species switch
             {
-                (int)Species.Tyrogue => pk.Stat_ATK == pk.Stat_DEF ? evoList.Find(x => x.EvoType == EvolutionType.LevelUpAeqD) : pk.Stat_ATK > pk.Stat_DEF ? evoList.Find(x => x.EvoType == EvolutionType.LevelUpATK) : evoList.Find(x => x.EvoType == EvolutionType.LevelUpDEF),
-                (int)Species.Eevee when item > 0 => evoList.Find(x => x.Item == (TCItems)item),
-                (int)Species.Eevee when pk.CurrentFriendship >= 250 => evoList.Find(x => x.EvoType == EvolutionType.LevelUpAffection50MoveType),
-                (int)Species.Eevee when item <= 0 => evoList.Find(x => x.DayTime == tod),
-                (int)Species.Toxel => TradeExtensions<T>.LowKey.Contains(pk.Nature) ? evoList.Find(x => x.EvolvedForm == 1) : evoList.Find(x => x.EvolvedForm == 0),
-                (int)Species.Milcery when alcremieForm >= 0 => evoList.Find(x => x.EvolvedForm == alcremieForm),
-                (int)Species.Cosmoem => pk.Version == 45 ? evoList.Find(x => x.EvolvesInto == (int)Species.Lunala) : evoList.Find(x => x.EvolvesInto == (int)Species.Solgaleo),
-                (int)Species.Nincada => evoList.Find(x => x.EvolvesInto == (int)Species.Ninjask),
-                (int)Species.Espurr => evoList.Find(x => x.EvolvedForm == (pk.Gender == (int)Gender.Male ? 0 : 1)),
-                (int)Species.Combee => evoList.Find(x => x.EvolvesInto == (pk.Gender == (int)Gender.Male ? -1 : (int)Species.Vespiquen)),
-                (int)Species.Koffing or (int)Species.Exeggcute or (int)Species.Pikachu or (int)Species.Cubone when form != -1 => evoList.Find(x => x.EvolvedForm == form),
-                (int)Species.Meowth when pk.Form == 2 => evoList.Find(x => x.EvolvesInto == (int)Species.Perrserker),
-                (int)Species.Zigzagoon or (int)Species.Linoone or (int)Species.Yamask or (int)Species.Corsola or (int)Species.Diglett when pk.Form > 0 => evoList.Find(x => x.BaseForm > 0),
-                (int)Species.Darumaka => pk.Form == 1 ? evoList.Find(x => x.EvolvedForm == 2 && x.Item == (TCItems)item) : evoList.Find(x => x.EvolvedForm == 0),
-                (int)Species.Rockruff when pk.Form == 1 => evoList.Find(x => x.EvolvedForm == 2), // Dusk
-                (int)Species.Rockruff => evoList.Find(x => x.DayTime == tod),
-                (int)Species.Wurmple => GetWurmpleEvo(pk, evoList),
+                (ushort)Species.Tyrogue => pk.Stat_ATK == pk.Stat_DEF ? evoList.Find(x => x.EvoType is EvolutionType.LevelUpAeqD) : pk.Stat_ATK > pk.Stat_DEF ? evoList.Find(x => x.EvoType is EvolutionType.LevelUpATK) : evoList.Find(x => x.EvoType is EvolutionType.LevelUpDEF),
+                (ushort)Species.Eevee when item > 0 => evoList.Find(x => x.Item == (TCItems)item),
+                (ushort)Species.Eevee when pk.CurrentFriendship >= 250 => evoList.Find(x => x.EvoType is EvolutionType.LevelUpAffection50MoveType),
+                (ushort)Species.Eevee when item <= 0 => evoList.Find(x => x.DayTime == tod),
+                (ushort)Species.Toxel => TradeExtensions<T>.LowKey.Contains(pk.Nature) ? evoList.Find(x => x.EvolvedForm is 1) : evoList.Find(x => x.EvolvedForm is 0),
+                (ushort)Species.Milcery when alcremieForm >= 0 => evoList.Find(x => x.EvolvedForm == alcremieForm),
+                (ushort)Species.Cosmoem => pk.Version is 45 ? evoList.Find(x => x.EvolvesInto is (ushort)Species.Lunala) : evoList.Find(x => x.EvolvesInto is (ushort)Species.Solgaleo),
+                (ushort)Species.Nincada => evoList.Find(x => x.EvolvesInto is (ushort)Species.Ninjask),
+                (ushort)Species.Espurr => evoList.Find(x => x.EvolvedForm == (pk.Gender is (int)Gender.Male ? 0 : 1)),
+                (ushort)Species.Combee => evoList.Find(x => x.EvolvesInto == (pk.Gender is (int)Gender.Male ? -1 : (ushort)Species.Vespiquen)),
+                (ushort)Species.Koffing or (ushort)Species.Exeggcute or (ushort)Species.Pikachu or (ushort)Species.Cubone => evoList.Find(x => x.EvolvedForm == form),
+                (ushort)Species.Meowth when pk.Form is 2 => evoList.Find(x => x.EvolvesInto is (ushort)Species.Perrserker),
+                (ushort)Species.Zigzagoon or (ushort)Species.Linoone or (ushort)Species.Yamask or (ushort)Species.Corsola or (ushort)Species.Diglett when pk.Form > 0 => evoList.Find(x => x.BaseForm > 0),
+                (ushort)Species.Darumaka => pk.Form is 1 ? evoList.Find(x => x.EvolvedForm is 2 && x.Item == (TCItems)item) : evoList.Find(x => x.EvolvedForm is 0),
+                (ushort)Species.Rockruff when pk.Form is 1 => evoList.Find(x => x.EvolvedForm is 2), // Dusk
+                (ushort)Species.Rockruff => evoList.Find(x => x.DayTime == tod),
+                (ushort)Species.Wurmple => GetWurmpleEvo(pk, evoList),
                 _ => evoList.Find(x => x.BaseForm == pk.Form),
             };
             return result;
@@ -599,11 +601,11 @@ namespace SysBot.Pokemon
             update = false;
             criteria = new List<EvoCriteria>();
             balls = new int[2];
-            if (user.Daycare.Species1 == 0 || user.Daycare.Species2 == 0)
+            if (user.Daycare.Species1 is 0 || user.Daycare.Species2 is 0)
                 return false;
 
             var pkm1 = GetLookupAsClassObject<T>(user.UserInfo.UserID, "binary_catches", $"and id = {user.Daycare.ID1}");
-            if (pkm1.Species == 0)
+            if (pkm1.Species is 0)
             {
                 if (user.Daycare.Species2 != 0)
                     user.Daycare = new() { Ball2 = user.Daycare.Ball2, Form2 = user.Daycare.Form2, ID2 = user.Daycare.ID2, Shiny2 = user.Daycare.Shiny2, Species2 = user.Daycare.Species2 };
@@ -612,18 +614,18 @@ namespace SysBot.Pokemon
             }
 
             var pkm2 = GetLookupAsClassObject<T>(user.UserInfo.UserID, "binary_catches", $"and id = {user.Daycare.ID2}");
-            if (pkm2.Species == 0)
+            if (pkm2.Species is 0)
             {
-                if (user.Daycare.Species1 != 0)
+                if (user.Daycare.Species1 is not 0)
                     user.Daycare = new() { Ball1 = user.Daycare.Ball1, Form1 = user.Daycare.Form1, ID1 = user.Daycare.ID1, Shiny1 = user.Daycare.Shiny1, Species1 = user.Daycare.Species1 };
                 else user.Daycare = new();
                 update = true;
             }
 
-            if (pkm1.IsEgg || pkm2.IsEgg || user.Daycare.Species1 == 0 || user.Daycare.Species2 == 0)
+            if (pkm1.IsEgg || pkm2.IsEgg || user.Daycare.Species1 is 0 || user.Daycare.Species2 is 0)
                 return false;
 
-            bool sameTree = pkm1.Species == 132 || pkm2.Species == 132 || SameEvoTree(pkm1, pkm2);
+            bool sameTree = pkm1.Species is 132 || pkm2.Species is 132 || SameEvoTree(pkm1, pkm2);
             bool breedable = CanHatchTradeCord(pkm1.Species) && CanHatchTradeCord(pkm2.Species);
             if (!sameTree || !breedable)
                 return false;
@@ -636,7 +638,7 @@ namespace SysBot.Pokemon
             return true;
         }
 
-        private bool CanHatchTradeCord(int species) => Breeding.CanHatchAsEgg(species) || species == (int)Species.Ditto;
+        private bool CanHatchTradeCord(ushort species) => Breeding.CanHatchAsEgg(species) || species is (ushort)Species.Ditto;
 
         private bool SameEvoTree(PKM pkm1, PKM pkm2)
         {
@@ -659,23 +661,23 @@ namespace SysBot.Pokemon
             List<EvoCriteria> criteriaList = new();
             for (int i = 0; i < list.Count; i++)
             {
-                int form = list[i].Species switch
+                byte form = list[i].Species switch
                 {
-                    (int)Species.Obstagoon or (int)Species.Cursola or (int)Species.Runerigus or (int)Species.Sirfetchd => 1,
-                    (int)Species.Perrserker => 2,
-                    (int)Species.Lycanroc or (int)Species.Slowbro or (int)Species.Darmanitan when list[i].Form == 2 => 1,
-                    (int)Species.Lycanroc when list[i].Form == 1 => 0,
-                    (int)Species.Sinistea or (int)Species.Polteageist or (int)Species.Rotom or (int)Species.Pikachu or (int)Species.Raichu or (int)Species.Marowak or (int)Species.Exeggutor or (int)Species.Weezing or (int)Species.Alcremie => 0,
-                    (int)Species.MrMime when list[i].Form == 1 => 0,
+                    (ushort)Species.Obstagoon or (ushort)Species.Cursola or (ushort)Species.Runerigus or (ushort)Species.Sirfetchd => 1,
+                    (ushort)Species.Perrserker => 2,
+                    (ushort)Species.Lycanroc or (ushort)Species.Slowbro or (ushort)Species.Darmanitan when list[i].Form is 2 => 1,
+                    (ushort)Species.Lycanroc when list[i].Form is 1 => 0,
+                    (ushort)Species.Sinistea or (ushort)Species.Polteageist or (ushort)Species.Rotom or (ushort)Species.Pikachu or (ushort)Species.Raichu or (ushort)Species.Marowak or (ushort)Species.Exeggutor or (ushort)Species.Weezing or (ushort)Species.Alcremie => 0,
+                    (ushort)Species.MrMime when list[i].Form is 1 => 0,
                     _ => list[i].Form,
                 };
 
-                if (list[i].Species == (int)Species.Rotom && list[i].Form > 0)
+                if (list[i].Species is (ushort)Species.Rotom && list[i].Form > 0)
                     list[i].Form = 0;
 
                 EvoCriteria evo = default;
-                var preEvos = EvolutionTree.GetEvolutionTree(list[i].Context).GetValidPreEvolutions(list[i], 100, 8, true).ToList().FindAll(x => x.LevelMin == 1);
-                if (preEvos.Count == 0)
+                var preEvos = EvolutionTree.GetEvolutionTree(list[i].Context).GetValidPreEvolutions(list[i], 100, 8, true).ToList().FindAll(x => x.LevelMin is 1);
+                if (preEvos.Count is 0)
                     continue;
                 else evo = preEvos.LastOrDefault(x => x.Form == form);
 
@@ -685,7 +687,7 @@ namespace SysBot.Pokemon
             return criteriaList;
         }
 
-        protected List<string> GetMissingDexEntries(List<int> dex)
+        protected List<string> GetMissingDexEntries(List<ushort> dex)
         {
             List<string> missing = new();
             var keys = Dex.Keys.ToArray();
@@ -697,11 +699,11 @@ namespace SysBot.Pokemon
             return missing;
         }
 
-        protected void EventHandler(TradeCordSettings settings, out MysteryGift? mg, out int form)
+        protected void EventHandler(TradeCordSettings settings, out MysteryGift? mg, out byte form)
         {
             string type = string.Empty;
             bool match = false;
-            form = -1;
+            form = 255;
             mg = default;
             var eventType = $"{settings.PokeEventType}";
             var keys = Dex.Keys.ToArray();
@@ -710,9 +712,9 @@ namespace SysBot.Pokemon
             {
                 Rng.SpeciesRNG = keys[Random.Next(Dex.Count)];
                 var formIDs = Dex[Rng.SpeciesRNG].ToArray();
-                form = -1;
+                form = 255;
 
-                if (settings.PokeEventType == PokeEventType.EventPoke)
+                if (settings.PokeEventType is PokeEventType.EventPoke)
                     mg = MysteryGiftRng(settings);
                 else if ((int)settings.PokeEventType <= 17)
                 {
@@ -729,23 +731,23 @@ namespace SysBot.Pokemon
                         }
                     }
                 }
-                else if (settings.PokeEventType == PokeEventType.Halloween)
+                else if (settings.PokeEventType is PokeEventType.Halloween)
                 {
-                    if (Rng.SpeciesRNG is (int)Species.Corsola or (int)Species.Marowak or (int)Species.Moltres)
+                    if (Rng.SpeciesRNG is (ushort)Species.Corsola or (ushort)Species.Marowak or (ushort)Species.Moltres)
                         form = 1;
                 }
-                else if (settings.PokeEventType == PokeEventType.Babies)
+                else if (settings.PokeEventType is PokeEventType.Babies)
                 {
-                    BaseCanBeEgg(Rng.SpeciesRNG, 0, out _, out int baseSpecies);
+                    BaseCanBeEgg(Rng.SpeciesRNG, 0, out _, out ushort baseSpecies);
                     Rng.SpeciesRNG = baseSpecies;
                 }
-                else if (settings.PokeEventType == PokeEventType.CottonCandy)
+                else if (settings.PokeEventType is PokeEventType.CottonCandy)
                     form = formIDs[Random.Next(formIDs.Length)];
 
                 match = settings.PokeEventType switch
                 {
                     PokeEventType.Legends => IsLegendaryOrMythical(Rng.SpeciesRNG),
-                    PokeEventType.Babies => Rng.SpeciesRNG != -1,
+                    PokeEventType.Babies => Rng.SpeciesRNG is not 0,
                     PokeEventType.Halloween => Enum.IsDefined(typeof(Halloween), Rng.SpeciesRNG),
                     PokeEventType.CottonCandy => IsCottonCandy(Rng.SpeciesRNG, form),
                     PokeEventType.PokePets => Enum.IsDefined(typeof(PokePets), Rng.SpeciesRNG),
@@ -757,9 +759,9 @@ namespace SysBot.Pokemon
             }
         }
 
-        private bool IsCottonCandy(int species, int form)
+        private bool IsCottonCandy(ushort species, byte form)
         {
-            var color = (PersonalColor)(Game == GameVersion.SWSH ? PersonalTable.SWSH.GetFormEntry(species, form).Color : PersonalTable.BDSP.GetFormEntry(species, form).Color);
+            var color = (PersonalColor)(Game is GameVersion.SWSH ? PersonalTable.SWSH.GetFormEntry(species, form).Color : PersonalTable.BDSP.GetFormEntry(species, form).Color);
             return (ShinyMap[(Species)species] is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow) &&
                 (color is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow);
         }
@@ -783,18 +785,18 @@ namespace SysBot.Pokemon
                 else mgRng = mg.ElementAt(Random.Next(mg.Count));
             }
 
-            if (mgRng != default && mgRng.Species == (int)Species.Giratina && mgRng.Form > 0)
+            if (mgRng != default && mgRng.Species is (ushort)Species.Giratina && mgRng.Form > 0)
                 mgRng.HeldItem = 112;
-            else if (mgRng != default && mgRng.Species == (int)Species.Silvally && mgRng.Form > 0)
+            else if (mgRng != default && mgRng.Species is (ushort)Species.Silvally && mgRng.Form > 0)
                 mgRng.HeldItem = SilvallyFormMath(mgRng.Form, 0);
             return mgRng;
         }
 
-        protected int SilvallyFormMath(int form, int item) => item > 0 ? item - 903 : item == 0 && form == 0 ? 0 : form + 903;
+        protected byte SilvallyFormMath(byte form, int item) => (byte)(item > 0 ? item - 903 : item is 0 && form is 0 ? 0 : form + 903);
 
         public string ArrayStringify(Array array)
         {
-            int[] newArray = (int[])array;
+            ushort[] newArray = (ushort[])array;
             var result = "";
             for (int i = 0; i < array.Length; i++)
                 result += $"{newArray[i]}{(i + 1 == array.Length ? "" : ",")}";
