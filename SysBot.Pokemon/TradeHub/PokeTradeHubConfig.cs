@@ -52,10 +52,6 @@ namespace SysBot.Pokemon
 
         [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public LairSettings Lair { get; set; } = new();
-
-        [Category(BotEncounter)]
-        [TypeConverter(typeof(ExpandableObjectConverter))]
         public RaidSettings RaidSWSH { get; set; } = new();
 
         [Category(BotEncounter), Description("Stop conditions for EncounterBot.")]
@@ -64,11 +60,11 @@ namespace SysBot.Pokemon
 
         [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public LairBotSettings Lair { get; set; } = new();
+        public LairBotSettings LairSWSH { get; set; } = new();
 
         [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public DenSettings Den { get; set; } = new();
+        public DenSettings DenSWSH { get; set; } = new();
 
         [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
@@ -76,11 +72,15 @@ namespace SysBot.Pokemon
 
         [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public CurryBotSettings Curry { get; set; } = new();
+        public CurryBotSettings CurrySWSH { get; set; } = new();
 
-        [Category(Bots)]
+        [Category(BotEncounter)]
         [TypeConverter(typeof(ExpandableObjectConverter))]
-        public BoolSettings Bool { get; set; } = new();
+        public RollingRaidSettings RollingRaidSWSH { get; set; } = new();
+
+        [Category(BotEncounter)]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public EtumrepDumpSettings EtumrepDump { get; set; } = new();
 
         // Integration
 
