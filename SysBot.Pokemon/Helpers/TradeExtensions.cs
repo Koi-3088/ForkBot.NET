@@ -247,7 +247,7 @@ namespace SysBot.Pokemon
         public static PKM TrashBytes(PKM pkm, LegalityAnalysis? la = null)
         {
             var pkMet = (T)pkm.Clone();
-            if (pkMet.Version != (int)GameVersion.GO)
+            if (pkMet.Version is not (int)GameVersion.GO)
                 pkMet.MetDate = DateTime.Parse("2020/10/20");
 
             var analysis = new LegalityAnalysis(pkMet);
@@ -268,22 +268,26 @@ namespace SysBot.Pokemon
 
         public static T CherishHandler(MysteryGift mg, ITrainerInfo info, int format)
         {
+            var result = EntityConverterResult.None;
             var mgPkm = mg.ConvertToPKM(info);
-            mgPkm = EntityConverter.IsConvertibleToFormat(mgPkm, format) ? EntityConverter.ConvertToType(mgPkm, typeof(T), out _) : mgPkm;
-            if (mgPkm != null)
+            bool canConvert = EntityConverter.IsConvertibleToFormat(mgPkm, format);
+            mgPkm = canConvert ? EntityConverter.ConvertToType(mgPkm, typeof(T), out result) : mgPkm;
+
+            if (mgPkm is not null && result is EntityConverterResult.Success)
             {
                 var enc = new LegalityAnalysis(mgPkm).EncounterMatch;
                 mgPkm.SetHandlerandMemory(info, enc);
-                if (mgPkm.TID == 0 && mgPkm.SID == 0)
+
+                if (mgPkm.TID is 0 && mgPkm.SID is 0)
                 {
                     mgPkm.TID = info.TID;
                     mgPkm.SID = info.SID;
                 }
 
                 mgPkm.CurrentLevel = mg.LevelMin;
-                if (mgPkm.Species == (int)Species.Giratina && mgPkm.Form > 0)
+                if (mgPkm.Species is (ushort)Species.Giratina && mgPkm.Form > 0)
                     mgPkm.HeldItem = 112;
-                else if (mgPkm.Species == (int)Species.Silvally && mgPkm.Form > 0)
+                else if (mgPkm.Species is (ushort)Species.Silvally && mgPkm.Form > 0)
                     mgPkm.HeldItem = mgPkm.Form + 903;
                 else mgPkm.HeldItem = 0;
             }
@@ -294,8 +298,10 @@ namespace SysBot.Pokemon
             if (!la.Valid)
             {
                 mgPkm.SetRandomIVs(6);
-                var showdown = ShowdownParsing.GetShowdownText(mgPkm);
-                var pk = AutoLegalityWrapper.GetLegal(info, new ShowdownSet(showdown), out _);
+                var text = ShowdownParsing.GetShowdownText(mgPkm);
+                var set = new ShowdownSet(text);
+                var template = AutoLegalityWrapper.GetTemplate(set);
+                var pk = AutoLegalityWrapper.GetLegal(info, template, out _);
                 pk.SetAllTrainerData(info);
                 return (T)pk;
             }
