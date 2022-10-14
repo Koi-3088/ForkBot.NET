@@ -152,9 +152,6 @@ namespace SysBot.Pokemon
                     threeDay = seed;
                     return;
                 }
-
-                if (i >= raidInfo.SearchRange)
-                    return;
             }
         }
 
@@ -219,7 +216,7 @@ namespace SysBot.Pokemon
         {
             nature = species switch
             {
-                849 => altform == 0 ? (uint)TradeExtensions<PK8>.Amped[rng.NextInt(13)] : (uint)TradeExtensions<PK8>.LowKey[rng.NextInt(12)],
+                (int)Species.Toxtricity => altform == 0 ? (uint)TradeExtensions<PK8>.Amped[rng.NextInt(13)] : (uint)TradeExtensions<PK8>.LowKey[rng.NextInt(12)],
                 _ => (uint)rng.NextInt(25),
             };
         }

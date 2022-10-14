@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 
 namespace SysBot.Pokemon
 {
-    public abstract class LairBotUtil
+    public class LairBotUtil
     {
         public static CancellationTokenSource EmbedSource = new();
         public static bool DiscordQueueOverride;
@@ -62,24 +62,24 @@ namespace SysBot.Pokemon
             {
                 effectiveness[i] = moveType switch
                 {
-                    0 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
-                    1 => new double[] { 2.0, 1.0, 0.5, 0.5, 1.0, 2.0, 0.5, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5 }[types[i]],
-                    2 => new double[] { 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
-                    3 => new double[] { 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 0.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0 }[types[i]],
-                    4 => new double[] { 1.0, 1.0, 0.0, 2.0, 1.0, 2.0, 0.5, 1.0, 2.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
-                    5 => new double[] { 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0 }[types[i]],
-                    6 => new double[] { 1.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 2.0, 0.5 }[types[i]],
-                    7 => new double[] { 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 1.0 }[types[i]],
-                    8 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 2.0, 1.0, 1.0, 2.0 }[types[i]],
-                    9 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5, 0.5, 2.0, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0 }[types[i]],
-                    10 => new double[] { 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
-                    11 => new double[] { 1.0, 1.0, 0.5, 0.5, 2.0, 2.0, 0.5, 1.0, 0.5, 0.5, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
-                    12 => new double[] { 1.0, 1.0, 2.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
-                    13 => new double[] { 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 0.0, 1.0 }[types[i]],
-                    14 => new double[] { 1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 2.0, 1.0, 1.0, 0.5, 2.0, 1.0, 1.0 }[types[i]],
-                    15 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0 }[types[i]],
-                    16 => new double[] { 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5 }[types[i]],
-                    17 => new double[] { 1.0, 2.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0 }[types[i]],
+                    (int)Types.Normal => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
+                    (int)Types.Fighting => new double[] { 2.0, 1.0, 0.5, 0.5, 1.0, 2.0, 0.5, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5 }[types[i]],
+                    (int)Types.Flying => new double[] { 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
+                    (int)Types.Poison => new double[] { 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 0.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0 }[types[i]],
+                    (int)Types.Ground => new double[] { 1.0, 1.0, 0.0, 2.0, 1.0, 2.0, 0.5, 1.0, 2.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
+                    (int)Types.Rock => new double[] { 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0 }[types[i]],
+                    (int)Types.Bug => new double[] { 1.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 2.0, 0.5 }[types[i]],
+                    (int)Types.Ghost => new double[] { 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 1.0 }[types[i]],
+                    (int)Types.Steel => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 2.0, 1.0, 1.0, 2.0 }[types[i]],
+                    (int)Types.Fire => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5, 0.5, 2.0, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0 }[types[i]],
+                    (int)Types.Water => new double[] { 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
+                    (int)Types.Grass => new double[] { 1.0, 1.0, 0.5, 0.5, 2.0, 2.0, 0.5, 1.0, 0.5, 0.5, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
+                    (int)Types.Electric => new double[] { 1.0, 1.0, 2.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
+                    (int)Types.Psychic => new double[] { 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 0.0, 1.0 }[types[i]],
+                    (int)Types.Ice => new double[] { 1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 2.0, 1.0, 1.0, 0.5, 2.0, 1.0, 1.0 }[types[i]],
+                    (int)Types.Dragon => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0 }[types[i]],
+                    (int)Types.Dark => new double[] { 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5 }[types[i]],
+                    (int)Types.Fairy => new double[] { 1.0, 2.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0 }[types[i]],
                     _ => 1.0,
                 };
             }
@@ -93,13 +93,15 @@ namespace SysBot.Pokemon
                 public HashSet<PokeMoveInfo> Moves { get; private set; } = new();
             }
 
-            public int MoveID { get; set; }
             public string Name { get; set; } = string.Empty;
+            public int MoveID { get; set; }
             public MoveType Type { get; set; }
             public MoveCategory Category { get; set; }
             public int Power { get; set; }
             public int Accuracy { get; set; }
             public int Priority { get; set; }
+            public int HitMin { get; set; }
+            public int HitMax { get; set; }
             public int EffectSequence { get; set; }
             public int Recoil { get; set; }
             public int PowerGmax { get; set; }
@@ -109,6 +111,7 @@ namespace SysBot.Pokemon
             public bool Sound { get; set; }
             public bool Gravity { get; set; }
             public bool Defrost { get; set; }
+            public bool FailSkyBattle { get; set; }
             public MoveTarget Target { get; set; }
         }
 
@@ -128,34 +131,28 @@ namespace SysBot.Pokemon
             return selectIndex;
         }
 
-        private bool AbilityImmunity(int ourAbility, int encounterAbility, int[] encounterTypes, MoveType ourMoveType, int ourMoveID, PK8[]? party = default)
+        private bool AbilityImmunity(int ourAbility, int encounterAbility, int[] encounterTypes, MoveType ourMoveType, int ourMoveID, PK8[] party)
         {
-            if (ourAbility == (int)Ability.Turboblaze || ourAbility == (int)Ability.Teravolt || ourAbility == (int)Ability.MoldBreaker)
+            if (ourAbility is (int)Ability.Turboblaze or (int)Ability.Teravolt or (int)Ability.MoldBreaker)
                 return false;
 
-            bool partyStop = false;
-            if (party != default)
+            bool partyStop = ourMoveType switch
             {
-                switch (ourMoveType)
-                {
-                    case MoveType.Water: partyStop = party.Any(x => x.Ability == (int)Ability.StormDrain); break;
-                    case MoveType.Electric: partyStop = party.Any(x => x.Ability == (int)Ability.LightningRod); break;
-                };
-            }
+                MoveType.Water => party.Any(x => x.Ability is (int)Ability.StormDrain),
+                MoveType.Electric => party.Any(x => x.Ability is (int)Ability.LightningRod),
+                _ => false,
+            };
 
-            if (partyStop)
-                return true;
-
-            if (ourMoveType == MoveType.Ground && ourMoveID != (int)Move.ThousandArrows && (encounterTypes[0] == 2 || encounterTypes[1] == 2))
+            if (partyStop || (ourMoveType is MoveType.Ground && encounterTypes.Any(x => x is (int)Types.Flying) && ourMoveID is not (int)Move.ThousandArrows))
                 return true;
 
             return encounterAbility switch
             {
-                (int)Ability.DrySkin or (int)Ability.WaterAbsorb or (int)Ability.StormDrain when ourMoveType == MoveType.Water => true,
-                (int)Ability.VoltAbsorb or (int)Ability.LightningRod or (int)Ability.MotorDrive when ourMoveType == MoveType.Electric => true,
-                (int)Ability.Levitate when ourMoveType == MoveType.Ground => true,
-                (int)Ability.FlashFire when ourMoveType == MoveType.Fire => true,
-                (int)Ability.SapSipper when ourMoveType == MoveType.Grass => true,
+                (int)Ability.DrySkin or (int)Ability.WaterAbsorb or (int)Ability.StormDrain when ourMoveType is MoveType.Water => true,
+                (int)Ability.VoltAbsorb or (int)Ability.LightningRod or (int)Ability.MotorDrive when ourMoveType is MoveType.Electric => true,
+                (int)Ability.Levitate when ourMoveType is MoveType.Ground => true,
+                (int)Ability.FlashFire when ourMoveType is MoveType.Fire => true,
+                (int)Ability.SapSipper when ourMoveType is MoveType.Grass => true,
                 _ => false,
             };
         }
@@ -175,24 +172,27 @@ namespace SysBot.Pokemon
             {
                 double typeMultiplier = -1.0;
                 var move = root.Moves.FirstOrDefault(x => x.MoveID == pk.Moves[i]);
-                var power = Convert.ToDouble(move.Power);
+                var power = Convert.ToDouble(dmax ? move.PowerGmax : move.Power);
+                power *= move.HitMax switch
+                {
+                    _ when !dmax && move.HitMax > 0 && move.HitMin != move.HitMax => move.HitMax - move.HitMin,
+                    _ when !dmax && move.HitMax > 0 && move.HitMin == move.HitMax => move.HitMax,
+                    _ => 1,
+                };
+                
                 bool immune = AbilityImmunity(pk.Ability, lairPk.Ability, types, move.Type, move.MoveID, party);
+                var typeMulti = move.Category is MoveCategory.Status ? new double[] { 1.0, 1.0 } : TypeDamageMultiplier(types, (int)move.Type);
+                typeMultiplier = typeMulti switch
+                {
+                    _ when typeMulti[0] is 0.5 && typeMulti[1] is 0.5 && types[0] != types[1] => 0.25,
+                    _ when typeMulti[0] is 0.5 || typeMulti[1] is 0.5 => 0.5,
+                    _ when typeMulti[0] is 1.0 && typeMulti[1] is 1.0 => 1.0,
+                    _ when typeMulti[0] is 2.0 && typeMulti[1] is 2.0 && types[0] != types[1] => 4.0,
+                    _ when typeMulti[0] is 2.0 || typeMulti[1] is 2.0 => 2.0,
+                    _ => 0.0,
+                };
 
-                var typeMulti = move.Category == MoveCategory.Status ? new double[] { 1.0, 1.0 } : TypeDamageMultiplier(types, (int)move.Type);
-                if (typeMulti[0] == 0.0 || typeMulti[1] == 0.0)
-                    typeMultiplier = 0.0;
-                else if (typeMulti[0] == 0.5 && typeMulti[1] == 0.5 && types[0] != types[1])
-                    typeMultiplier = 0.25;
-                else if (typeMulti[0] == 0.5 || typeMulti[1] == 0.5)
-                    typeMultiplier = 0.5;
-                else if (typeMulti[0] == 1.0 && typeMulti[1] == 1.0)
-                    typeMultiplier = 1.0;
-                else if (typeMulti[0] == 2.0 && typeMulti[1] == 2.0 && types[0] != types[1])
-                    typeMultiplier = 4.0;
-                else if (typeMulti[0] == 2.0 || typeMulti[1] == 2.0)
-                    typeMultiplier = 2.0;
-
-                if (immune || (move.MoveID == (int)Move.WillOWisp && types.Contains(9)) || (move.MoveID == (int)Move.DreamEater && lairPk.Status_Condition != (int)StatusCondition.Asleep))
+                if (immune || (move.MoveID is (int)Move.WillOWisp && types.Contains((int)Types.Fire)) || (move.MoveID is (int)Move.DreamEater && lairPk.Status_Condition is not (int)StatusCondition.Asleep))
                     typeMultiplier = -1.0;
 
                 double target = move.Target switch
@@ -201,14 +201,14 @@ namespace SysBot.Pokemon
                     _ => 1.0,
                 };
 
-                double stab = ourAbility == (int)Ability.Adaptability && (pk.PersonalInfo.Type1 == (int)move.Type || pk.PersonalInfo.Type2 == (int)move.Type) ? 2.0 : pk.PersonalInfo.Type1 == (int)move.Type || pk.PersonalInfo.Type2 == (int)move.Type ? 1.5 : 1.0;
-                double multiplier = movePP[i] == 0 || (move.MoveID == (int)Move.SteelRoller && TerrainDur == -1) ? -100.0 : 1.0;
+                double stab = ourAbility is (int)Ability.Adaptability && (pk.PersonalInfo.Type1 == (int)move.Type || pk.PersonalInfo.Type2 == (int)move.Type) ? 2.0 : pk.PersonalInfo.Type1 == (int)move.Type || pk.PersonalInfo.Type2 == (int)move.Type ? 1.5 : 1.0;
+                double multiplier = movePP[i] is 0 || (move.MoveID is (int)Move.SteelRoller && TerrainDur is -1) ? 0.0 : 1.0;
                 multiplier *= encAbility switch // Target ability influence
                 {
-                    (int)Ability.Fluffy => move.Type == MoveType.Fire && !move.Contact ? 2.0 : 0.5,
-                    (int)Ability.DrySkin => move.Type == MoveType.Fire ? 1.25 : move.Type == MoveType.Water ? -1.25 : 1.0,
-                    (int)Ability.ThickFat => move.Type == MoveType.Fire || move.Type == MoveType.Ice ? 0.5 : 1.0,
-                    (int)Ability.Heatproof => move.Type == MoveType.Fire ? 0.5 : 1.0,
+                    (int)Ability.Fluffy => move.Type is MoveType.Fire && !move.Contact ? 2.0 : 0.5,
+                    (int)Ability.DrySkin => move.Type is MoveType.Fire ? 1.25 : move.Type is MoveType.Water ? 0.0 : 1.0,
+                    (int)Ability.ThickFat => move.Type is MoveType.Fire or MoveType.Ice ? 0.5 : 1.0,
+                    (int)Ability.Heatproof => move.Type is MoveType.Fire ? 0.5 : 1.0,
                     (int)Ability.PrismArmor => typeMultiplier >= 2.0 ? 0.75 : 1.0,
                     (int)Ability.PunkRock => move.Sound ? 0.5 : 1.0,
                     _ => 1.0,
@@ -217,11 +217,11 @@ namespace SysBot.Pokemon
                 multiplier *= ourAbility switch // Our ability influence
                 {
                     (int)Ability.TintedLens => typeMultiplier < 1.0 ? 2.0 : 1.0,
-                    (int)Ability.IronFist => move.Name.Contains("Punch") || move.Name.Contains("Hammer") || move.MoveID == (int)Move.MeteorMash || move.MoveID == (int)Move.SkyUppercut ? 1.2 : 1.0,
-                    (int)Ability.StrongJaw => move.Name.Contains("Fang") || move.MoveID == (int)Move.Bite || move.MoveID == (int)Move.Crunch || move.MoveID == (int)Move.JawLock ? 1.5 : 1.0,
+                    (int)Ability.IronFist => move.Name.Contains("Punch") || move.Name.Contains("Hammer") || move.MoveID is (int)Move.MeteorMash || move.MoveID is (int)Move.SkyUppercut ? 1.2 : 1.0,
+                    (int)Ability.StrongJaw => move.Name.Contains("Fang") || move.MoveID is (int)Move.Bite || move.MoveID is (int)Move.Crunch || move.MoveID is (int)Move.JawLock ? 1.5 : 1.0,
                     (int)Ability.Adaptability => (int)move.Type == pk.PersonalInfo.Type1 || (int)move.Type == pk.PersonalInfo.Type2 ? 1.75 : 1.0,
                     (int)Ability.PunkRock => move.Sound ? 1.3 : 1.0,
-                    (int)Ability.Normalize or (int)Ability.Refrigerate or (int)Ability.Aerilate or (int)Ability.Galvanize or (int)Ability.Pixilate => move.Type == MoveType.Normal ? 1.2 : 1.0,
+                    (int)Ability.Normalize or (int)Ability.Refrigerate or (int)Ability.Aerilate or (int)Ability.Galvanize or (int)Ability.Pixilate => move.Type is MoveType.Normal ? 1.2 : 1.0,
                     _ => 1.0,
                 };
 
@@ -234,16 +234,17 @@ namespace SysBot.Pokemon
 
                 multiplier *= move.Type switch
                 {
-                    MoveType.Fairy => (ourAbility == (int)Ability.FairyAura || encAbility == (int)Ability.FairyAura) && (ourAbility == (int)Ability.AuraBreak || encAbility == (int)Ability.AuraBreak) ? 0.75 : ourAbility == (int)Ability.FairyAura || encAbility == (int)Ability.FairyAura ? 1.33 : 1.0,
-                    MoveType.Dark => (ourAbility == (int)Ability.FairyAura || encAbility == (int)Ability.FairyAura) && (ourAbility == (int)Ability.AuraBreak || encAbility == (int)Ability.AuraBreak) ? 0.75 : ourAbility == (int)Ability.DarkAura || encAbility == (int)Ability.DarkAura ? 1.33 : 1.0,
+                    MoveType.Fairy => (ourAbility is (int)Ability.FairyAura || encAbility is (int)Ability.FairyAura) && (ourAbility is (int)Ability.AuraBreak || encAbility is (int)Ability.AuraBreak) ? 0.75 : ourAbility is (int)Ability.FairyAura || encAbility is (int)Ability.FairyAura ? 1.33 : 1.0,
+                    MoveType.Dark => (ourAbility is (int)Ability.FairyAura || encAbility is (int)Ability.FairyAura) && (ourAbility is (int)Ability.AuraBreak || encAbility is (int)Ability.AuraBreak) ? 0.75 : ourAbility is (int)Ability.DarkAura || encAbility is (int)Ability.DarkAura ? 1.33 : 1.0,
                     _ => 1.0,
                 };
 
                 multiplier *= target * 0.925 * typeMultiplier * stab * (dmax ? 1.0 : move.Accuracy / 100.0);
-                bool physical = move.Category == MoveCategory.Physical;
-                bool bodyPress = move.MoveID == (int)Move.BodyPress;
-                bool foulPlay = move.MoveID == (int)Move.FoulPlay;
-                bool psy = move.MoveID == (int)Move.Psyshock || move.MoveID == (int)Move.Psystrike;
+                bool physical = move.Category is MoveCategory.Physical;
+                bool bodyPress = move.MoveID is (int)Move.BodyPress;
+                bool foulPlay = move.MoveID is (int)Move.FoulPlay;
+                bool psy = move.MoveID is (int)Move.Psyshock || move.MoveID is (int)Move.Psystrike;
+
                 double effectiveAttack = physical switch
                 {
                     true => CalculateEffectiveStat(bodyPress ? pk.IV_DEF : foulPlay ? lairPk.IV_ATK : pk.IV_ATK, bodyPress ? pk.EV_DEF : foulPlay ? lairPk.EV_ATK : pk.EV_ATK, bodyPress ? pk.PersonalInfo.DEF : foulPlay ? lairPk.PersonalInfo.ATK : pk.PersonalInfo.ATK, pk.CurrentLevel),
@@ -258,25 +259,25 @@ namespace SysBot.Pokemon
 
                 power *= move.MoveID switch
                 {
-                    (int)Move.Acrobatics => pk.HeldItem == 0 && !dmax ? 2.0 : 1.0,
-                    (int)Move.Hex => lairPk.Status_Condition != (int)StatusCondition.NoCondition && !dmax ? 2.0 : 1.0,
-                    (int)Move.Venoshock => lairPk.Status_Condition == (int)StatusCondition.Poisoned && !dmax ? 2.0 : 1.0,
-                    (int)Move.DreamEater => lairPk.Status_Condition == (int)StatusCondition.Asleep && !dmax ? 1.5 : 1.0,
+                    (int)Move.Acrobatics => pk.HeldItem is 0 && !dmax ? 2.0 : 1.0,
+                    (int)Move.Hex => lairPk.Status_Condition is not (int)StatusCondition.NoCondition && !dmax ? 2.0 : 1.0,
+                    (int)Move.Venoshock => lairPk.Status_Condition is (int)StatusCondition.Poisoned && !dmax ? 2.0 : 1.0,
+                    (int)Move.DreamEater => lairPk.Status_Condition is (int)StatusCondition.Asleep && !dmax ? 1.5 : 1.0,
                     _ => dmax ? 2.0 : 1.0,
                 };
 
                 double status = pk.Status_Condition switch // Add extra weight based on niche circumstances
                 {
-                    (int)StatusCondition.Burned => move.Category == MoveCategory.Physical && ourAbility != (int)Ability.Guts ? 0.5 : 1.0,
+                    (int)StatusCondition.Burned => move.Category is MoveCategory.Physical && ourAbility is not (int)Ability.Guts ? 0.5 : 1.0,
                     (int)StatusCondition.Frozen => move.Defrost ? 10.0 : 1.0,
-                    (int)StatusCondition.Asleep => move.MoveID == (int)Move.Snore || move.MoveID == (int)Move.SleepTalk ? 10.0 : 1.0,
+                    (int)StatusCondition.Asleep => move.MoveID is (int)Move.Snore or (int)Move.SleepTalk ? 10.0 : 1.0,
                     _ => 1.0,
                 };
 
+                var bossAoE = root.Moves.Select(x => lairPk.Moves.Contains(x.MoveID) && x.Target is MoveTarget.All or MoveTarget.AllAdjacentOpponents).Any();
                 double usefulStatus = 
-                    (!dmax && ((move.MoveID == (int)Move.Toxic && lairPk.Status_Condition != (int)StatusCondition.Poisoned) || move.MoveID == (int)Move.Counter || move.MoveID == (int)Move.LifeDew ||
-                    move.MoveID == (int)Move.WideGuard || (move.MoveID == (int)Move.Yawn && lairPk.Status_Condition != (int)StatusCondition.Asleep)))
-                    || (move.MoveID == (int)Move.Protect && dmax) ? 1.2 : 1.0;
+                    (!dmax && ((move.MoveID is (int)Move.Toxic && lairPk.Status_Condition is not (int)StatusCondition.Poisoned) || (move.MoveID is (int)Move.Counter or (int)Move.LifeDew) || (move.MoveID is (int)Move.Yawn && lairPk.Status_Condition is not (int)StatusCondition.Asleep)))
+                    || (move.MoveID is (int)Move.Protect && dmax) || (bossAoE && move.MoveID is (int)Move.WideGuard) ? 1.3 : 1.0;
 
                 power *= status * (!dmax && (move.Charge || move.Recharge) ? 0.5 : 1.0);
                 double terrain = 1.0;
@@ -294,7 +295,7 @@ namespace SysBot.Pokemon
                 }
 
                 power *= terrain;
-                dmgCalc[i] = ((((2 * pk.CurrentLevel / 5) + 2) * power * (effectiveAttack / effectiveDefense) / 50) + 2) * multiplier * usefulStatus;
+                dmgCalc[i] = ((((2.0 * pk.CurrentLevel / 5.0) + 2.0) * power * (effectiveAttack / effectiveDefense) / 50.0) + 2.0) * multiplier * usefulStatus;
             }
             return dmgCalc;
         }
@@ -305,7 +306,6 @@ namespace SysBot.Pokemon
             using TextReader reader = new StreamReader(stream);
             JsonSerializer serializer = new();
             var root = (PokeMoveInfo.MoveInfoRoot?)serializer.Deserialize(reader, typeof(PokeMoveInfo.MoveInfoRoot));
-            reader.Close();
             return root ?? new();
         }
     }

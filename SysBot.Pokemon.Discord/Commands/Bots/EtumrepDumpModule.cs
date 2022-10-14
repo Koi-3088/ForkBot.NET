@@ -56,5 +56,38 @@ namespace SysBot.Pokemon.Discord.Commands
             });
             await ReplyAsync("These are the users who are currently waiting:", embed: embed.Build()).ConfigureAwait(false);
         }
+
+        [Command("etumrepTest")]
+        [Alias("et", "etest")]
+        [Summary("Dumps the Pokémon you show via Link Trade.")]
+        [RequireQueueRole(nameof(DiscordManager.RolesDump))]
+        public async Task TestEtumrep()
+        {
+            var b1 = System.IO.File.ReadAllBytes("test/test1.pa8");
+            var b2 = System.IO.File.ReadAllBytes("test/test2.pa8");
+            var b3 = System.IO.File.ReadAllBytes("test/test3.pa8");
+            var b4 = System.IO.File.ReadAllBytes("test/test4.pa8");
+
+            var pk1 = (PA8)EntityFormat.GetFromBytes(b1)!;
+            var pk2 = (PA8)EntityFormat.GetFromBytes(b2)!;
+            var pk3 = (PA8)EntityFormat.GetFromBytes(b3)!;
+            var pk4 = (PA8)EntityFormat.GetFromBytes(b4)!;
+
+            var b5 = System.IO.File.ReadAllBytes("test5/test1.pa8");
+            var b6 = System.IO.File.ReadAllBytes("test5/test2.pa8");
+            var b7 = System.IO.File.ReadAllBytes("test5/test3.pa8");
+            var b8 = System.IO.File.ReadAllBytes("test5/test4.pa8");
+
+            var pk5 = (PA8)EntityFormat.GetFromBytes(b5)!;
+            var pk6 = (PA8)EntityFormat.GetFromBytes(b6)!;
+            var pk7 = (PA8)EntityFormat.GetFromBytes(b7)!;
+            var pk8 = (PA8)EntityFormat.GetFromBytes(b8)!;
+
+            PA8[] pks = new[] { pk1, pk2, pk3, pk4 };
+            PA8[] pks2 = new[] { pk5, pk6, pk7, pk8 };
+
+            await EtumrepUtil.SendEtumrepEmbedAsync(Context.User, pks).ConfigureAwait(false);
+            await EtumrepUtil.SendEtumrepEmbedAsync(Context.User, pks2).ConfigureAwait(false);
+        }
     }
 }
