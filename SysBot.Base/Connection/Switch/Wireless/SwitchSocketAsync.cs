@@ -237,25 +237,51 @@ namespace SysBot.Base
             return BitConverter.ToUInt64(offsetBytes, 0);
         }
 
-        public async Task<byte[]> Screengrab(CancellationToken token)
+        public async Task<byte[]> PixelPeek(CancellationToken token)
         {
-            List<byte> flexBuffer = new();
-            int received = 0;
-
-            await SendAsync(SwitchCommand.Screengrab(), token).ConfigureAwait(false);
+            await SendAsync(SwitchCommand.PixelPeek(), token).ConfigureAwait(false);
             await Task.Delay(Connection.ReceiveBufferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
-            while (Connection.Available > 0)
+
+            var data = await FlexRead(token).ConfigureAwait(false);
+            var result = Array.Empty<byte>();
+            try
             {
-                byte[] buffer = new byte[Connection.ReceiveBufferSize];
-                received += Connection.Receive(buffer, 0, Connection.ReceiveBufferSize, SocketFlags.None);
-                flexBuffer.AddRange(buffer);
-                await Task.Delay(MaximumTransferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
+                result = Decoder.ConvertHexByteStringToBytes(data);
+            }
+            catch (Exception e)
+            {
+                LogError($"Malformed screenshot data received:\n{e.Message}");
             }
 
-            byte[] data = new byte[flexBuffer.Count];
-            flexBuffer.CopyTo(data);
-            var result = data.SliceSafe(0, received);
-            return Decoder.ConvertHexByteStringToBytes(result);
+            return result;
+        }
+
+        private async Task<byte[]> FlexRead(CancellationToken token)
+        {
+            List<byte> flexBuffer = new();
+            int available = Connection.Available;
+            Connection.ReceiveTimeout = 1_000;
+
+            do
+            {
+                byte[] buffer = new byte[available];
+                try
+                {
+                    Connection.Receive(buffer, available, SocketFlags.None);
+                    flexBuffer.AddRange(buffer);
+                }
+                catch (Exception ex)
+                {
+                    LogError($"Socket exception thrown while receiving data:\n{ex.Message}");
+                    return Array.Empty<byte>();
+                }
+
+                await Task.Delay(MaximumTransferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
+                available = Connection.Available;
+            } while (flexBuffer.Count == 0 || flexBuffer.Last() != (byte)'\n');
+
+            Connection.ReceiveTimeout = 0;
+            return flexBuffer.ToArray();
         }
     }
 }

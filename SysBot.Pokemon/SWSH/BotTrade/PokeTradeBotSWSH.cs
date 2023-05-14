@@ -1000,7 +1000,7 @@ namespace SysBot.Pokemon
                 return (offered, PokeTradeResult.TrainerRequestBad);
             }
 
-            var clone = (PK8)offered.Clone();
+            var clone = offered.Clone();
             if (Hub.Config.Legality.ResetHOMETracker)
                 clone.Tracker = 0;
 
@@ -1013,7 +1013,9 @@ namespace SysBot.Pokemon
             var ball = $"\n{(Ball)offered.Ball}";
             var extraInfo = $"OT: {name}{ball}{shiny}";
             var set = ShowdownParsing.GetShowdownText(offered).Split('\n').ToList();
-            set.Remove(set.Find(x => x.Contains("Shiny")));
+            var shinyRes = set.Find(x => x.Contains("Shiny"));
+            if (shinyRes != null)
+                set.Remove(shinyRes);
             set.InsertRange(1, extraInfo.Split('\n'));
 
             if (!laInit.Valid)
@@ -1029,10 +1031,10 @@ namespace SysBot.Pokemon
             if (clone.FatefulEncounter)
             {
                 clone.SetDefaultNickname(laInit);
-                var info = new SimpleTrainerInfo { Gender = clone.OT_Gender, Language = clone.Language, OT = name, TID = clone.TID, SID = clone.SID };
+                var info = new SimpleTrainerInfo { Gender = clone.OT_Gender, Language = clone.Language, OT = name, TID16 = clone.TID16, SID16 = clone.SID16, Generation = 8 };
                 var mg = EncounterEvent.GetAllEvents().Where(x => x.Species == clone.Species && x.Form == clone.Form && x.IsShiny == clone.IsShiny && x.OT_Name == clone.OT_Name).ToList();
                 if (mg.Count > 0)
-                    clone = TradeExtensions<PK8>.CherishHandler(mg.First(), info, clone.Format);
+                    clone = TradeExtensions<PK8>.CherishHandler(mg.First(), info);
                 else clone = (PK8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
             }
             else clone = (PK8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
@@ -1050,7 +1052,7 @@ namespace SysBot.Pokemon
             Log($"{(!laInit.Valid ? "Legalized" : "Fixed Nickname/OT for")} {(Species)clone.Species}!");
 
             await Click(A, 0_800, token).ConfigureAwait(false);
-            await SetBoxPokemon(clone, InjectBox, InjectSlot, token, sav).ConfigureAwait(false);
+            await SetBoxPokemon(clone, 0, 0, token, sav).ConfigureAwait(false);
             await Click(A, 0_500, token).ConfigureAwait(false);
             poke.SendNotification(this, "Now confirm the trade!");
 

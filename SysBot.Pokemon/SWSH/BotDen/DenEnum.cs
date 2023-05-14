@@ -66,4 +66,20 @@
         SomewhatVain,
         Any,
     }
+
+    public enum ConsoleLanguageParameter
+    {
+        English,
+        French,
+        German,
+        Spanish,
+        Italian,
+        Dutch,
+        Portuguese,
+        Russian,
+        Japanese,
+        ChineseTraditional,
+        ChineseSimplified,
+        Korean,
+    }
 }

@@ -38,6 +38,7 @@ namespace SysBot.Pokemon
             if (StopSettings.MarkOnly)
                 StopSettings.MarkOnly = false;
 
+            await InitializeSessionOffsets(token).ConfigureAwait(false);
             await SetCurrentBox(0, token).ConfigureAwait(false);
             var existing = await ReadBoxPokemon(0, 0, token).ConfigureAwait(false);
             if (Hub.Config.Folder.Dump && existing.Species != 0 && existing.ChecksumValid)
@@ -58,13 +59,20 @@ namespace SysBot.Pokemon
             await DoCurryMonEncounter(ingrIndex, berryIndex, berryCount, ingredientCount, token).ConfigureAwait(false);
         }
 
+        // For pointer offsets that don't change per session are accessed frequently, so set these each time we start.
+        private async Task InitializeSessionOffsets(CancellationToken token)
+        {
+            Log("Caching session offsets...");
+            OverworldOffset = await SwitchConnection.PointerAll(Offsets.OverworldPointer, token).ConfigureAwait(false);
+        }
+
         private async Task DoCurryMonEncounter(int ingrIndex, int berryIndex, int berryCount, int ingredientCount, CancellationToken token)
         {
             bool firstRun = true;
             PK8? comparison = null;
             while (!token.IsCancellationRequested && Config.NextRoutineType == PokeRoutineType.CurryBot)
             {
-                if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+                if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
                 {
                     Log("Entering camp...");
                     await Click(X, 2_000, token).ConfigureAwait(false);
@@ -146,23 +154,23 @@ namespace SysBot.Pokemon
             Log("Time to cook!");
             sw.Start();
             while (sw.ElapsedMilliseconds < Settings.FanningDuration - 4_000)
-                Click(A, 0_100, token).Wait();
+                Click(A, 0_100, token).Wait(token);
 
             while (sw.ElapsedMilliseconds < Settings.FanningDuration)
-                Click(A, 0_150, token).Wait();
+                Click(A, 0_150, token).Wait(token);
 
             Log("Stirring the pot!");
             sw.Restart();
             while (sw.ElapsedMilliseconds < Settings.StirringDuration)
             {
-                SetStick(RIGHT, -30_000, 0, 0_050, token).Wait(); // ←
-                SetStick(RIGHT, 0, 30_000, 0_050, token).Wait(); // ↑
-                SetStick(RIGHT, 30_000, 0, 0_050, token).Wait(); // →
-                SetStick(RIGHT, 0, -30_000, 0_050, token).Wait(); // ↓
+                SetStick(RIGHT, -30_000, 0, 0_050, token).Wait(token); // ←
+                SetStick(RIGHT, 0, 30_000, 0_050, token).Wait(token); // ↑
+                SetStick(RIGHT, 30_000, 0, 0_050, token).Wait(token); // →
+                SetStick(RIGHT, 0, -30_000, 0_050, token).Wait(token); // ↓
             }
             sw.Stop();
 
-            await Task.Delay(Settings.SprinkleOfLove).ConfigureAwait(false);
+            await Task.Delay(Settings.SprinkleOfLove, token).ConfigureAwait(false);
             Log("Adding a sprinkle of love!");
             await Click(A, Settings.CurryChowCutscene, token).ConfigureAwait(false); // Delay until we can present our curry.
             await SetStick(RIGHT, 0, 0, 0_100, token).ConfigureAwait(false);
@@ -238,12 +246,12 @@ namespace SysBot.Pokemon
             };
 
             IngredientPouch = await Connection.ReadBytesAsync(IngredientPouchOffset, 100, token).ConfigureAwait(false);
-            var pouch = GetItemPouch(IngredientPouch, InventoryType.Ingredients, ingredients, 999, 0, ingredients.Length);
+            var pouch = GetItemPouch(IngredientPouch, InventoryType.Ingredients, 999, 0, ingredients.Length);
             var item = pouch.Items.FirstOrDefault(x => x.Index == (int)Settings.Ingredient && x.Count > 0);
             if (item == default)
                 item = pouch.Items.FirstOrDefault(x => x.Count > 0);
 
-            IngredientCount = item.Count;
+            IngredientCount = item!.Count;
             var index = pouch.Items.ToList().IndexOf(item);
             ScrollUpIngr = pouch.Items.Length - index < index;
             return ScrollUpIngr ? pouch.Items.Length - index : index;
@@ -262,20 +270,20 @@ namespace SysBot.Pokemon
             };
 
             BerryPouch = await Connection.ReadBytesAsync(BerryPouchOffset, 212, token).ConfigureAwait(false);
-            var pouch = GetItemPouch(BerryPouch, InventoryType.Berries, berries, 999, 0, berries.Length);
+            var pouch = GetItemPouch(BerryPouch, InventoryType.Berries, 999, 0, berries.Length);
             var item = pouch.Items.FirstOrDefault(x => x.Index == (int)Settings.Berry && x.Count > 0);
             if (item == default)
                 item = pouch.Items.FirstOrDefault(x => x.Count >= 10);
 
-            BerryCount = item.Count;
+            BerryCount = item!.Count;
             var index = pouch.Items.ToList().IndexOf(item);
             ScrollUpBerry = pouch.Items.Length - index < index;
             return ScrollUpBerry ? pouch.Items.Length - index : index;
         }
 
-        private InventoryPouch8 GetItemPouch(byte[] data, InventoryType type, ushort[] items, int maxCount, int offset, int length)
+        private static InventoryPouch8 GetItemPouch(byte[] data, InventoryType type, int maxCount, int offset, int length)
         {
-            var pouch = new InventoryPouch8(type, items, maxCount, offset, length);
+            var pouch = new InventoryPouch8(type, ItemStorage8SWSH.Instance, maxCount, offset, length);
             pouch.GetPouch(data);
             return pouch;
         }

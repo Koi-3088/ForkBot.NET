@@ -413,13 +413,13 @@ namespace SysBot.Pokemon
                 ));
         }
 
-        public async Task SaveGame(PokeTradeHubConfig config, CancellationToken token)
+        public async Task SaveGame(ulong offset, CancellationToken token)
         {
             await Click(B, 0_200, token).ConfigureAwait(false);
             Log("Saving the game...");
             await Click(X, 2_000, token).ConfigureAwait(false);
             await Click(R, 0_250, token).ConfigureAwait(false);
-            while (!await IsOnOverworld(config, token).ConfigureAwait(false))
+            while (!await IsOnOverworld(offset, token).ConfigureAwait(false))
                 await Click(A, 0_500, token).ConfigureAwait(false);
             Log("Game saved!");
         }

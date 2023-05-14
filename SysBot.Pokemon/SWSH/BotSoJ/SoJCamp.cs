@@ -12,9 +12,17 @@ namespace SysBot.Pokemon
         {
         }
 
+        // For pointer offsets that don't change per session are accessed frequently, so set these each time we start.
+        private async Task InitializeSessionOffsets(CancellationToken token)
+        {
+            Log("Caching session offsets...");
+            OverworldOffset = await SwitchConnection.PointerAll(Offsets.OverworldPointer, token).ConfigureAwait(false);
+        }
+
         protected override async Task EncounterLoop(SAV8SWSH sav, CancellationToken token)
         {
             bool campEntered = false;
+            await InitializeSessionOffsets(token).ConfigureAwait(false);
             while (!token.IsCancellationRequested)
             {
                 await Click(X, 2_000, token).ConfigureAwait(false);
@@ -31,7 +39,7 @@ namespace SysBot.Pokemon
                 await Click(A, 0_500, token).ConfigureAwait(false);
 
                 while (!await IsInBattle(token).ConfigureAwait(false))
-                    await Task.Delay(2_000).ConfigureAwait(false);
+                    await Task.Delay(2_000, token).ConfigureAwait(false);
 
                 var pk = await ReadUntilPresent(WildPokemonOffset, 2_000, 0_200, BoxFormatSlotSize, token).ConfigureAwait(false);
                 if (pk == null)
@@ -50,8 +58,8 @@ namespace SysBot.Pokemon
                 while (await IsInBattle(token).ConfigureAwait(false))
                     await FleeToOverworld(token).ConfigureAwait(false);
 
-                while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
-                    await Task.Delay(2_000).ConfigureAwait(false);
+                while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+                    await Task.Delay(2_000, token).ConfigureAwait(false);
             }
         }
     }

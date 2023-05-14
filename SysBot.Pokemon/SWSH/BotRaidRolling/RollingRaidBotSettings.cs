@@ -106,6 +106,9 @@ namespace SysBot.Pokemon
         [Category(Hosting), Description("Enter Discord channel ID(s) to post raid embeds to. Feature has to be initialized via \"$raidEmbed\" after every client restart.")]
         public string RollingRaidEmbedChannels { get; set; } = string.Empty;
 
+        [Category(Hosting), Description("Console language. Needed in order to read distribution raid data correctly.")]
+        public ConsoleLanguageParameter ConsoleLanguage { get; set; } = ConsoleLanguageParameter.English;
+
         /// <summary>
         /// Gets a random trade code based on the range settings.
         /// </summary>

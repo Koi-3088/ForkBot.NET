@@ -38,8 +38,8 @@ steps:
     /p:Configuration=$(Configuration);Platform=$(Platform);PublishSingleFile=true;OutputPath=$(Build.ArtifactStagingDirectory)\'
 
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish Artifact: SysBot-x64'
+  displayName: 'Publish Artifact: ForkBot-x64'
   inputs:
     TargetPath: '$(Build.ArtifactStagingDirectory)\publish\'
-    ArtifactName: SysBot-x64
+    ArtifactName: ForkBot-x64
   condition: succeededOrFailed()

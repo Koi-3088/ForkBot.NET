@@ -22,6 +22,7 @@ namespace SysBot.Pokemon
             Log("Starting main BoolBot loop.");
             Config.IterateNextRoutine();
 
+            await InitializeSessionOffsets(token).ConfigureAwait(false);
             var task = Settings.BoolType switch
             {
                 BoolMode.Skipper => Skipper(token),
@@ -30,6 +31,13 @@ namespace SysBot.Pokemon
                 _ => Skipper(token),
             };
             await task.ConfigureAwait(false);
+        }
+
+        // For pointer offsets that don't change per session are accessed frequently, so set these each time we start.
+        private async Task InitializeSessionOffsets(CancellationToken token)
+        {
+            Log("Caching session offsets...");
+            OverworldOffset = await SwitchConnection.PointerAll(Offsets.OverworldPointer, token).ConfigureAwait(false);
         }
 
         private async Task ResetLegendaryLairFlags(CancellationToken token)
@@ -200,7 +208,7 @@ namespace SysBot.Pokemon
                     }
                 }
 
-                while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+                while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
                     await Click(B, 0_500, token).ConfigureAwait(false);
             }
         }

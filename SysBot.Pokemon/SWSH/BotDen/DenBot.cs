@@ -42,8 +42,8 @@ namespace SysBot.Pokemon
             var denBytes = await DenData(RaidInfo.Settings.DenID, RaidInfo.Settings.DenType, token).ConfigureAwait(false);
             RaidInfo.DenID = DenUtil.GetDenID(RaidInfo.Settings.DenID, RaidInfo.Settings.DenType);
 
-            var eventOfs = DenUtil.GetEventDenOffset((int)Hub.Config.ConsoleLanguage, RaidInfo.Settings.DenID, RaidInfo.Settings.DenType, out _);
-            var eventDenBytes = RaidInfo.Settings.DenBeamType == BeamType.Event ? await Connection.ReadBytesAsync(eventOfs, 0x23D4, token).ConfigureAwait(false) : new byte[] { };
+            var eventOfs = DenUtil.GetEventDenOffset((int)Settings.ConsoleLanguage, RaidInfo.Settings.DenID, RaidInfo.Settings.DenType, out _);
+            var eventDenBytes = RaidInfo.Settings.DenBeamType == BeamType.Event ? await Connection.ReadBytesAsync(eventOfs, 0x23D4, token).ConfigureAwait(false) : Array.Empty<byte>();
             RaidInfo = DenUtil.GetRaid(RaidInfo, denBytes, eventDenBytes);
 
             while (!token.IsCancellationRequested)
@@ -58,6 +58,8 @@ namespace SysBot.Pokemon
                     if (!await SkipCorrection(skips, token).ConfigureAwait(false))
                         return;
 
+                    Log("Saving the game...");
+                    await SaveGame(OverworldOffset, token).ConfigureAwait(false);
                     EchoUtil.Echo($"{Hub.Config.StopConditions.MatchFoundEchoMention}Skipping complete, stopping the bot.\n");
                     return;
                 }
@@ -139,7 +141,7 @@ namespace SysBot.Pokemon
                 }
 
                 await DaySkip(token).ConfigureAwait(false);
-                await Task.Delay(0_360 + Settings.SkipDelay).ConfigureAwait(false);
+                await Task.Delay(0_360 + Settings.SkipDelay, token).ConfigureAwait(false);
                 --remaining;
                 if (remaining == lastQuarterLog || remaining + 3 == skips)
                     remaining = await SkipCheck(skips, remaining, token).ConfigureAwait(false);

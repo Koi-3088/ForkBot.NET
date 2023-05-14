@@ -15,20 +15,20 @@ namespace SysBot.Pokemon
             851,
         };
 
-        private InventoryPouch8 GetBallPouch(byte[] ballBlock)
+        private static InventoryPouch8 GetBallPouch(byte[] ballBlock)
         {
-            var pouch = new InventoryPouch8(InventoryType.Balls, Pouch_Ball_SWSH, 999, 0, 28);
+            var pouch = new InventoryPouch8(InventoryType.Balls, ItemStorage8SWSH.Instance, 999, 0, 28);
             pouch.GetPouch(ballBlock);
             return pouch;
         }
 
-        public BallPouchUtil GetBallCounts(byte[] ballBlock)
+        public static BallPouchUtil GetBallCounts(byte[] ballBlock)
         {
             var pouch = GetBallPouch(ballBlock);
             return ReadCounts(pouch);
         }
 
-        private BallPouchUtil ReadCounts(InventoryPouch pouch)
+        private static BallPouchUtil ReadCounts(InventoryPouch pouch)
         {
             var counts = new BallPouchUtil();
             foreach (var ball in pouch.Items)
@@ -97,7 +97,7 @@ namespace SysBot.Pokemon
                 Ball.Ultra => Ultra,
                 Ball.Safari => Safari,
                 Ball.Sport => Sport,
-                _ => throw new ArgumentOutOfRangeException(nameof(Ball))
+                _ => throw new Exception($"Invalid ball: {nameof(Ball)}")
             };
         }
 

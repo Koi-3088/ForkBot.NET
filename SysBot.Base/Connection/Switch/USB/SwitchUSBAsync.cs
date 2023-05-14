@@ -146,12 +146,12 @@ namespace SysBot.Base
             }, token);
         }
 
-        public Task<byte[]> Screengrab(CancellationToken token)
+        public Task<byte[]> PixelPeek(CancellationToken token)
         {
             return Task.Run(() =>
             {
-                Send(SwitchCommand.Screengrab(false));
-                return GetScreenshot();
+                Send(SwitchCommand.PixelPeek(false));
+                return PixelPeekUSB();
             }, token);
         }
     }

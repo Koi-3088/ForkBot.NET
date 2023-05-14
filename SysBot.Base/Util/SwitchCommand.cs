@@ -316,6 +316,6 @@ namespace SysBot.Base
         /// </summary>
         /// <param name="crlf">Line terminator (unused by USB's protocol)</param>
         /// <returns>Encoded command bytes</returns>
-        public static byte[] Screengrab(bool crlf = true) => Encode("pixelPeek", crlf);
+        public static byte[] PixelPeek(bool crlf = true) => Encode("pixelPeek", crlf);
     }
 }

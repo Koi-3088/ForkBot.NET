@@ -30,6 +30,9 @@ namespace SysBot.Pokemon
         public static bool RollingRaidEmbedsInitialized;
         public static ConcurrentQueue<(PK8, string, string)> EmbedQueue = new();
 
+        // Cached offsets that stay the same per session.
+        private ulong OverworldOffset;
+
         private int encounterCount;
         private bool deleteFriends;
         private bool addFriends;
@@ -77,6 +80,7 @@ namespace SysBot.Pokemon
             {
                 Log("Identifying trainer data of the host console.");
                 RaidInfo.TrainerInfo = await IdentifyTrainer(token).ConfigureAwait(false);
+                await InitializeSessionOffsets(token).ConfigureAwait(false);
                 await InitializeHardware(Settings, token).ConfigureAwait(false);
 
                 if (Settings.RolloverPreventionTest)
@@ -113,6 +117,13 @@ namespace SysBot.Pokemon
             if (rolled)
                 await ResetTime(token).ConfigureAwait(false);
             await HardStop().ConfigureAwait(false);
+        }
+
+        // For pointer offsets that don't change per session are accessed frequently, so set these each time we start.
+        private async Task InitializeSessionOffsets(CancellationToken token)
+        {
+            Log("Caching session offsets...");
+            OverworldOffset = await SwitchConnection.PointerAll(Offsets.OverworldPointer, token).ConfigureAwait(false);
         }
 
         private async Task InnerLoop(CancellationToken token)
@@ -173,7 +184,7 @@ namespace SysBot.Pokemon
         {
             RollingRaidEmbedsInitialized = false;
             RaidEmbedSource.Cancel();
-            await CleanExit(Settings, CancellationToken.None).ConfigureAwait(false);
+            await CleanExit(CancellationToken.None).ConfigureAwait(false);
         }
 
         private async Task<bool> AutoRollDen(int code, CancellationToken token)
@@ -214,10 +225,10 @@ namespace SysBot.Pokemon
             };
 
             // Connect to Y-Comm
-            await EnsureConnectedToYComm(Hub.Config, token).ConfigureAwait(false);
+            await EnsureConnectedToYComm(OverworldOffset, Hub.Config, token).ConfigureAwait(false);
 
             // Because my internet is hot garbage and timings vary between 20 seconds and 3 minutes to connect. Yes, really.
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
             {
                 await Click(B, 1_250, token).ConfigureAwait(false);
                 if (await IsInBattle(token).ConfigureAwait(false))
@@ -229,7 +240,7 @@ namespace SysBot.Pokemon
             }
 
             if (unexpectedBattle)
-                await EnsureConnectedToYComm(Hub.Config, token).ConfigureAwait(false);
+                await EnsureConnectedToYComm(OverworldOffset, Hub.Config, token).ConfigureAwait(false);
 
             // Press A and stall out a bit for the loading
             Log($"Initializing raid for {raidBossString}.");
@@ -311,14 +322,14 @@ namespace SysBot.Pokemon
                a raid by the end, something has gone wrong and we should quit trying. */
             while (timetojoinraid > 0 && !await IsInBattle(token).ConfigureAwait(false))
             {
-                if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false)) // If overworld, lobby disbanded.
+                if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false)) // If overworld, lobby disbanded.
                 {
                     EchoUtil.Echo("Lobby disbanded! Recovering...");
                     await Click(B, 0_500, token).ConfigureAwait(false);
                     await Task.Delay(3_000, token).ConfigureAwait(false);
                     airplaneUsable = false;
 
-                    if (await IsOnOverworld(Hub.Config, token).ConfigureAwait(false)) // If still on Overworld, we don't need to do anything special.
+                    if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false)) // If still on Overworld, we don't need to do anything special.
                     {
                         Log("Re-hosting the raid.");
                         return true;
@@ -476,6 +487,7 @@ namespace SysBot.Pokemon
                 await DeleteAddFriends(token).ConfigureAwait(false);
 
             await StartGame(Hub.Config, token).ConfigureAwait(false);
+            await InitializeSessionOffsets(token).ConfigureAwait(false);
         }
 
         private async Task DeleteAddFriends(CancellationToken token)
@@ -598,19 +610,19 @@ namespace SysBot.Pokemon
             await ToggleAirplane(Hub.Config.Timings.ExtraTimeAirplane, token).ConfigureAwait(false);
             Log("Airplaned out!");
 
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer > 45)
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false) && timer > 45)
             {
                 await Click(B, 1_000, token).ConfigureAwait(false);
                 timer -= 1_000;
             }
 
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer > 0) // If airplaned too late, we might be stuck in raid (move selection)
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false) && timer > 0) // If airplaned too late, we might be stuck in raid (move selection)
             {
                 await Click(A, 1_000, token).ConfigureAwait(false);
                 timer -= 1_000;
             }
 
-            if (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false) && timer <= 0) // Something's gone wrong
+            if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false) && timer <= 0) // Something's gone wrong
             {
                 Log("Something went wrong. Restarting by closing the game.");
                 await ResetGameAsync(token).ConfigureAwait(false);
@@ -639,7 +651,7 @@ namespace SysBot.Pokemon
             await Click(A, 0_500, token).ConfigureAwait(false);
 
             var timer = 10_000;
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
             {
                 await Click(B, 1_000, token).ConfigureAwait(false);
                 timer -= 1_000;
@@ -671,7 +683,7 @@ namespace SysBot.Pokemon
         private async Task AirplaneLobbyRecover(CancellationToken token)
         {
             await ToggleAirplane(0, token).ConfigureAwait(false); // We could be in lobby, or have invited others, or in a box. Conflicts with ldn_mitm, but we don't need it anyways.
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
                 await Click(B, 0_500, token).ConfigureAwait(false); // If we airplaned, need to clear errors and leave a box if we were stuck.
             Log("Back in the overworld! Re-hosting the raid.");
         }
@@ -704,11 +716,12 @@ namespace SysBot.Pokemon
                 Log("Time sync turned off.");
                 await StartGame(Hub.Config, token).ConfigureAwait(false);
 
+                await InitializeSessionOffsets(token).ConfigureAwait(false);
                 denData = await Connection.ReadBytesAsync(denOfs, 0x18, token).ConfigureAwait(false);
                 RaidInfo.Den = new RaidSpawnDetail(denData, 0);
                 if (RaidInfo.Den.WattsHarvested)
                 {
-                    await SaveGame(Hub.Config, token).ConfigureAwait(false);
+                    await SaveGame(OverworldOffset, token).ConfigureAwait(false);
                     Log("Turning time sync back on...");
                     await RolloverCorrection(token).ConfigureAwait(false);
                     Log("Rollover correction complete, resuming hosting routine.");
@@ -765,7 +778,7 @@ namespace SysBot.Pokemon
                 await ClearWatts(token).ConfigureAwait(false);
 
             bool unexpectedBattle = false;
-            while (!await IsOnOverworld(Hub.Config, token).ConfigureAwait(false))
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
             {
                 await Click(B, 0_300, token).ConfigureAwait(false);
                 if (await IsInBattle(token).ConfigureAwait(false))
@@ -811,7 +824,7 @@ namespace SysBot.Pokemon
             else EchoUtil.Echo($"Rolling complete. Raid for {raidBossString} will be going up shortly!");
 
             if (hardLock && !unexpectedBattle)
-                await SaveGame(Hub.Config, token).ConfigureAwait(false);
+                await SaveGame(OverworldOffset, token).ConfigureAwait(false);
             return unexpectedBattle;
         }
 
@@ -832,7 +845,7 @@ namespace SysBot.Pokemon
             {
                 if (RaidInfo.Den.IsEvent)
                 {
-                    var eventOfs = DenUtil.GetEventDenOffset((int)Hub.Config.ConsoleLanguage, RaidInfo.DenID, Settings.DenType, out _);
+                    var eventOfs = DenUtil.GetEventDenOffset((int)Settings.ConsoleLanguage, RaidInfo.DenID, Settings.DenType, out _);
                     var eventData = await Connection.ReadBytesAsync(eventOfs, 0x23D4, token).ConfigureAwait(false);
 
                     RaidInfo.RaidDistributionEncounter = DenUtil.GetSpawnEvent(RaidInfo, eventData, out FlatbuffersResource.NestHoleDistributionEncounter8Table table);

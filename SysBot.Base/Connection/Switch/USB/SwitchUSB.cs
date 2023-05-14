@@ -2,6 +2,7 @@
 using LibUsbDotNet.Main;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace SysBot.Base
@@ -77,7 +78,7 @@ namespace SysBot.Base
         {
             lock (_registry)
             {
-                foreach (UsbRegistry ur in UsbDevice.AllLibUsbDevices)
+                foreach (UsbRegistry ur in UsbDevice.AllLibUsbDevices.Cast<UsbRegistry>())
                 {
                     if (ur.Vid != 0x057E)
                         continue;
@@ -234,7 +235,7 @@ namespace SysBot.Base
             }
         }
 
-        protected byte[] GetScreenshot()
+        protected byte[] PixelPeekUSB()
         {
             Thread.Sleep(1);
             lock (_sync)

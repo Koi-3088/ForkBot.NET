@@ -190,7 +190,14 @@ namespace SysBot.Pokemon.Discord
         public async Task DittoTrade([Summary("Trade Code")] int code, [Summary("A combination of \"ATK/SPA/SPE\" or \"6IV\"")] string keyword, [Summary("Language")] string language, [Summary("Nature")] string nature)
         {
             keyword = keyword.ToLower().Trim();
-            language = language.Trim()[..1].ToUpper() + language.Trim()[1..].ToLower();
+            if (Enum.TryParse(language, true, out LanguageID lang))
+                language = lang.ToString();
+            else
+            {
+                await Context.Message.ReplyAsync($"Couldn't recognize language: {language}.").ConfigureAwait(false);
+                return;
+            }
+
             nature = nature.Trim()[..1].ToUpper() + nature.Trim()[1..].ToLower();
             var set = new ShowdownSet($"{keyword}(Ditto)\nLanguage: {language}\nNature: {nature}");
             var template = AutoLegalityWrapper.GetTemplate(set);
@@ -231,7 +238,7 @@ namespace SysBot.Pokemon.Discord
             }
 
             var c = bot.Bot.Connection;
-            var bytes = await c.Screengrab(token).ConfigureAwait(false);
+            var bytes = await c.PixelPeek(token).ConfigureAwait(false);
             if (bytes.Length == 1)
             {
                 await ReplyAsync($"Failed to take a screenshot for bot at {address}. Is the bot connected?").ConfigureAwait(false);

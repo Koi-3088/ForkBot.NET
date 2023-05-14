@@ -55,31 +55,32 @@ namespace SysBot.Pokemon
             1592, 1604, 1606
         };
 
-        public double[] TypeDamageMultiplier(int[] types, int moveType)
+        private static double[] TypeDamageMultiplier(MoveType[] enemyTypes, MoveType moveType)
         {
             double[] effectiveness = { -1, -1 };
-            for (int i = 0; i < types.Length; i++)
+            for (int i = 0; i < enemyTypes.Length; i++)
             {
+                var type = (int)enemyTypes[i];
                 effectiveness[i] = moveType switch
                 {
-                    0 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
-                    1 => new double[] { 2.0, 1.0, 0.5, 0.5, 1.0, 2.0, 0.5, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5 }[types[i]],
-                    2 => new double[] { 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
-                    3 => new double[] { 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 0.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0 }[types[i]],
-                    4 => new double[] { 1.0, 1.0, 0.0, 2.0, 1.0, 2.0, 0.5, 1.0, 2.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[types[i]],
-                    5 => new double[] { 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0 }[types[i]],
-                    6 => new double[] { 1.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 2.0, 0.5 }[types[i]],
-                    7 => new double[] { 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 1.0 }[types[i]],
-                    8 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 2.0, 1.0, 1.0, 2.0 }[types[i]],
-                    9 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5, 0.5, 2.0, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0 }[types[i]],
-                    10 => new double[] { 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
-                    11 => new double[] { 1.0, 1.0, 0.5, 0.5, 2.0, 2.0, 0.5, 1.0, 0.5, 0.5, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
-                    12 => new double[] { 1.0, 1.0, 2.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 0.5, 1.0, 1.0 }[types[i]],
-                    13 => new double[] { 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 0.0, 1.0 }[types[i]],
-                    14 => new double[] { 1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 2.0, 1.0, 1.0, 0.5, 2.0, 1.0, 1.0 }[types[i]],
-                    15 => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0 }[types[i]],
-                    16 => new double[] { 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5 }[types[i]],
-                    17 => new double[] { 1.0, 2.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0 }[types[i]],
+                    MoveType.Normal => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 0.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[type],
+                    MoveType.Fighting => new double[] { 2.0, 1.0, 0.5, 0.5, 1.0, 2.0, 0.5, 0.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5 }[type],
+                    MoveType.Flying => new double[] { 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0 }[type],
+                    MoveType.Poison => new double[] { 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 0.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0 }[type],
+                    MoveType.Ground => new double[] { 1.0, 1.0, 0.0, 2.0, 1.0, 2.0, 0.5, 1.0, 2.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0 }[type],
+                    MoveType.Rock => new double[] { 1.0, 0.5, 2.0, 1.0, 0.5, 1.0, 2.0, 1.0, 0.5, 2.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0 }[type],
+                    MoveType.Bug => new double[] { 1.0, 0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 2.0, 0.5 }[type],
+                    MoveType.Ghost => new double[] { 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 1.0 }[type],
+                    MoveType.Steel => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5, 0.5, 1.0, 0.5, 1.0, 2.0, 1.0, 1.0, 2.0 }[type],
+                    MoveType.Fire => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 2.0, 1.0, 2.0, 0.5, 0.5, 2.0, 1.0, 1.0, 2.0, 0.5, 1.0, 1.0 }[type],
+                    MoveType.Water => new double[] { 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[type],
+                    MoveType.Grass => new double[] { 1.0, 1.0, 0.5, 0.5, 2.0, 2.0, 0.5, 1.0, 0.5, 0.5, 2.0, 0.5, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0 }[type],
+                    MoveType.Electric => new double[] { 1.0, 1.0, 2.0, 1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.5, 0.5, 1.0, 1.0, 0.5, 1.0, 1.0 }[type],
+                    MoveType.Psychic => new double[] { 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 0.0, 1.0 }[type],
+                    MoveType.Ice => new double[] { 1.0, 1.0, 2.0, 1.0, 2.0, 1.0, 1.0, 1.0, 0.5, 0.5, 0.5, 2.0, 1.0, 1.0, 0.5, 2.0, 1.0, 1.0 }[type],
+                    MoveType.Dragon => new double[] { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 0.0 }[type],
+                    MoveType.Dark => new double[] { 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 1.0, 1.0, 0.5, 0.5 }[type],
+                    MoveType.Fairy => new double[] { 1.0, 2.0, 1.0, 0.5, 1.0, 1.0, 1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 1.0 }[type],
                     _ => 1.0,
                 };
             }
@@ -112,9 +113,9 @@ namespace SysBot.Pokemon
             public MoveTarget Target { get; set; }
         }
 
-        public int CalculateEffectiveStat(int statIV, int statEV, int statBase, int level) => ((statIV + (2 * statBase) + (statEV / 4)) * level / 100) + 5; // Taken from PKHeX
+        public static int CalculateEffectiveStat(int statIV, int statEV, int statBase, int level) => ((statIV + (2 * statBase) + (statEV / 4)) * level / 100) + 5; // Taken from PKHeX
 
-        public int PriorityIndex(PK8 pk)
+        public static int PriorityIndex(PK8 pk)
         {
             int selectIndex = -1;
             for (int i = 0; i < pk.Moves.Length; i++)
@@ -128,7 +129,7 @@ namespace SysBot.Pokemon
             return selectIndex;
         }
 
-        private bool AbilityImmunity(int ourAbility, int encounterAbility, int[] encounterTypes, MoveType ourMoveType, int ourMoveID, PK8[]? party = default)
+        private static bool AbilityImmunity(int ourAbility, int enemyAbility, MoveType[] enemyTypes, MoveType ourMoveType, int ourMoveID, PK8[]? party = default)
         {
             if (ourAbility == (int)Ability.Turboblaze || ourAbility == (int)Ability.Teravolt || ourAbility == (int)Ability.MoldBreaker)
                 return false;
@@ -146,10 +147,10 @@ namespace SysBot.Pokemon
             if (partyStop)
                 return true;
 
-            if (ourMoveType == MoveType.Ground && ourMoveID != (int)Move.ThousandArrows && (encounterTypes[0] == 2 || encounterTypes[1] == 2))
+            if (ourMoveType == MoveType.Ground && ourMoveID != (int)Move.ThousandArrows && enemyTypes.Contains(MoveType.Flying))
                 return true;
 
-            return encounterAbility switch
+            return enemyAbility switch
             {
                 (int)Ability.DrySkin or (int)Ability.WaterAbsorb or (int)Ability.StormDrain when ourMoveType == MoveType.Water => true,
                 (int)Ability.VoltAbsorb or (int)Ability.LightningRod or (int)Ability.MotorDrive when ourMoveType == MoveType.Electric => true,
@@ -167,32 +168,32 @@ namespace SysBot.Pokemon
 
             int[] movePP = new int[] { pk.Move1_PP, pk.Move2_PP, pk.Move3_PP, pk.Move4_PP };
             double[] dmgCalc = new double[4];
-            int[] types = { lairPk.PersonalInfo.Type1, lairPk.PersonalInfo.Type2 };
+            MoveType[] enemyTypes = { (MoveType)lairPk.PersonalInfo.Type1, (MoveType)lairPk.PersonalInfo.Type2 };
             var encAbility = lairPk.Ability;
             var ourAbility = pk.Ability;
 
             for (int i = 0; i < pk.Moves.Length; i++)
             {
                 double typeMultiplier = -1.0;
-                var move = root.Moves.FirstOrDefault(x => x.MoveID == pk.Moves[i]);
+                var move = root.Moves.FirstOrDefault(x => x.MoveID == pk.Moves[i])!;
                 var power = Convert.ToDouble(move.Power);
-                bool immune = AbilityImmunity(pk.Ability, lairPk.Ability, types, move.Type, move.MoveID, party);
+                bool immune = AbilityImmunity(pk.Ability, lairPk.Ability, enemyTypes, move.Type, move.MoveID, party);
 
-                var typeMulti = move.Category == MoveCategory.Status ? new double[] { 1.0, 1.0 } : TypeDamageMultiplier(types, (int)move.Type);
+                var typeMulti = move.Category == MoveCategory.Status ? new double[] { 1.0, 1.0 } : TypeDamageMultiplier(enemyTypes, move.Type);
                 if (typeMulti[0] == 0.0 || typeMulti[1] == 0.0)
                     typeMultiplier = 0.0;
-                else if (typeMulti[0] == 0.5 && typeMulti[1] == 0.5 && types[0] != types[1])
+                else if (typeMulti[0] == 0.5 && typeMulti[1] == 0.5 && enemyTypes[0] != enemyTypes[1])
                     typeMultiplier = 0.25;
                 else if (typeMulti[0] == 0.5 || typeMulti[1] == 0.5)
                     typeMultiplier = 0.5;
                 else if (typeMulti[0] == 1.0 && typeMulti[1] == 1.0)
                     typeMultiplier = 1.0;
-                else if (typeMulti[0] == 2.0 && typeMulti[1] == 2.0 && types[0] != types[1])
+                else if (typeMulti[0] == 2.0 && typeMulti[1] == 2.0 && enemyTypes[0] != enemyTypes[1])
                     typeMultiplier = 4.0;
                 else if (typeMulti[0] == 2.0 || typeMulti[1] == 2.0)
                     typeMultiplier = 2.0;
 
-                if (immune || (move.MoveID == (int)Move.WillOWisp && types.Contains(9)) || (move.MoveID == (int)Move.DreamEater && lairPk.Status_Condition != (int)StatusCondition.Asleep))
+                if (immune || (move.MoveID == (int)Move.WillOWisp && enemyTypes.Contains(MoveType.Fire)) || (move.MoveID == (int)Move.DreamEater && lairPk.Status_Condition != (int)StatusCondition.Asleep))
                     typeMultiplier = -1.0;
 
                 double target = move.Target switch
@@ -299,9 +300,9 @@ namespace SysBot.Pokemon
             return dmgCalc;
         }
 
-        public PokeMoveInfo.MoveInfoRoot LoadMoves()
+        public static PokeMoveInfo.MoveInfoRoot LoadMoves()
         {
-            using Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("SysBot.Pokemon.SWSH.BotLair.MoveInfo.json");
+            using Stream stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("SysBot.Pokemon.SWSH.BotLair.MoveInfo.json")!;
             using TextReader reader = new StreamReader(stream);
             JsonSerializer serializer = new();
             var root = (PokeMoveInfo.MoveInfoRoot?)serializer.Deserialize(reader, typeof(PokeMoveInfo.MoveInfoRoot));

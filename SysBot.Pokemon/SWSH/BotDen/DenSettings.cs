@@ -46,6 +46,9 @@ namespace SysBot.Pokemon
         [Category(DenSkip), Description("Seed to inject. Please disclose seed-injected raids.")]
         public string SeedToInject { get; set; } = string.Empty;
 
+        [Category(DenSkip), Description("Console language. Needed in order to read distribution raid data correctly.")]
+        public ConsoleLanguageParameter ConsoleLanguage { get; set; } = ConsoleLanguageParameter.English;
+
         [Category(DenSkip)]
         [TypeConverter(typeof(DenFiltersCategoryConverter))]
         public class DenFiltersCategory
@@ -79,11 +82,11 @@ namespace SysBot.Pokemon
 
         private sealed class DenFiltersCategoryConverter : TypeConverter
         {
-            public override bool GetPropertiesSupported(ITypeDescriptorContext context) => true;
+            public override bool GetPropertiesSupported(ITypeDescriptorContext? context) => true;
 
-            public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext context, object value, Attribute[] attributes) => TypeDescriptor.GetProperties(typeof(DenFiltersCategory));
+            public override PropertyDescriptorCollection GetProperties(ITypeDescriptorContext? context, object? value, Attribute[]? attributes) => TypeDescriptor.GetProperties(typeof(DenFiltersCategory));
 
-            public override bool CanConvertTo(ITypeDescriptorContext context, Type destinationType) => destinationType != typeof(string) && base.CanConvertTo(context, destinationType);
+            public override bool CanConvertTo(ITypeDescriptorContext? context, Type? destinationType) => destinationType != typeof(string) && base.CanConvertTo(context, destinationType);
         }
 
         public uint[] IVParse()
