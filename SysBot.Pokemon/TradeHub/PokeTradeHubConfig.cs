@@ -39,6 +39,10 @@ public sealed class PokeTradeHubConfig : BaseConfig
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public TradeAbuseSettings TradeAbuse { get; set; } = new();
 
+    [Category(BotTrade), Description("Settings for TradeCord.")]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public TradeCordSettings TradeCord { get; set; } = new();
+
     // Encounter Bots - For finding or hosting Pokémon in-game.
 
     [Category(BotEncounter)]
@@ -52,6 +56,30 @@ public sealed class PokeTradeHubConfig : BaseConfig
     [Category(BotEncounter), Description("Stop conditions for EncounterBot.")]
     [TypeConverter(typeof(ExpandableObjectConverter))]
     public StopConditionSettings StopConditions { get; set; } = new();
+
+    [Category(BotEncounter)]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public LairBotSettings LairSWSH { get; set; } = new();
+
+    [Category(BotEncounter)]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public DenSettings DenSWSH { get; set; } = new();
+
+    [Category(BotEncounter)]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public BoolSettings Bool { get; set; } = new();
+
+    [Category(BotEncounter)]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public CurryBotSettings CurrySWSH { get; set; } = new();
+
+    [Category(BotEncounter)]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public RollingRaidSettings RollingRaidSWSH { get; set; } = new();
+
+    [Category(BotEncounter)]
+    [TypeConverter(typeof(ExpandableObjectConverter))]
+    public EtumrepDumpSettings EtumrepDump { get; set; } = new();
 
     // Integration
 

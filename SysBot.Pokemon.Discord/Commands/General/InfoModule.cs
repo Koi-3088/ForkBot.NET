@@ -17,6 +17,7 @@ public class InfoModule : ModuleBase<SocketCommandContext>
 {
     private const string detail = "I am an open-source Discord bot powered by PKHeX.Core and other open-source software.";
     private const string repo = "https://github.com/kwsch/SysBot.NET";
+    private const string fork = "https://github.com/Koi-3088/ForkBot.NET";
 
     [Command("info")]
     [Alias("about", "whoami", "owner")]
@@ -31,8 +32,8 @@ public class InfoModule : ModuleBase<SocketCommandContext>
         };
 
         builder.AddField("Info",
-            $"- [Source Code]({repo})\n" +
-            $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
+            $"- [Original Source Code]({repo})\n" +
+            $"- [This Fork's Source Code]({fork})\n" +
             $"- {Format.Bold("Library")}: Discord.Net ({DiscordConfig.Version})\n" +
             $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
             $"- {Format.Bold("Runtime")}: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture} " +
@@ -46,7 +47,8 @@ public class InfoModule : ModuleBase<SocketCommandContext>
             $"- {Format.Bold("Heap Size")}: {GetHeapSize()}MiB\n" +
             $"- {Format.Bold("Guilds")}: {Context.Client.Guilds.Count}\n" +
             $"- {Format.Bold("Channels")}: {Context.Client.Guilds.Sum(g => g.Channels.Count)}\n" +
-            $"- {Format.Bold("Users")}: {Context.Client.Guilds.Sum(g => g.MemberCount)}\n"
+            $"- {Format.Bold("Users")}: {Context.Client.Guilds.Sum(g => g.MemberCount)}\n" +
+            $"{Format.Bold("\nThank you, [Project Pokémon](https://projectpokemon.org), for making Pokémon sprites and images used here publicly available!")}\n"
         );
 
         await ReplyAsync("Here's a bit about me!", embed: builder.Build()).ConfigureAwait(false);

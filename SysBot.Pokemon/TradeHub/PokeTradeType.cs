@@ -7,4 +7,9 @@ public enum PokeTradeType
     Seed,
     Clone,
     Dump,
+    EtumrepDump,
+    FixOT,
+    TradeCord,
+    Giveaway,
+    SupportTrade,
 }

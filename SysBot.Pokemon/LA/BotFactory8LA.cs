@@ -11,6 +11,8 @@ public sealed class BotFactory8LA : BotFactory<PA8>
             or PokeRoutineType.LinkTrade
             or PokeRoutineType.Clone
             or PokeRoutineType.Dump
+            or PokeRoutineType.EtumrepDump
+            or PokeRoutineType.FixOT
             => new PokeTradeBotLA(Hub, cfg),
 
         PokeRoutineType.RemoteControl => new RemoteControlBotLA(cfg),
@@ -24,6 +26,8 @@ public sealed class BotFactory8LA : BotFactory<PA8>
             or PokeRoutineType.LinkTrade
             or PokeRoutineType.Clone
             or PokeRoutineType.Dump
+            or PokeRoutineType.EtumrepDump
+            or PokeRoutineType.FixOT
             => true,
 
         PokeRoutineType.RemoteControl => true,

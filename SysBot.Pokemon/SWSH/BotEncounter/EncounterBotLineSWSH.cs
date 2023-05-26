@@ -35,6 +35,7 @@ public sealed class EncounterBotLineSWSH(PokeBotState Config, PokeTradeHub<PK8> 
                 await Task.Delay(0_100, token).ConfigureAwait(false);
             await Task.Delay(0_100, token).ConfigureAwait(false);
 
+            TradeExtensions<PK8>.EncounterLogs(pk, "EncounterLogPretty_EncounterLine.txt");
             if (await HandleEncounter(pk, token).ConfigureAwait(false))
                 return;
 

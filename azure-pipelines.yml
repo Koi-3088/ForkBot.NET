@@ -4,7 +4,9 @@
 # https://docs.microsoft.com/azure/devops/pipelines/apps/windows/dot-net
 
 trigger:
-- master
+- KoiTest
+
+pr: none
 
 pool:
   name: Azure Pipelines
@@ -37,8 +39,8 @@ steps:
     /p:RuntimeIdentifier=win-$(Platform)'
 
 - task: PublishPipelineArtifact@1
-  displayName: 'Publish Artifact: SysBot-x64'
+  displayName: 'Publish Artifact: ForkBot-x64'
   inputs:
     TargetPath: '$(Build.ArtifactStagingDirectory)\publish\'
-    ArtifactName: SysBot-x64
+    ArtifactName: ForkBot-x64
   condition: succeededOrFailed()

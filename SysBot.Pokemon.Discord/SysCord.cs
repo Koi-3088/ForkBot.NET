@@ -1,4 +1,5 @@
 using Discord;
+using Discord.Rest;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public static class SysCordSettings
 public sealed class SysCord<T> where T : PKM, new()
 {
     public static PokeBotRunner<T> Runner { get; private set; } = default!;
+    public static RestApplication App { get; private set; } = default!;
 
     private readonly DiscordSocketClient _client;
     private readonly DiscordManager Manager;
@@ -53,7 +55,8 @@ public sealed class SysCord<T> where T : PKM, new()
             // If you or another service needs to do anything with messages
             // (ex. checking Reactions, checking the content of edited/deleted messages),
             // you must set the MessageCacheSize. You may adjust the number as needed.
-            //MessageCacheSize = 50,
+            MessageCacheSize = 100,
+            AlwaysDownloadUsers = true,
         });
 
         _commands = new CommandService(new CommandServiceConfig
@@ -141,9 +144,13 @@ public sealed class SysCord<T> where T : PKM, new()
 
         await _commands.AddModulesAsync(assembly, _services).ConfigureAwait(false);
         var genericTypes = assembly.DefinedTypes.Where(z => z.IsSubclassOf(typeof(ModuleBase<SocketCommandContext>)) && z.IsGenericType);
+        bool initTC = typeof(T) == typeof(PK8) || typeof(T) == typeof(PB8);
         foreach (var t in genericTypes)
         {
             var genModule = t.MakeGenericType(typeof(T));
+            if (!initTC && t.Name.Contains("TradeCordModule"))
+                continue;
+
             await _commands.AddModuleAsync(genModule, _services).ConfigureAwait(false);
         }
         var modules = _commands.Modules.ToList();
@@ -166,6 +173,11 @@ public sealed class SysCord<T> where T : PKM, new()
         // Subscribe a handler to see if a message invokes a command.
         _client.Ready += LoadLoggingAndEcho;
         _client.MessageReceived += HandleMessageAsync;
+        _client.ReactionAdded += ExtraCommandUtil<T>.HandleReactionAsync;
+        _client.UserBanned += ExtraCommandUtil<T>.TCUserBanned;
+        _client.ButtonExecuted += ExtraCommandUtil<T>.ButtonExecuted;
+        _client.SelectMenuExecuted += ExtraCommandUtil<T>.SelectMenuExecuted;
+        _client.ModalSubmitted += ExtraCommandUtil<T>.ModalSubmitted;
     }
 
     private async Task HandleMessageAsync(SocketMessage arg)

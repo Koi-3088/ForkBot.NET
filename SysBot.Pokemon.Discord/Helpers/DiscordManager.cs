@@ -22,6 +22,12 @@ public class DiscordManager(DiscordSettings Config)
     public RemoteControlAccessList RolesDump => Config.RoleCanDump;
     public RemoteControlAccessList RolesRemoteControl => Config.RoleRemoteControl;
 
+    public RemoteControlAccessList RolesEtumrepDump => Config.RoleCanEtumrepDump;
+    public RemoteControlAccessList RolesFixOT => Config.RoleCanFixOT;
+    public RemoteControlAccessList RolesTradeCord => Config.RoleCanTradeCord;
+    public RemoteControlAccessList RolesGiveaway => Config.RoleCanGiveaway;
+    public RemoteControlAccessList RolesSupportTrade => Config.RoleCanSupportTrade;
+
     public bool CanUseSudo(ulong uid) => SudoDiscord.Contains(uid);
     public bool CanUseSudo(IEnumerable<string> roles) => roles.Any(SudoRoles.Contains);
 
@@ -54,6 +60,11 @@ public class DiscordManager(DiscordSettings Config)
         nameof(RolesSeed) => RolesSeed,
         nameof(RolesDump) => RolesDump,
         nameof(RolesRemoteControl) => RolesRemoteControl,
+        nameof(RolesEtumrepDump) => RolesEtumrepDump,
+        nameof(RolesFixOT) => RolesFixOT,
+        nameof(RolesTradeCord) => RolesTradeCord,
+        nameof(RolesGiveaway) => RolesGiveaway,
+        nameof(RolesSupportTrade) => RolesSupportTrade,
         _ => throw new ArgumentOutOfRangeException(nameof(type)),
     };
 }

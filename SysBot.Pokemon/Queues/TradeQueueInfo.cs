@@ -88,6 +88,7 @@ public sealed record TradeQueueInfo<T>(PokeTradeHub<T> Hub)
         {
             Hub.Queues.ClearAll();
             UsersInQueue.Clear();
+            TradeCordHelper<T>.TradeCordTrades.Clear();
         }
     }
 
@@ -111,7 +112,10 @@ public sealed record TradeQueueInfo<T>(PokeTradeHub<T> Hub)
         int removedCount = ClearTrade(details, Hub);
 
         if (removedCount == details.Count)
+        {
+            ClearTCTrade(details);
             return QueueResultRemove.Removed;
+        }
 
         bool canRemoveWhileProcessing = Hub.Config.Queues.CanDequeueIfProcessing;
         foreach (var detail in details)
@@ -201,5 +205,15 @@ public sealed record TradeQueueInfo<T>(PokeTradeHub<T> Hub)
     {
         lock (_sync)
             return UsersInQueue.Count(func);
+    }
+
+    private void ClearTCTrade(IEnumerable<TradeEntry<T>> details)
+    {
+        var detail = details.FirstOrDefault(x => x.Type == PokeRoutineType.TradeCord);
+        if (detail == default)
+            return;
+
+        if (TradeCordHelper<T>.TradeCordTrades.TryGetValue(detail.UserID, out _))
+            TradeCordHelper<T>.TradeCordTrades.Remove(detail.UserID);
     }
 }

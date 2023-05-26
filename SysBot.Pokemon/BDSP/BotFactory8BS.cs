@@ -10,6 +10,8 @@ public sealed class BotFactory8BS : BotFactory<PB8>
         PokeRoutineType.FlexTrade or PokeRoutineType.Idle
             or PokeRoutineType.LinkTrade
             or PokeRoutineType.Dump
+            or PokeRoutineType.FixOT
+            or PokeRoutineType.TradeCord
             => new PokeTradeBotBS(Hub, cfg),
 
         PokeRoutineType.RemoteControl => new RemoteControlBotBS(cfg),
@@ -22,6 +24,8 @@ public sealed class BotFactory8BS : BotFactory<PB8>
         PokeRoutineType.FlexTrade or PokeRoutineType.Idle
             or PokeRoutineType.LinkTrade
             or PokeRoutineType.Dump
+            or PokeRoutineType.FixOT
+            or PokeRoutineType.TradeCord
             => true,
 
         PokeRoutineType.RemoteControl => true,

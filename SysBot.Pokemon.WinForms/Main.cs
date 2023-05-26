@@ -133,6 +133,8 @@ public sealed partial class Main : Form
         var cfg = GetCurrentConfiguration();
         var lines = JsonSerializer.Serialize(cfg, ProgramConfigContext.Default.ProgramConfig);
         File.WriteAllText(Program.ConfigPath, lines);
+        if (TradeCordHelper<PK8>.TCInitialized)
+            TradeCordHelper<PK8>.CleanDB();
     }
 
     [JsonSerializable(typeof(ProgramConfig))]

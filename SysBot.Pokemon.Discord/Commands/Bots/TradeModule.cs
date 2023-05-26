@@ -74,9 +74,18 @@ public class TradeModule<T> : ModuleBase<SocketCommandContext> where T : PKM, ne
         {
             var sav = AutoLegalityWrapper.GetTrainerInfo<T>();
             var pkm = sav.GetLegal(template, out var result);
+            bool pla = typeof(T) == typeof(PA8);
+
+            if (!pla && pkm.Nickname.ToLower() == "egg" && Breeding.CanHatchAsEgg(pkm.Species))
+                TradeExtensions<T>.EggTrade(pkm, template);
+
             var la = new LegalityAnalysis(pkm);
             var spec = GameInfo.Strings.Species[template.Species];
             pkm = EntityConverter.ConvertToType(pkm, typeof(T), out _) ?? pkm;
+            bool memes = Info.Hub.Config.Trade.Memes && await TradeAdditionsModule<T>.TrollAsync(Context, pkm is not T || !la.Valid, pkm).ConfigureAwait(false);
+            if (memes)
+                return;
+
             if (pkm is not T pk || !la.Valid)
             {
                 var reason = result switch

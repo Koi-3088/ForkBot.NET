@@ -19,6 +19,14 @@ public class PokeDataOffsetsSWSH
     public const uint IsConnectedOffset = 0x30c7cca8;
     public const uint TextSpeedOffset = 0x450690A0;
     public const uint ItemTreasureAddress = 0x45068970;
+    public const uint LastUsedBallOffset = 0x4C428C80;
+    public const uint PokeBallOffset = 0x45067B88; // 0x74 size
+    public const uint DenOffset = 0x450C8A70;
+    public const uint DexRecMon = 0x45072B18;
+    public const uint DexRecMonGender = 0x45072B20;
+    public const uint DexRecLocation = 0x45072B98;
+    public const uint BerryPouchOffset = 0x45067C50;// 212 bytes
+    public const uint IngredientPouchOffset = 0x45068B00;// 100 bytes
 
     // Raid Offsets
     // The dex number of the Pokémon the host currently has chosen. 
@@ -69,6 +77,31 @@ public class PokeDataOffsetsSWSH
 
     public const int BoxFormatSlotSize = 0x158;
     public const int TrainerDataLength = 0x110;
+
+    // Lair offsets
+    public const uint CurrentScreenLairOffset = 0x16E498;
+    public const uint LairMiscScreenOffset = 0x2955BA0; // Main
+
+    public const uint AdventureSeedOffset = 0x4514A4B0;
+    public const uint ResetLegendFlagOffset = 0x50AD76B8;
+    public const uint LairMove1Offset = 0x840A5B10;
+
+    public const uint LairPartyP1Offset = 0x886B67C8;
+    public const uint LairPartyP2Offset = 0x886BC348;
+    public const uint LairPartyP3Offset = 0x886B9588;
+    public const uint LairPartyP4Offset = 0x886BF108;
+
+    public const uint RentalMon1 = 0x83E93070;
+    public const uint RentalMon2 = 0x83E93300;
+    public const uint RentalMon3 = 0x83E93590;
+
+    public const uint DamageOutputOffset = 0x007E37F0;
+    public const uint OtherItemAddress = 0x45067D90;
+
+    public const uint LairSpeciesNote1 = 0x50B12278;
+    public const uint LairSpeciesNote2 = 0x50B122B0;
+    public const uint LairSpeciesNote3 = 0x50B122E8;
+    public const uint LairSpeciesNote4 = 0x50B12320;
 
     #region ScreenDetection
     // Stable overworld detection. Value is 1 on overworld and 0 otherwise.

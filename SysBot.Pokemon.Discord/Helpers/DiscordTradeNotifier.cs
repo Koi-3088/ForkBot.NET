@@ -3,6 +3,9 @@ using Discord.WebSocket;
 using PKHeX.Core;
 using System;
 using System.Linq;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
 
@@ -32,12 +35,18 @@ public class DiscordTradeNotifier<T>(T Data, PokeTradeTrainerInfo Info, int Code
 
     public void TradeCanceled(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, PokeTradeResult msg)
     {
+        if (info.Type == PokeTradeType.TradeCord)
+            TradeCordHelper<T>.HandleTradedCatches(Trader.Id, false);
+
         OnFinish?.Invoke(routine);
         Trader.SendMessageAsync($"Trade canceled: {msg}").ConfigureAwait(false);
     }
 
     public void TradeFinished(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, T result)
     {
+        if (info.Type == PokeTradeType.TradeCord)
+            TradeCordHelper<T>.HandleTradedCatches(Trader.Id, true);
+
         OnFinish?.Invoke(routine);
         var tradedToUser = Data.Species;
         var message = tradedToUser != 0 ? $"Trade finished. Enjoy your {(Species)tradedToUser}!" : "Trade finished!";
@@ -84,5 +93,32 @@ public class DiscordTradeNotifier<T>(T Data, PokeTradeTrainerInfo Info, int Code
         });
         var msg = $"Here are the details for `{r.Seed:X16}`:";
         Trader.SendMessageAsync(msg, embed: embed.Build()).ConfigureAwait(false);
+    }
+
+    public void SendIncompleteEtumrepEmbed(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, string msg, IReadOnlyList<PA8> pkms)
+    {
+        var list = new List<FileAttachment>();
+        for (int i = 0; i < pkms.Count; i++)
+        {
+             var pk = pkms[i];
+             var ms = new MemoryStream(pk.Data);
+             var name = Util.CleanFileName(pk.FileName);
+             list.Add(new(ms, name));
+        }
+
+        var embed = new EmbedBuilder
+        {
+            Color = Color.Blue,
+            Description = "Here are all the Pokémon you dumped!",
+        }.WithAuthor(x => { x.Name = "Pokémon Legends: Arceus Dump"; });
+
+        var ch = Trader.CreateDMChannelAsync().Result;
+        ch.SendFilesAsync(list, msg, false, embed: embed.Build()).ConfigureAwait(false);
+    }
+
+    public void SendEtumrepEmbed(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, IReadOnlyList<PA8> pkms)
+    {
+        OnFinish?.Invoke(routine);
+        _ = Task.Run(async () => await EtumrepUtil.SendEtumrepEmbedAsync(Trader, pkms).ConfigureAwait(false));
     }
 }

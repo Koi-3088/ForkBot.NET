@@ -92,4 +92,7 @@ public abstract class SwitchRoutineExecutor<T> : RoutineExecutor<T> where T : cl
         } while (sw.ElapsedMilliseconds < waitms);
         return false;
     }
+
+    public async Task DaySkip(CancellationToken token) => await Connection.SendAsync(SwitchCommand.DaySkip(UseCRLF), token).ConfigureAwait(false);
+    public async Task ResetTime(CancellationToken token) => await Connection.SendAsync(SwitchCommand.ResetTime(UseCRLF), token).ConfigureAwait(false);
 }

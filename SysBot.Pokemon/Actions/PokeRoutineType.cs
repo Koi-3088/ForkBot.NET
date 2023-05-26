@@ -44,6 +44,33 @@ public enum PokeRoutineType
     RemoteControl = 6_000,
 
     // Add your own custom bots here, so they don't clash for future main-branch bot releases.
+
+    /// <summary> Searches, injects, or skips to den seeds. </summary>
+    DenBot = 6_001,
+
+    /// <summary> Attempts to fix advert names and minor legality issues of what a trade partner shows. </summary>
+    FixOT = 6_002,
+
+    /// <summary> Discord mini-game that generates random Pokémon. </summary>
+    TradeCord = 6_003,
+
+    /// <summary> Automates Dynamax Adventures. </summary>
+    LairBot = 6_004,
+
+    /// <summary> Easily and quickly resets various in-game flags. </summary>
+    BoolBot = 6_005,
+
+    /// <summary> Easily and quickly resets various in-game flags. </summary>
+    CurryBot = 6_006,
+
+    /// <summary> Resets Swords Of Justice via the camp method. </summary>
+    SoJCamp = 6_007,
+
+    /// <summary> Resets Swords Of Justice via the camp method. </summary>
+    RollingRaid = 6_008,
+
+    /// <summary> Resets Swords Of Justice via the camp method. </summary>
+    EtumrepDump = 6_009,
 }
 
 public static class PokeRoutineTypeExtensions

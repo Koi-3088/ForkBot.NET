@@ -41,6 +41,7 @@ public sealed class EncounterBotDogSWSH(PokeBotState Config, PokeTradeHub<PK8> H
                 await Task.Delay(0_100, token).ConfigureAwait(false);
             await Task.Delay(0_100, token).ConfigureAwait(false);
 
+            TradeExtensions<PK8>.EncounterLogs(pk, "EncounterLogPretty_EncounterDog.txt");
             if (await HandleEncounter(pk, token).ConfigureAwait(false))
                 return;
 
