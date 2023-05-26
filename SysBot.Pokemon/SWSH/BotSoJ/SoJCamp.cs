@@ -2,13 +2,13 @@
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
-using static SysBot.Pokemon.PokeDataOffsets;
+using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
 namespace SysBot.Pokemon
 {
-    public sealed class SoJCamp : EncounterBot
+    public sealed class SoJCampSWSH : EncounterBotSWSH
     {
-        public SoJCamp(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
+        public SoJCampSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
         }
 

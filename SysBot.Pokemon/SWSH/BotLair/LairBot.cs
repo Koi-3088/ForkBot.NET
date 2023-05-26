@@ -7,12 +7,12 @@ using System.Globalization;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using static SysBot.Base.SwitchButton;
-using static SysBot.Pokemon.PokeDataOffsets;
+using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
 namespace SysBot.Pokemon
 {
     // Thanks to Anubis and Zyro for providing offsets and ideas for LairBot, and Elvis for endless testing with PinkBot!
-    public sealed class LairBot : EncounterBot
+    public sealed class LairBotSWSH : EncounterBotSWSH
     {
         private StopConditionSettings NewSCSettings = new();
         private readonly LairBotSettings Settings;
@@ -63,7 +63,7 @@ namespace SysBot.Pokemon
             public ushort LairRewardsScreen { get; set; }
         }
 
-        public LairBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
+        public LairBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
             Settings = Hub.Config.LairSWSH;
             DumpSetting = Hub.Config.Folder;

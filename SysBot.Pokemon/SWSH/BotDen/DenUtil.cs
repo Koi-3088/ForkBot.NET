@@ -47,7 +47,7 @@ namespace SysBot.Pokemon
         public static uint GetDenOffset(uint id, DenType type, out uint denID)
         {
             denID = GetDenID(id, type);
-            uint shiftedOffset = PokeDataOffsets.DenOffset;
+            uint shiftedOffset = PokeDataOffsetsSWSH.DenOffset;
             if (denID >= 190)
                 return shiftedOffset += 0x300 + (denID * 0x18);
             else if (denID >= 100)

@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace SysBot.Pokemon
 {
-    public sealed class DenBot : EncounterBot
+    public sealed class DenBotSWSH : EncounterBotSWSH
     {
         private readonly DenSettings Settings;
         private DenUtil.RaidData RaidInfo = new();
         private ulong InitialSeed;
         private ulong DestinationSeed;
 
-        public DenBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
+        public DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
             Settings = hub.Config.DenSWSH;
         }

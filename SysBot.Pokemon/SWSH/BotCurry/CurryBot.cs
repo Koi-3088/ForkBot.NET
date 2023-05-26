@@ -6,11 +6,11 @@ using System.Threading.Tasks;
 using System.Diagnostics;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Base.SwitchStick;
-using static SysBot.Pokemon.PokeDataOffsets;
+using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
 namespace SysBot.Pokemon
 {
-    public sealed class CurryBot : EncounterBot
+    public sealed class CurryBotSWSH : EncounterBotSWSH
     {
         private readonly CurryBotSettings Settings;
         private readonly StopConditionSettings StopSettings;
@@ -27,7 +27,7 @@ namespace SysBot.Pokemon
         private int IngredientCount;
         private int BerryCount;
 
-        public CurryBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
+        public CurryBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg, hub)
         {
             Settings = Hub.Config.CurrySWSH;
             StopSettings = Hub.Config.StopConditions;

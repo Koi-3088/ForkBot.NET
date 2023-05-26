@@ -398,7 +398,7 @@ namespace SysBot.Pokemon.Discord
 
             List<ulong> channels = new();
             List<ITextChannel> embedChannels = new();
-            if (!RollingRaidBot.RollingRaidEmbedsInitialized)
+            if (!RollingRaidBotSWSH.RollingRaidEmbedsInitialized)
             {
                 var chStrings = RollingRaidSettings.RollingRaidEmbedChannels.Split(',');
                 foreach (var channel in chStrings)
@@ -430,24 +430,24 @@ namespace SysBot.Pokemon.Discord
                 }
             }
 
-            RollingRaidBot.RollingRaidEmbedsInitialized ^= true;
-            await ReplyAsync(!RollingRaidBot.RollingRaidEmbedsInitialized ? "RollingRaid Embed task stopped!" : "RollingRaid Embed task started!").ConfigureAwait(false);
+            RollingRaidBotSWSH.RollingRaidEmbedsInitialized ^= true;
+            await ReplyAsync(!RollingRaidBotSWSH.RollingRaidEmbedsInitialized ? "RollingRaid Embed task stopped!" : "RollingRaid Embed task started!").ConfigureAwait(false);
 
-            if (!RollingRaidBot.RollingRaidEmbedsInitialized)
+            if (!RollingRaidBotSWSH.RollingRaidEmbedsInitialized)
             {
-                RollingRaidBot.RaidEmbedSource.Cancel();
+                RollingRaidBotSWSH.RaidEmbedSource.Cancel();
                 return;
             }
 
-            RollingRaidBot.RaidEmbedSource = new();
+            RollingRaidBotSWSH.RaidEmbedSource = new();
             _ = Task.Run(async () => await RollingRaidEmbedLoop(embedChannels).ConfigureAwait(false));
         }
 
         private static async Task RollingRaidEmbedLoop(List<ITextChannel> channels)
         {
-            while (!RollingRaidBot.RaidEmbedSource.IsCancellationRequested)
+            while (!RollingRaidBotSWSH.RaidEmbedSource.IsCancellationRequested)
             {
-                if (RollingRaidBot.EmbedQueue.TryDequeue(out var embedInfo))
+                if (RollingRaidBotSWSH.EmbedQueue.TryDequeue(out var embedInfo))
                 {
                     var url = TradeExtensions<T>.PokeImg(embedInfo.Item1, embedInfo.Item1.CanGigantamax, false);
                     var embed = new EmbedBuilder

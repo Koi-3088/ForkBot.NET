@@ -9,18 +9,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using static SysBot.Base.SwitchButton;
-using static SysBot.Pokemon.PokeDataOffsets;
+using static SysBot.Pokemon.PokeDataOffsetsSWSH;
 
 namespace SysBot.Pokemon
 {
-    public class RollingRaidBot : PokeRoutineExecutor8, ICountBot
+    public class RollingRaidBotSWSH : PokeRoutineExecutor8SWSH, ICountBot
     {
         private readonly PokeTradeHub<PK8> Hub;
         private readonly RollingRaidSettings Settings;
         public ICountSettings Counts => Settings;
         private readonly DenUtil.RaidData RaidInfo = new();
 
-        public RollingRaidBot(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg)
+        public RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : base(cfg)
         {
             Hub = hub;
             Settings = hub.Config.RollingRaidSWSH;
@@ -113,7 +113,7 @@ namespace SysBot.Pokemon
                 Log(msg);
             }
 
-            Log($"Ending {nameof(RollingRaidBot)} loop.");
+            Log($"Ending {nameof(RollingRaidBotSWSH)} loop.");
             if (rolled)
                 await ResetTime(token).ConfigureAwait(false);
             await HardStop().ConfigureAwait(false);
