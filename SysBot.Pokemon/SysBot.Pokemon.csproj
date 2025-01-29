@@ -18,7 +18,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
     <PackageReference Include="PKHeX.Core" Version="25.2.23" />
     <PackageReference Include="KdSoft.FlatBuffers" Version="1.12.0" />
-    <PackageReference Include="System.Data.SQLite" Version="1.0.114.4" />
+    <PackageReference Include="System.Data.SQLite" Version="1.0.119" />
     <ProjectReference Include="..\SysBot.Base\SysBot.Base.csproj" />
   </ItemGroup>
 
