@@ -126,7 +126,7 @@ namespace SysBot.Pokemon.Discord
                     new( 40, "Purugly", false, new[] { 41, 44 }, 0),
                     new(  1, "Purugly", true,  new[] { 56, 59 }, 3),
                 },
-                new SlotDetail[] // Mirelands: 8A628649D2AB899C; All times; All weather (2-2)
+                new SlotDetail[] // Highlands: 8A628649D2AB899C; All times; All weather (2-2)
                 {
                     new( 30, "Teddiursa", false, new[] { 26, 29 }, 0),
                     new(  2, "Teddiursa", true,  new[] { 41, 44 }, 3),
