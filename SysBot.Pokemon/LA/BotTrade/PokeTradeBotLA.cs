@@ -735,6 +735,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
         {
             if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
                 break;
+
             if (bctr++ % 3 == 0)
                 await Click(B, 0_100, token).ConfigureAwait(false);
 
@@ -745,7 +746,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
 
             var hash = SearchUtil.HashByDetails(pk);
             if (hash == SearchUtil.HashByDetails(pkprev) || hashes.Contains(hash))
-                ontinue;
+                continue;
 
             // Save the new Pokémon and hash for comparison next round.
             pkprev = pk;
@@ -761,8 +762,10 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             ctr++;
             var hint = ctr == 1 ? " Please dump at least one (1) more Pokémon." : string.Empty;
             var msg = $"File {ctr}: {SpeciesName.GetSpeciesNameGeneration(pk.Species, 2, 8)} dumped successfully.{hint}";
+
             dumps.Add(pk);
             detail.SendNotification(this, msg);
+            await Task.Delay(1_000, token).ConfigureAwait(false);
         }
 
         Log($"Ended Etumrep Dump loop after processing {ctr} Pokémon.");
@@ -773,8 +776,8 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             return PokeTradeResult.TrainerTooSlow;
         }
 
-        ushort[] multiExceptions = new ushort[]
-        {
+        ushort[] multiExceptions =
+        [
             (ushort)Species.Bidoof, (ushort)Species.Eevee,
             (ushort)Species.Combee,
             (ushort)Species.Qwilfish,
@@ -795,7 +798,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             (ushort)Species.Swinub, (ushort)Species.Piloswine,
             (ushort)Species.Paras, (ushort)Species.Parasect, (ushort)Species.Zubat, (ushort)Species.Golbat,
             (ushort)Species.Rufflet,
-        };
+        ];
 
         bool isMulti = multiExceptions.Intersect(dumps.Select(x => x.Species)).ToArray().Length >= 1 && dumps.All(x => multiExceptions.Contains(x.Species));
         bool different = TradeExtensions<PA8>.DifferentFamily(dumps) && !isMulti;
@@ -850,13 +853,16 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
         if (clone.FatefulEncounter)
         {
             clone.SetDefaultNickname(laInit);
-            var info = new SimpleTrainerInfo { Gender = clone.OT_Gender, Language = clone.Language, OT = name, TID16 = clone.TID16, SID16 = clone.SID16, Generation = 8 };
-            var mg = EncounterEvent.GetAllEvents().Where(x => x.Species == clone.Species && x.Form == clone.Form && x.IsShiny == clone.IsShiny && x.OT_Name == clone.OT_Name).ToList();
+            var info = new SimpleTrainerInfo { Gender = clone.OriginalTrainerGender, Language = clone.Language, OT = name, TID16 = clone.TID16, SID16 = clone.SID16, Generation = 8 };
+            var mg = EncounterEvent.GetAllEvents().Where(x => x.Species == clone.Species && x.Form == clone.Form && x.IsShiny == clone.IsShiny && x.OriginalTrainerName == clone.OriginalTrainerName).ToList();
             if (mg.Count > 0)
                 clone = TradeExtensions<PA8>.CherishHandler(mg.First(), info);
             else clone = (PA8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
         }
-        else clone = (PA8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
+        else
+        {
+            clone = (PA8)sav.GetLegal(AutoLegalityWrapper.GetTemplate(new ShowdownSet(string.Join("\n", set))), out _);
+        }
 
         clone = (PA8)TradeExtensions<PA8>.TrashBytes(clone, new LegalityAnalysis(clone));
         clone.ResetPartyStats();

@@ -85,7 +85,7 @@ public static class ReusableActions
             else newShowdown[index] = "\nShiny: Star\r";
         }
 
-        var extra = new string[] { $"\nOT: {pkm.OT_Name}", $"\nTID: {pkm.GetDisplayTID()}", $"\nSID: {pkm.GetDisplaySID()}", $"{(pkm.IsEgg ? "\nIsEgg: Yes" : "")}" };
+        var extra = new string[] { $"\nOT: {pkm.OriginalTrainerName}", $"\nTID: {pkm.GetDisplayTID()}", $"\nSID: {pkm.GetDisplaySID()}", $"{(pkm.IsEgg ? "\nIsEgg: Yes" : "")}" };
         newShowdown.InsertRange(1, extra);
         return Format.Code(string.Join("", newShowdown).Trim());
     }

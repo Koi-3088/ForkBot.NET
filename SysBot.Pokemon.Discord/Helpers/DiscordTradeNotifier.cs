@@ -1,11 +1,10 @@
-﻿using Discord;
+using Discord;
 using Discord.WebSocket;
 using PKHeX.Core;
 using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace SysBot.Pokemon.Discord;
 
@@ -112,13 +111,12 @@ public class DiscordTradeNotifier<T>(T Data, PokeTradeTrainerInfo Info, int Code
             Description = "Here are all the Pokémon you dumped!",
         }.WithAuthor(x => { x.Name = "Pokémon Legends: Arceus Dump"; });
 
-        var ch = Trader.CreateDMChannelAsync().Result;
-        ch.SendFilesAsync(list, msg, false, embed: embed.Build()).ConfigureAwait(false);
+        Trader.SendFilesAsync(list, msg, false, embed: embed.Build()).ConfigureAwait(false);
     }
 
     public void SendEtumrepEmbed(PokeRoutineExecutor<T> routine, PokeTradeDetail<T> info, IReadOnlyList<PA8> pkms)
     {
         OnFinish?.Invoke(routine);
-        _ = Task.Run(async () => await EtumrepUtil.SendEtumrepEmbedAsync(Trader, pkms).ConfigureAwait(false));
+        EtumrepUtil.SendEtumrepEmbedAsync(Trader, pkms).ConfigureAwait(false);
     }
 }

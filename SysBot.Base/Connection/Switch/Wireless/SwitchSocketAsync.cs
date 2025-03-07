@@ -256,9 +256,22 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
         return result;
     }
 
+    public async Task<long> GetSwitchTime(CancellationToken token)
+    {
+        var bytes = await ReadBytesFromCmdAsync(SwitchCommand.GetSwitchTime(), sizeof(long), token).ConfigureAwait(false);
+        return BitConverter.ToInt64(bytes, 0);
+    }
+
+    public async Task<bool> SetSwitchTime(long posix, int delay, CancellationToken token)
+    {
+        var bytes = await ReadBytesFromCmdAsync(SwitchCommand.SetSwitchTime(posix), sizeof(bool), token).ConfigureAwait(false);
+        await Task.Delay(delay, token).ConfigureAwait(false);
+        return BitConverter.ToBoolean(bytes);
+    }
+
     private async Task<byte[]> FlexRead(CancellationToken token)
     {
-        List<byte> flexBuffer = new();
+        List<byte> flexBuffer = [];
         int available = Connection.Available;
         Connection.ReceiveTimeout = 1_000;
 
@@ -267,13 +280,13 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
             byte[] buffer = new byte[available];
             try
             {
-                Connection.Receive(buffer, available, SocketFlags.None);
+                await Connection.ReceiveAsync(buffer, token);
                 flexBuffer.AddRange(buffer);
             }
             catch (Exception ex)
             {
                 LogError($"Socket exception thrown while receiving data:\n{ex.Message}");
-                return Array.Empty<byte>();
+                return [];
             }
 
             await Task.Delay(MaximumTransferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
@@ -281,6 +294,6 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
         } while (flexBuffer.Count == 0 || flexBuffer.Last() != (byte)'\n');
 
         Connection.ReceiveTimeout = 0;
-        return flexBuffer.ToArray();
+        return [.. flexBuffer];
     }
 }

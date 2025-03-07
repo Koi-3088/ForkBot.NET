@@ -151,4 +151,25 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
             return PixelPeekUSB();
         }, token);
     }
+
+    public Task<long> GetSwitchTime(CancellationToken token)
+    {
+        return Task.Run(() =>
+        {
+            Send(SwitchCommand.GetSwitchTime(false));
+            byte[] baseBytes = ReadBulkUSB();
+            return BitConverter.ToInt64(baseBytes);
+        }, token);
+    }
+
+    public Task<bool> SetSwitchTime(long posix, int delay, CancellationToken token)
+    {
+        return Task.Run(() =>
+        {
+            Send(SwitchCommand.SetSwitchTime(posix, false));
+            Task.Delay(delay, token);
+            byte[] baseBytes = ReadBulkUSB();
+            return BitConverter.ToBoolean(baseBytes);
+        }, token);
+    }
 }

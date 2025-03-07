@@ -207,7 +207,7 @@ public sealed record TradeQueueInfo<T>(PokeTradeHub<T> Hub)
             return UsersInQueue.Count(func);
     }
 
-    private void ClearTCTrade(IEnumerable<TradeEntry<T>> details)
+    private static void ClearTCTrade(IEnumerable<TradeEntry<T>> details)
     {
         var detail = details.FirstOrDefault(x => x.Type == PokeRoutineType.TradeCord);
         if (detail == default)

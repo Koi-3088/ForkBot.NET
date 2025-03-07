@@ -348,16 +348,16 @@ public static class SwitchCommand
     /// <param name="resetNTP">Should we use NTP to sync back time (1/0 for true/false, about to be deprecated)</param>
     /// <param name="crlf">Line terminator (unused by USB's protocol)</param>
     /// <returns>Encoded command bytes</returns>
-    public static byte[] DaySkip(bool crlf = true)
-        => Encode($"daySkip", crlf);
+    public static byte[] GetSwitchTime(bool crlf = true)
+        => Encode("getSwitchTime", crlf);
 
     /// <summary>
     /// Sync system network clock with the initial day skip's clock.
     /// </summary>
     /// <param name="crlf">Line terminator (unused by USB's protocol)</param>
     /// <returns>Encoded command bytes</returns>
-    public static byte[] ResetTime(bool crlf = true)
-        => Encode("resetTime", crlf);
+    public static byte[] SetSwitchTime(long posix, bool crlf = true)
+        => Encode($"setSwitchTime {posix}", crlf);
 
     /// <summary>
     /// Takes and sends a raw screenshot.

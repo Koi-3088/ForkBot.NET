@@ -133,6 +133,7 @@ public sealed class SysCord<T> where T : PKM, new()
 
         var app = await _client.GetApplicationInfoAsync().ConfigureAwait(false);
         Manager.Owner = app.Owner.Id;
+        App = app;
 
         // Wait infinitely so your bot actually stays connected.
         await MonitorStatusAsync(token).ConfigureAwait(false);
