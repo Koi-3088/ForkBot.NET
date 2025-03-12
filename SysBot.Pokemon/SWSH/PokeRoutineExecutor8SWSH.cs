@@ -390,7 +390,10 @@ public abstract class PokeRoutineExecutor8SWSH(PokeBotState Config) : PokeRoutin
                 await SetStick(SwitchStick.LEFT, 3_500, 0, 0, token).ConfigureAwait(false); // →
                 await SetStick(SwitchStick.LEFT, 0, 3_500, 0, token).ConfigureAwait(false); // ↑
             }
-            else await SetStick(SwitchStick.LEFT, 0, 0, 0_100, token).ConfigureAwait(false);
+            else
+            {
+                await SetStick(SwitchStick.LEFT, 0, 0, 0_100, token).ConfigureAwait(false);
+            }
         } while (sw.ElapsedMilliseconds < waitms);
 
         await Task.Delay(waitInterval, token).ConfigureAwait(false);
@@ -426,7 +429,7 @@ public abstract class PokeRoutineExecutor8SWSH(PokeBotState Config) : PokeRoutin
         await Click(X, 2_000, token).ConfigureAwait(false);
         await Click(R, 0_250, token).ConfigureAwait(false);
         while (!await IsOnOverworld(offset, token).ConfigureAwait(false))
-            await Click(A, 0_500, token).ConfigureAwait(false);
+            await Click(A, 1_000, token).ConfigureAwait(false);
         Log("Game saved!");
     }
 
@@ -438,9 +441,9 @@ public abstract class PokeRoutineExecutor8SWSH(PokeBotState Config) : PokeRoutin
     {
         var ptr = pointer;
         uint finadd = 0;
-        if (!ptr.EndsWith("]"))
+        if (!ptr.EndsWith(']'))
             finadd = Util.GetHexValue(ptr.Split('+').Last());
-        var jumps = ptr.Replace("main", "").Replace("[", "").Replace("]", "").Split(new[] { "+" }, StringSplitOptions.RemoveEmptyEntries);
+        var jumps = ptr.Replace("main", "").Replace("[", "").Replace("]", "").Split(["+"], StringSplitOptions.RemoveEmptyEntries);
         if (jumps.Length == 0)
         {
             Log("Invalid Pointer");

@@ -266,7 +266,13 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
     {
         var bytes = await ReadBytesFromCmdAsync(SwitchCommand.SetSwitchTime(posix), sizeof(bool), token).ConfigureAwait(false);
         await Task.Delay(delay, token).ConfigureAwait(false);
-        return BitConverter.ToBoolean(bytes);
+        return BitConverter.ToUInt16(bytes) == 1;
+    }
+
+    public async Task<bool> ResetSwitchTime(CancellationToken token)
+    {
+        var bytes = await ReadBytesFromCmdAsync(SwitchCommand.ResetSwitchTime(), sizeof(ushort), token).ConfigureAwait(false);
+        return BitConverter.ToUInt16(bytes) == 1;
     }
 
     private async Task<byte[]> FlexRead(CancellationToken token)

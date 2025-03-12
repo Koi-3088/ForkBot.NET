@@ -360,6 +360,14 @@ public static class SwitchCommand
         => Encode($"setSwitchTime {posix}", crlf);
 
     /// <summary>
+    /// Sync system network clock with the initial day skip's clock.
+    /// </summary>
+    /// <param name="crlf">Line terminator (unused by USB's protocol)</param>
+    /// <returns>Encoded command bytes</returns>
+    public static byte[] ResetSwitchTime(bool crlf = true)
+        => Encode("resetSwitchTime", crlf);
+
+    /// <summary>
     /// Takes and sends a raw screenshot.
     /// </summary>
     /// <param name="crlf">Line terminator (unused by USB's protocol)</param>

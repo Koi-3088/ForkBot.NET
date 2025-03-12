@@ -40,7 +40,7 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
         var eventOfs = DenUtil.GetEventDenOffset((int)Settings.ConsoleLanguage, RaidInfo.Settings.DenID, RaidInfo.Settings.DenType, out _);
         var eventDenBytes = RaidInfo.Settings.DenBeamType == BeamType.Event ? await Connection.ReadBytesAsync(eventOfs, 0x23D4, token).ConfigureAwait(false) : [];
         RaidInfo = DenUtil.GetRaid(RaidInfo, denBytes, eventDenBytes);
-        long origPosix = 0;
+        long posix = 0;
 
         while (!token.IsCancellationRequested)
         {
@@ -51,18 +51,25 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
                 DestinationSeed = DenUtil.GetTargetSeed(RaidInfo.Den.Seed, skips);
                 Log($"\nInitial seed: {InitialSeed:X16}.\nDestination seed: {DestinationSeed:X16}.");
 
-                origPosix = await Connection.GetSwitchTime(token).ConfigureAwait(false);
-                if (origPosix == 0)
+                posix = await Connection.GetSwitchTime(token).ConfigureAwait(false);
+                if (posix == 0)
                 {
                     Log("Couldn't get network time on your Switch. Is network sync enabled?");
                     return;
                 }
 
-                (long posix, bool success) = await PerformDaySkip(origPosix, skips, token).ConfigureAwait(false);
+                (posix, skips, bool success) = await PerformDaySkip(posix, skips, token).ConfigureAwait(false);
+
+                Log("Attempting to reset time from NTP...");
+                await EnsureConnectedToYComm(OverworldOffset, Hub.Config, token).ConfigureAwait(false);
+
+                if (await Connection.ResetSwitchTime(token).ConfigureAwait(false))
+                    Log("Switch network time was reset successfully.");
+                else Log("Failed to reset Switch network time. Reboot the Switch.");
+
                 if (!success || !await SkipCorrection(posix, skips, token).ConfigureAwait(false))
                     break;
 
-                Log("Saving the game...");
                 await SaveGame(OverworldOffset, token).ConfigureAwait(false);
                 EchoUtil.Echo($"{Hub.Config.StopConditions.MatchFoundEchoMention}Skipping complete, stopping the bot.\n");
                 break;
@@ -100,9 +107,6 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
                 return;
             }
         }
-
-        if (Settings.DenMode == DenMode.Skip && origPosix != 0)
-            await Connection.SetSwitchTime(origPosix, 0_360, token).ConfigureAwait(false);
     }
 
     private Tuple<ulong, ulong> PerformSeedSearch(CancellationToken token)
@@ -132,16 +136,15 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
         return new Tuple<ulong, ulong>(seed, threeDay);
     }
 
-    private async Task<(long, bool)> PerformDaySkip(long origPosix, int skips, CancellationToken token)
+    private async Task<(long, int, bool)> PerformDaySkip(long posix, int skips, CancellationToken token)
     {
         var timeRemaining = TimeSpan.FromMilliseconds((0_360 + Settings.SkipDelay) * skips);
-        var firstQuarterLog = Math.Round(skips * 0.25, 0, MidpointRounding.ToEven);
-        var halfLog = Math.Round(skips * 0.5, 0, MidpointRounding.ToEven);
-        var lastQuarterLog = Math.Round(skips * 0.75, 0, MidpointRounding.ToEven);
+        var firstQuarterLog = Math.Round(skips * 0.75, 0, MidpointRounding.ToNegativeInfinity);
+        var halfLog = Math.Round(skips * 0.5, 0, MidpointRounding.ToNegativeInfinity);
+        var lastQuarterLog = Math.Round(skips * 0.25, 0, MidpointRounding.ToNegativeInfinity);
         EchoUtil.Echo($"Beginning to skip {$"{skips} frame{(skips > 1 ? "s" : "")}"}. Skipping should take around {(timeRemaining.Days == 0 ? "" : timeRemaining.Days + "d:")}{(timeRemaining.Hours == 0 ? "" : timeRemaining.Hours + "h:")}{(timeRemaining.Minutes == 0 ? "" : timeRemaining.Minutes + "m:")}{(timeRemaining.Seconds < 1 ? "1s" : timeRemaining.Seconds + "s")}.");
 
-        int remaining = await SkipCheck(skips, 0, token).ConfigureAwait(false);
-        var posix = new DateTime(origPosix).Ticks;
+        int remaining = await SkipCheck(skips, token).ConfigureAwait(false);
         while (remaining != 0 && !token.IsCancellationRequested)
         {
             if (remaining == firstQuarterLog || remaining == halfLog || remaining == lastQuarterLog)
@@ -150,7 +153,7 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
                 Log($"{$"{remaining} skip{(remaining > 1 ? "s" : "")}"} and around {(timeRemaining.Days == 0 ? "" : timeRemaining.Days + "d:")}{(timeRemaining.Hours == 0 ? "" : timeRemaining.Hours + "h:")}{(timeRemaining.Minutes == 0 ? "" : timeRemaining.Minutes + "m:")}{(timeRemaining.Seconds < 1 ? "1s" : timeRemaining.Seconds + "s")} left.");
             }
 
-            var currentTime = DateTimeOffset.FromUnixTimeSeconds(posix).DateTime;
+            var currentTime = DateTimeOffset.FromUnixTimeSeconds(posix);
             if (currentTime.Date.Year >= 2060)
             {
                 var newTime = new DateTime(2000, 1, 1);
@@ -158,7 +161,7 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
                 if (!await Connection.SetSwitchTime(posix, 0_360 + Settings.SkipDelay, token).ConfigureAwait(false))
                 {
                     Log("Couldn't set network time on your Switch. Is network sync enabled?");
-                    return (posix, false);
+                    return (posix, remaining, false);
                 }
             }
 
@@ -166,15 +169,15 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
             if (!await Connection.SetSwitchTime(posix, 0_360 + Settings.SkipDelay, token).ConfigureAwait(false))
             {
                 Log("Couldn't set network time on your Switch. Is network sync enabled?");
-                return (posix, false);
+                return (posix, remaining, false);
             }
 
             --remaining;
             if (remaining == lastQuarterLog || remaining + 3 == skips)
-                remaining = await SkipCheck(skips, remaining, token).ConfigureAwait(false);
+                remaining = await SkipCheck(skips, token).ConfigureAwait(false);
         }
 
-        return (posix, true);
+        return (posix, remaining, true);
     }
 
     private async Task<bool> SkipCorrection(long posix, int skips, CancellationToken token)
@@ -193,7 +196,7 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
             {
                 Log($"Fell short by {skips} skips! Resuming skipping until destination seed is reached.");
 
-                (posix, var success) = await PerformDaySkip(posix, skips, token).ConfigureAwait(false);
+                (posix, skips, var success) = await PerformDaySkip(posix, skips, token).ConfigureAwait(false);
                 if (token.IsCancellationRequested || !success)
                     return false;
 
@@ -213,15 +216,14 @@ public sealed class DenBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : Encoun
         return skips == 0;
     }
 
-    private async Task<int> SkipCheck(int skips, int skipsDone, CancellationToken token)
+    private async Task<int> SkipCheck(int skips, CancellationToken token)
     {
-        var currentSeed = new RaidSpawnDetail(await DenData(RaidInfo.Settings.DenID, RaidInfo.Settings.DenType, token).ConfigureAwait(false)).Seed;
+        var data = await DenData(RaidInfo.Settings.DenID, RaidInfo.Settings.DenType, token).ConfigureAwait(false);
+        var currentSeed = new RaidSpawnDetail(data).Seed;
         var remaining = DenUtil.GetSkipsToTargetSeed(currentSeed, DestinationSeed, skips);
-        bool dateRolled = remaining < skips - skipsDone;
-        if (dateRolled)
-            return remaining + skipsDone;
-        else return remaining;
+        return remaining;
     }
 
-    private async Task<byte[]> DenData(uint id, DenType type, CancellationToken token) => await Connection.ReadBytesAsync(DenUtil.GetDenOffset(id, type, out _), 0x18, token).ConfigureAwait(false);
+    private async Task<byte[]> DenData(uint id, DenType type, CancellationToken token)
+        => await Connection.ReadBytesAsync(DenUtil.GetDenOffset(id, type, out _), 0x18, token).ConfigureAwait(false);
 }

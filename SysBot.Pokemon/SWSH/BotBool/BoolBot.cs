@@ -23,8 +23,8 @@ public sealed class BoolBotSWSH : EncounterBotSWSH
         Config.IterateNextRoutine();
 
         await InitializeSessionOffsets(token).ConfigureAwait(false);
-        var origPosix = await Connection.GetSwitchTime(token).ConfigureAwait(false);
-        if (origPosix == 0)
+        var posix = await Connection.GetSwitchTime(token).ConfigureAwait(false);
+        if (posix == 0)
         {
             Log("Failed to retrieve Switch time. Is network time sync enabled?");
             return;
@@ -32,8 +32,10 @@ public sealed class BoolBotSWSH : EncounterBotSWSH
 
         if (Settings.BoolType == BoolMode.Skipper)
         {
-            await Skipper(origPosix, token).ConfigureAwait(false);
-            await Connection.SetSwitchTime(origPosix, 0_360, token).ConfigureAwait(false);
+            await Skipper(posix, token).ConfigureAwait(false);
+            if (await Connection.ResetSwitchTime(token).ConfigureAwait(false))
+                Log("Switch network time was reset successfully.");
+            else Log("Failed to reset Switch network time.");
         }
         else
         {
@@ -156,7 +158,7 @@ public sealed class BoolBotSWSH : EncounterBotSWSH
         return;
     }
 
-    private async Task Skipper(long origPosix, CancellationToken token)
+    private async Task Skipper(long posix, CancellationToken token)
     {
         DexRecSpecies[] dex = Settings.DexRecConditions.SpeciesTargets;
         DexRecLoc loc = Settings.DexRecConditions.LocationTarget;
@@ -169,7 +171,6 @@ public sealed class BoolBotSWSH : EncounterBotSWSH
         if (empty)
             Log("No target set, skipping indefinitely.. When you see a species or location you want, stop the bot.");
 
-        var posix = new DateTime(origPosix).Ticks;
         while (!token.IsCancellationRequested)
         {
             var currentTime = DateTimeOffset.FromUnixTimeSeconds(posix).DateTime;

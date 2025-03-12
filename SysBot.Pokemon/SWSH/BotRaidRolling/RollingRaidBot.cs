@@ -68,8 +68,8 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
             return;
         }
 
-        var origTime = await Connection.GetSwitchTime(token).ConfigureAwait(false);
-        if (origTime == 0)
+        var posix = await Connection.GetSwitchTime(token).ConfigureAwait(false);
+        if (posix == 0)
         {
             Log("Couldn't get network time on your Switch. Is network sync enabled?");
             return;
@@ -87,7 +87,7 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
                 Log("Testing rollover prevention... Bot should detect watts, fix the rollover, then stop the routine.");
                 if (await ReadDenData(true, token).ConfigureAwait(false))
                 {
-                    var time = new DateTime(origTime).Ticks + 86_400;
+                    var time = new DateTime(posix).Ticks + 86_400;
                     if (!await Connection.SetSwitchTime(time, 0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false))
                     {
                         Log("Couldn't set network time on your Switch. Is network sync enabled?");
@@ -104,9 +104,9 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
                         Log("Rollover prevention successful! Disable the test routine, then run the bot!");
                     }
 
-                    if (!await Connection.SetSwitchTime(origTime, 0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false))
+                    if (!await Connection.ResetSwitchTime(token).ConfigureAwait(false))
                     {
-                        Log("Couldn't set network time on your Switch. Is network sync enabled?");
+                        Log("Couldn't reset network time on your Switch. Is network sync enabled? Are you connected to the internet?");
                         return;
                     }
                 }
@@ -117,7 +117,7 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
                 if (await ReadDenData(false, token).ConfigureAwait(false))
                 {
                     Log("Starting main RollingRaidBot loop.");
-                    await InnerLoop(origTime, token).ConfigureAwait(false);
+                    await InnerLoop(posix, token).ConfigureAwait(false);
                 }
             }
         }
@@ -128,7 +128,7 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
         }
 
         Log($"Ending {nameof(RollingRaidBotSWSH)} loop.");
-        await Connection.SetSwitchTime(origTime, 0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false);
+        await Connection.ResetSwitchTime(token).ConfigureAwait(false);
         await HardStop().ConfigureAwait(false);
     }
 
@@ -204,17 +204,16 @@ public class RollingRaidBotSWSH(PokeBotState cfg, PokeTradeHub<PK8> hub) : PokeR
     {
         if (!softLock && !hardLock)
         {
-            var time = new DateTime(posix).Ticks;
             for (int i = 0; i < Settings.DaysToRoll; i++)
             {
-                time += 86_400;
-                await Connection.SetSwitchTime(time, 0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false);
+                posix += 86_400;
+                await Connection.SetSwitchTime(posix, 0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false);
                 if (!rolled && Settings.DaysToRoll > 0)
                     rolled = true;
 
                 Log($"Roll {i + 1}...");
                 if (i == Settings.DaysToRoll - 1)
-                    await Connection.SetSwitchTime(posix, 0_500 + Settings.DateAdvanceDelay, token).ConfigureAwait(false);
+                    await Connection.ResetSwitchTime(token).ConfigureAwait(false);
             }
         }
 

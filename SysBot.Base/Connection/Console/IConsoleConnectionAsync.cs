@@ -15,4 +15,5 @@ public interface IConsoleConnectionAsync : IConsoleConnection
     Task<byte[]> PixelPeek(CancellationToken token);
     Task<long> GetSwitchTime(CancellationToken token);
     Task<bool> SetSwitchTime(long posix, int delay, CancellationToken token);
+    Task<bool> ResetSwitchTime(CancellationToken token);
 }
