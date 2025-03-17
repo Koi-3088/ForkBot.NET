@@ -119,11 +119,11 @@ public class TradeExtensions<T> where T : PKM, new()
 
         pkm.Ball = 21;
         pkm.IVs = [31, nickname.Contains(dittoStats[0]) ? 0 : 31, 31, nickname.Contains(dittoStats[1]) ? 0 : 31, nickname.Contains(dittoStats[2]) ? 0 : 31, 31];
-        pkm.ClearHyperTraining();
+        pkm.SetSuggestedHyperTrainingData();
         TrashBytes(pkm, new LegalityAnalysis(pkm));
     }
 
-    public static void EggTrade(PKM pk, IBattleTemplate template)
+    public static void EggTrade(PKM pk, IBattleTemplate template, Ball ball = Ball.None)
     {
         pk.IsNicknamed = true;
         pk.Nickname = pk.Language switch
@@ -204,6 +204,9 @@ public class TradeExtensions<T> where T : PKM, new()
         pk = TrashBytes(pk);
         var la = new LegalityAnalysis(pk);
         var enc = la.EncounterMatch;
+
+        pk.SetSuggestedHyperTrainingData();
+        pk.SetSuggestedBall(enc, true, false, ball);
         pk.SetFriendship(enc);
 
         Span<ushort> relearn = stackalloc ushort[4];
@@ -320,7 +323,7 @@ public class TradeExtensions<T> where T : PKM, new()
         if (mgPkm is not null && result is EntityConverterResult.Success)
         {
             var enc = new LegalityAnalysis(mgPkm).EncounterMatch;
-            mgPkm.SetHandlerandMemory(info, enc);
+            mgPkm.SetHandlerAndMemory(info, enc);
 
             if (mgPkm.TID16 is 0 && mgPkm.SID16 is 0)
             {

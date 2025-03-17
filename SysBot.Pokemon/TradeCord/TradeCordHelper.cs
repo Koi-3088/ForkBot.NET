@@ -1978,7 +1978,7 @@ public class TradeCordHelper<T>(TradeCordSettings settings) : TradeCordDatabase<
         var finalEggName = eggSpeciesName + eggForm;
 
         pk.ResetPartyStats();
-        pk.ClearHyperTraining();
+        pk.SetSuggestedHyperTrainingData();
         msg = $"&^&You got {(pk.IsShiny ? "a **shiny egg**" : "an egg")} from the daycare! Welcome, {(pk.IsShiny ? $"**{finalEggName}**" : $"{finalEggName}")}!";
         return pk;
     }

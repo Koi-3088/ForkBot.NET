@@ -3,7 +3,6 @@ using System.Linq;
 using System.Collections.Generic;
 using PKHeX.Core;
 using PKHeX.Core.AutoMod;
-using PersonalColor = PKHeX.Core.AutoMod.Aesthetics.PersonalColor;
 
 namespace SysBot.Pokemon;
 
@@ -33,7 +32,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         pkm.StatNature = pkm.Nature;
         pkm.Move1_PPUps = pkm.Move2_PPUps = pkm.Move3_PPUps = pkm.Move4_PPUps = 0;
         pkm.SetMaximumPPCurrent(pkm.Moves);
-        pkm.ClearHyperTraining();
+        pkm.SetSuggestedHyperTrainingData();
 
         var enc = la.Info.EncounterMatch;
         var evoChain = la.Info.EvoChainsAllGens.Gen8.FirstOrDefault(x => x.Species == pkm.Species);
@@ -142,7 +141,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
     {
         pkm.Move1_PPUps = pkm.Move2_PPUps = pkm.Move3_PPUps = pkm.Move4_PPUps = 0;
         pkm.SetMaximumPPCurrent(pkm.Moves);
-        pkm.ClearHyperTraining();
+        pkm.SetSuggestedHyperTrainingData();
 
         var la = new LegalityAnalysis(pkm);
         var enc = la.Info.EncounterMatch;
@@ -248,11 +247,9 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
         var pk = (T)sav.GetLegal(template, out string result);
 
         var ballRngDC = Random.Next(1, 3);
-        pk.Ball = ballRngDC is 1 ? balls[0] : balls[1];
-        if (!pk.ValidBall())
-            pk.Ball = BallApplicator.ApplyBallLegalRandom(pk);
+        var ball = ballRngDC is 1 ? (Ball)balls[0] : (Ball)balls[1];
 
-        TradeExtensions<T>.EggTrade(pk, template);
+        TradeExtensions<T>.EggTrade(pk, template, ball);
         pk.SetAbilityIndex(Random.Next(Game is GameVersion.SWSH ? 3 : 2));
 
         pk.Nature = (Nature)Random.Next(25);
@@ -410,7 +407,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
                     clone.OriginalTrainerName = "Nishikigoi";
                     var trainer = new PokeTrainerDetails(clone);
                     var encShelm = new LegalityAnalysis(pk).EncounterMatch;
-                    pk.SetHandlerandMemory(trainer, encShelm);
+                    pk.SetHandlerAndMemory(trainer, encShelm);
                 }; break;
             case EvolutionType.Spin:
                 {
@@ -485,7 +482,7 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
             pk.MetLevel = 1;
             pk.SetEggMetData(GameVersion.UM, version);
             enc = new LegalityAnalysis(pk).EncounterMatch;
-            pk.SetHandlerandMemory(sav, enc);
+            pk.SetHandlerAndMemory(sav, enc);
             if (pk is PK8 pk8)
             {
                 pk8.HeightScalar = 0;
@@ -493,11 +490,11 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
             }
 
             if (pk.Ball is (int)Ball.Sport || (pk.WasEgg && pk.Ball is (int)Ball.Master))
-                pk.SetSuggestedBall(true);
+                pk.SetSuggestedBall(enc, true);
         }
         else
         {
-            pk.SetHandlerandMemory(sav, enc);
+            pk.SetHandlerAndMemory(sav, enc);
         }
 
         var index = pk.PersonalInfo.GetIndexOfAbility(pk.Ability);
@@ -795,7 +792,8 @@ public abstract class TradeCordDatabase<T> : TradeCordBase<T> where T : PKM, new
     private bool IsCottonCandy(ushort species, byte form)
     {
         var color = (PersonalColor)(Game is GameVersion.SWSH ? PersonalTable.SWSH.GetFormEntry(species, form).Color : PersonalTable.BDSP.GetFormEntry(species, form).Color);
-        return (ShinyMap[(Species)species] is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow) &&
+        var shinyColor = Aesthetics.GetShinyColor(species, form);
+        return (shinyColor is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow) &&
             (color is PersonalColor.Blue or PersonalColor.Red or PersonalColor.Pink or PersonalColor.Purple or PersonalColor.Yellow);
     }
 
