@@ -144,6 +144,8 @@ public sealed partial class Main : Form
     private void B_Start_Click(object sender, EventArgs e)
     {
         SaveCurrentConfig();
+        if (Bots.Count > 0 && !DaySkipDisclaimer())
+            return;
 
         LogUtil.LogInfo("Starting all bots...", "Form");
         RunningEnvironment.InitializeStart();
@@ -279,5 +281,38 @@ public sealed partial class Main : Form
     private void CB_Protocol_SelectedIndexChanged(object sender, EventArgs e)
     {
         TB_IP.Visible = CB_Protocol.SelectedIndex == 0;
+    }
+
+    private bool DaySkipDisclaimer()
+    {
+        var msg = "DISCLAIMER\n\n" +
+            "This bot routine programatically changes the console's NetworkSystemClock.\n\n" +
+            "While it will only set the clock within the system's allowed year range, " +
+            "and attempt to sync time using Cloudflare's NTP server, time desync between the console and servers is possible.\n\n" +
+            "Use at your own risk.";
+
+        for (int i = 0; i < Bots.Count; i++)
+        {
+            var bot = Bots[i];
+            switch (bot.InitialRoutine)
+            {
+                case PokeRoutineType.BoolBot:
+                    {
+                        if (Config.Hub.Bool.BoolType == BoolMode.Skipper)
+                            return WinFormsUtil.Prompt(MessageBoxButtons.OKCancel, msg) == DialogResult.OK;
+                    }; break;
+                case PokeRoutineType.DenBot:
+                    {
+                        if (Config.Hub.DenSWSH.DenMode == DenMode.Skip)
+                            return WinFormsUtil.Prompt(MessageBoxButtons.OKCancel, msg) == DialogResult.OK;
+                    }; break;
+                case PokeRoutineType.RollingRaid:
+                    {
+                        return WinFormsUtil.Prompt(MessageBoxButtons.OKCancel, msg) == DialogResult.OK;
+                    };
+                default: continue;
+            }
+        }
+        return true;
     }
 }
