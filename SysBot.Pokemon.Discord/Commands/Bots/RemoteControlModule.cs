@@ -98,8 +98,7 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         }
 
         var b = bot.Bot;
-        var crlf = b is SwitchRoutineExecutor<PokeBotState> { UseCRLF: true };
-        await b.Connection.SendAsync(SwitchCommand.SetScreen(on ? ScreenState.On : ScreenState.Off, crlf), CancellationToken.None).ConfigureAwait(false);
+        await b.Connection.SendAsync(SwitchCommand.SetScreen(on ? ScreenState.On : ScreenState.Off), CancellationToken.None).ConfigureAwait(false);
         await ReplyAsync("Screen state set to: " + (on ? "On" : "Off")).ConfigureAwait(false);
     }
 
@@ -118,8 +117,7 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         }
 
         var b = bot.Bot;
-        var crlf = b is SwitchRoutineExecutor<PokeBotState> { UseCRLF: true };
-        await b.Connection.SendAsync(SwitchCommand.Click(button, crlf), CancellationToken.None).ConfigureAwait(false);
+        await b.Connection.SendAsync(SwitchCommand.Click(button), CancellationToken.None).ConfigureAwait(false);
         await ReplyAsync($"{b.Connection.Name} has performed: {button}").ConfigureAwait(false);
     }
 
@@ -132,11 +130,10 @@ public class RemoteControlModule<T> : ModuleBase<SocketCommandContext> where T :
         }
 
         var b = bot.Bot;
-        var crlf = b is SwitchRoutineExecutor<PokeBotState> { UseCRLF: true };
-        await b.Connection.SendAsync(SwitchCommand.SetStick(s, x, y, crlf), CancellationToken.None).ConfigureAwait(false);
+        await b.Connection.SendAsync(SwitchCommand.SetStick(s, x, y), CancellationToken.None).ConfigureAwait(false);
         await ReplyAsync($"{b.Connection.Name} has performed: {s}").ConfigureAwait(false);
         await Task.Delay(ms).ConfigureAwait(false);
-        await b.Connection.SendAsync(SwitchCommand.ResetStick(s, crlf), CancellationToken.None).ConfigureAwait(false);
+        await b.Connection.SendAsync(SwitchCommand.ResetStick(s), CancellationToken.None).ConfigureAwait(false);
         await ReplyAsync($"{b.Connection.Name} has reset the stick position.").ConfigureAwait(false);
     }
 

@@ -8,12 +8,10 @@ namespace SysBot.Base;
 
 public abstract class SwitchRoutineExecutor<T> : RoutineExecutor<T> where T : class, IConsoleBotConfig
 {
-    public readonly bool UseCRLF;
     protected readonly ISwitchConnectionAsync SwitchConnection;
 
     protected SwitchRoutineExecutor(IConsoleBotManaged<IConsoleConnection, IConsoleConnectionAsync> Config) : base(Config)
     {
-        UseCRLF = Config.GetInnerConfig() is ISwitchConnectionConfig { UseCRLF: true };
         if (Connection is not ISwitchConnectionAsync connect)
             throw new System.Exception("Not a valid switch connection");
         SwitchConnection = connect;
@@ -23,47 +21,47 @@ public abstract class SwitchRoutineExecutor<T> : RoutineExecutor<T> where T : cl
 
     public async Task Click(SwitchButton b, int delay, CancellationToken token)
     {
-        await Connection.SendAsync(SwitchCommand.Click(b, UseCRLF), token).ConfigureAwait(false);
+        await Connection.SendAsync(SwitchCommand.Click(b), token).ConfigureAwait(false);
         await Task.Delay(delay, token).ConfigureAwait(false);
     }
 
     public async Task PressAndHold(SwitchButton b, int hold, int delay, CancellationToken token)
     {
-        await Connection.SendAsync(SwitchCommand.Hold(b, UseCRLF), token).ConfigureAwait(false);
+        await Connection.SendAsync(SwitchCommand.Hold(b), token).ConfigureAwait(false);
         await Task.Delay(hold, token).ConfigureAwait(false);
-        await Connection.SendAsync(SwitchCommand.Release(b, UseCRLF), token).ConfigureAwait(false);
+        await Connection.SendAsync(SwitchCommand.Release(b), token).ConfigureAwait(false);
         await Task.Delay(delay, token).ConfigureAwait(false);
     }
 
     public async Task DaisyChainCommands(int delay, IEnumerable<SwitchButton> buttons, CancellationToken token)
     {
-        SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, delay, UseCRLF);
-        var commands = buttons.Select(z => SwitchCommand.Click(z, UseCRLF)).ToArray();
+        SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, delay);
+        var commands = buttons.Select(z => SwitchCommand.Click(z)).ToArray();
         var chain = commands.SelectMany(x => x).ToArray();
         await Connection.SendAsync(chain, token).ConfigureAwait(false);
-        SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, 0, UseCRLF);
+        SwitchCommand.Configure(SwitchConfigureParameter.mainLoopSleepTime, 0);
     }
 
     public async Task SetStick(SwitchStick stick, short x, short y, int delay, CancellationToken token)
     {
-        var cmd = SwitchCommand.SetStick(stick, x, y, UseCRLF);
+        var cmd = SwitchCommand.SetStick(stick, x, y);
         await Connection.SendAsync(cmd, token).ConfigureAwait(false);
         await Task.Delay(delay, token).ConfigureAwait(false);
     }
 
     public async Task DetachController(CancellationToken token)
     {
-        await Connection.SendAsync(SwitchCommand.DetachController(UseCRLF), token).ConfigureAwait(false);
+        await Connection.SendAsync(SwitchCommand.DetachController(), token).ConfigureAwait(false);
     }
 
     public async Task SetScreen(ScreenState state, CancellationToken token)
     {
-        await Connection.SendAsync(SwitchCommand.SetScreen(state, UseCRLF), token).ConfigureAwait(false);
+        await Connection.SendAsync(SwitchCommand.SetScreen(state), token).ConfigureAwait(false);
     }
 
     public async Task EchoCommands(bool value, CancellationToken token)
     {
-        var cmd = SwitchCommand.Configure(SwitchConfigureParameter.echoCommands, value ? 1 : 0, UseCRLF);
+        var cmd = SwitchCommand.Configure(SwitchConfigureParameter.echoCommands, value ? 1 : 0);
         await Connection.SendAsync(cmd, token).ConfigureAwait(false);
     }
 

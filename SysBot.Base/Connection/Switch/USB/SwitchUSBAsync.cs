@@ -39,8 +39,8 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.GetMainNsoBase(false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.GetMainNsoBase());
+            byte[] baseBytes = ReadInternal();
             return BitConverter.ToUInt64(baseBytes, 0);
         }, token);
     }
@@ -49,8 +49,8 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.GetHeapBase(false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.GetHeapBase());
+            byte[] baseBytes = ReadInternal();
             return BitConverter.ToUInt64(baseBytes, 0);
         }, token);
     }
@@ -59,8 +59,8 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.GetTitleID(false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.GetTitleID());
+            byte[] baseBytes = ReadInternal();
             return BitConverter.ToUInt64(baseBytes, 0).ToString("X16").Trim();
         }, token);
     }
@@ -69,8 +69,8 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.GetBotbaseVersion(false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.GetBotbaseVersion());
+            byte[] baseBytes = ReadInternal();
             return Encoding.UTF8.GetString(baseBytes).Trim('\0');
         }, token);
     }
@@ -79,8 +79,8 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.GetGameInfo(info, false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.GetGameInfo(info));
+            byte[] baseBytes = ReadInternal();
             return Encoding.UTF8.GetString(baseBytes).Trim('\0');
         }, token);
     }
@@ -89,46 +89,32 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.IsProgramRunning(pid, false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.IsProgramRunning(pid));
+            byte[] baseBytes = ReadInternal();
             return baseBytes.Length == 1 && BitConverter.ToBoolean(baseBytes, 0);
         }, token);
-    }
-
-    public Task<byte[]> ReadRaw(byte[] command, int length, CancellationToken token)
-    {
-        return Task.Run(() =>
-        {
-            Send(command);
-            return ReadBulkUSB();
-        }, token);
-    }
-
-    public Task SendRaw(byte[] command, CancellationToken token)
-    {
-        return Task.Run(() => Send(command), token);
     }
 
     public Task<byte[]> PointerPeek(int size, IEnumerable<long> jumps, CancellationToken token)
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.PointerPeek(jumps, size, false));
-            return ReadBulkUSB();
+            Send(SwitchCommand.PointerPeek(jumps, size));
+            return ReadInternal();
         }, token);
     }
 
     public Task PointerPoke(byte[] data, IEnumerable<long> jumps, CancellationToken token)
     {
-        return Task.Run(() => Send(SwitchCommand.PointerPoke(jumps, data, false)), token);
+        return Task.Run(() => Send(SwitchCommand.PointerPoke(jumps, data)), token);
     }
 
     public Task<ulong> PointerAll(IEnumerable<long> jumps, CancellationToken token)
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.PointerAll(jumps, false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.PointerAll(jumps));
+            byte[] baseBytes = ReadInternal();
             return BitConverter.ToUInt64(baseBytes, 0);
         }, token);
     }
@@ -137,8 +123,8 @@ public sealed class SwitchUSBAsync(int Port) : SwitchUSB(Port), ISwitchConnectio
     {
         return Task.Run(() =>
         {
-            Send(SwitchCommand.PointerRelative(jumps, false));
-            byte[] baseBytes = ReadBulkUSB();
+            Send(SwitchCommand.PointerRelative(jumps));
+            byte[] baseBytes = ReadInternal();
             return BitConverter.ToUInt64(baseBytes, 0);
         }, token);
     }

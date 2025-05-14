@@ -2,7 +2,6 @@ using PKHeX.Core;
 using SysBot.Base;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -87,7 +86,7 @@ public abstract class PokeRoutineExecutor<T>(IConsoleBotManaged<IConsoleConnecti
     public async Task VerifyBotbaseVersion(CancellationToken token)
     {
         var data = await SwitchConnection.GetBotbaseVersion(token).ConfigureAwait(false);
-        var version = decimal.TryParse(data, CultureInfo.InvariantCulture, out var v) ? v : 0;
+        var version = Version.TryParse(data, out var v) ? v : new Version(0, 0, 0, 0);
         if (version < BotbaseVersion)
         {
             var protocol = Config.Connection.Protocol;

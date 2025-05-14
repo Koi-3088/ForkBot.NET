@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -69,27 +68,23 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
         InitializeSocket();
     }
 
-    /// <summary> Only call this if you are sending small commands. </summary>
-    public ValueTask<int> SendAsync(byte[] buffer, CancellationToken token) => Connection.SendAsync(buffer, token);
-
-    private async Task<byte[]> ReadBytesFromCmdAsync(byte[] cmd, int length, CancellationToken token)
+    public async ValueTask<int> SendAsync(byte[] buffer, CancellationToken token)
     {
-        await SendAsync(cmd, token).ConfigureAwait(false);
-        var size = (length * 2) + 1;
-        var buffer = ArrayPool<byte>.Shared.Rent(size);
-        var mem = buffer.AsMemory()[..size];
-        await Connection.ReceiveAsync(mem, token);
-        var result = DecodeResult(mem, length);
-        ArrayPool<byte>.Shared.Return(buffer, true);
-        return result;
-    }
+        int total = 0;
+        while (total < buffer.Length)
+        {
+            var chunk = new ArraySegment<byte>(buffer, total, buffer.Length - total);
+            int sent = await Connection.SendAsync(chunk, token).ConfigureAwait(false);
+            if (sent == 0)
+            {
+                Log("SendAsync() error: connection closed by the server.");
+                break;
+            }
 
-    private static byte[] DecodeResult(ReadOnlyMemory<byte> buffer, int length)
-    {
-        var result = new byte[length];
-        var span = buffer.Span[..^1]; // Last byte is always a terminator
-        Decoder.LoadHexBytesTo(span, result, 2);
-        return result;
+            total += sent;
+        }
+
+        return total;
     }
 
     public Task<byte[]> ReadBytesAsync(uint offset, int length, CancellationToken token) => Read(Heap, offset, length, token);
@@ -106,116 +101,97 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
 
     public async Task<ulong> GetMainNsoBaseAsync(CancellationToken token)
     {
-        byte[] baseBytes = await ReadBytesFromCmdAsync(SwitchCommand.GetMainNsoBase(), sizeof(ulong), token).ConfigureAwait(false);
-        Array.Reverse(baseBytes, 0, 8);
+        byte[] baseBytes = await ReadAsync(SwitchCommand.GetMainNsoBase(), token).ConfigureAwait(false);
         return BitConverter.ToUInt64(baseBytes, 0);
     }
 
     public async Task<ulong> GetHeapBaseAsync(CancellationToken token)
     {
-        var baseBytes = await ReadBytesFromCmdAsync(SwitchCommand.GetHeapBase(), sizeof(ulong), token).ConfigureAwait(false);
-        Array.Reverse(baseBytes, 0, 8);
+        var baseBytes = await ReadAsync(SwitchCommand.GetHeapBase(), token).ConfigureAwait(false);
         return BitConverter.ToUInt64(baseBytes, 0);
     }
 
     public async Task<string> GetTitleID(CancellationToken token)
     {
-        var bytes = await ReadRaw(SwitchCommand.GetTitleID(), 17, token).ConfigureAwait(false);
-        return Encoding.ASCII.GetString(bytes).Trim();
+        var bytes = await ReadAsync(SwitchCommand.GetTitleID(), token).ConfigureAwait(false);
+        return BitConverter.ToUInt64(bytes, 0).ToString("X16").Trim();
     }
 
     public async Task<string> GetBotbaseVersion(CancellationToken token)
     {
-        // Allows up to 9 characters for version, and trims extra '\0' if unused.
-        var bytes = await ReadRaw(SwitchCommand.GetBotbaseVersion(), 10, token).ConfigureAwait(false);
+        var bytes = await ReadAsync(SwitchCommand.GetBotbaseVersion(), token).ConfigureAwait(false);
         return Encoding.ASCII.GetString(bytes).Trim('\0');
     }
 
     public async Task<string> GetGameInfo(string info, CancellationToken token)
     {
-        var bytes = await ReadRaw(SwitchCommand.GetGameInfo(info), 17, token).ConfigureAwait(false);
+        var bytes = await ReadAsync(SwitchCommand.GetGameInfo(info), token).ConfigureAwait(false);
         return Encoding.ASCII.GetString(bytes).Trim('\0', '\n');
     }
 
     public async Task<bool> IsProgramRunning(ulong pid, CancellationToken token)
     {
-        var bytes = await ReadRaw(SwitchCommand.IsProgramRunning(pid), 17, token).ConfigureAwait(false);
+        var bytes = await ReadAsync(SwitchCommand.IsProgramRunning(pid), token).ConfigureAwait(false);
         return ulong.TryParse(Encoding.ASCII.GetString(bytes).Trim(), out var value) && value == 1;
     }
 
     private async Task<byte[]> Read(ICommandBuilder b, ulong offset, int length, CancellationToken token)
     {
-        if (length <= MaximumTransferSize)
-        {
-            var cmd = b.Peek(offset, length);
-            return await ReadBytesFromCmdAsync(cmd, length, token).ConfigureAwait(false);
-        }
-
-        byte[] result = new byte[length];
-        for (int i = 0; i < length; i += MaximumTransferSize)
-        {
-            int len = MaximumTransferSize;
-            int delta = length - i;
-            if (delta < MaximumTransferSize)
-                len = delta;
-
-            var cmd = b.Peek(offset + (uint)i, len);
-            var bytes = await ReadBytesFromCmdAsync(cmd, len, token).ConfigureAwait(false);
-            bytes.CopyTo(result, i);
-            await Task.Delay((MaximumTransferSize / DelayFactor) + BaseDelay, token).ConfigureAwait(false);
-        }
-        return result;
+        var cmd = b.Peek(offset, length);
+        return await ReadAsync(cmd, token).ConfigureAwait(false);
     }
 
-    private Task<byte[]> ReadMulti(ICommandBuilder b, IReadOnlyDictionary<ulong, int> offsetSizes, CancellationToken token)
+    private async Task<byte[]> ReadMulti(ICommandBuilder b, IReadOnlyDictionary<ulong, int> offsetSizes, CancellationToken token)
     {
-        var totalSize = offsetSizes.Values.Sum();
         var cmd = b.PeekMulti(offsetSizes);
-        return ReadBytesFromCmdAsync(cmd, totalSize, token);
+        return await ReadAsync(cmd, token).ConfigureAwait(false);
     }
 
     private async Task Write(ICommandBuilder b, byte[] data, ulong offset, CancellationToken token)
     {
-        if (data.Length <= MaximumTransferSize)
-        {
-            var cmd = b.Poke(offset, data);
-            await SendAsync(cmd, token).ConfigureAwait(false);
-            return;
-        }
-        int byteCount = data.Length;
-        for (int i = 0; i < byteCount; i += MaximumTransferSize)
-        {
-            var length = byteCount - i;
-            if (length > MaximumTransferSize)
-                length = MaximumTransferSize;
-            var cmd = GetPoke(b, data, offset, i, length);
-            await SendAsync(cmd, token).ConfigureAwait(false);
-            await Task.Delay((MaximumTransferSize / DelayFactor) + BaseDelay, token).ConfigureAwait(false);
-        }
+        var cmd = b.Poke(offset, data);
+        await SendAsync(cmd, token).ConfigureAwait(false);
     }
 
-    private static byte[] GetPoke(ICommandBuilder b, byte[] data, ulong offset, int i, int length)
+    public async Task<byte[]> ReadAsync(byte[] command, CancellationToken token)
     {
-        var slice = data.AsSpan(i, length);
-        return b.Poke(offset + (uint)i, slice);
-    }
-
-    public async Task<byte[]> ReadRaw(byte[] command, int length, CancellationToken token)
-    {
+        List<byte> data = [];
         await SendAsync(command, token).ConfigureAwait(false);
-        var buffer = new byte[length];
-        await Connection.ReceiveAsync(buffer, token);
-        return buffer;
+        await Task.Delay(Connection.ReceiveBufferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
+
+        do
+        {
+            int available = Connection.Available;
+            if (available <= 0)
+                break;
+
+            byte[] buffer = new byte[available];
+            try
+            {
+                int received = await Connection.ReceiveAsync(buffer, token).ConfigureAwait(false);
+                if (received == 0)
+                    break;
+
+                data.AddRange(buffer);
+            }
+            catch (Exception ex)
+            {
+                LogError($"Socket exception thrown while receiving data:\n{ex.Message}");
+                return [];
+            }
+
+        } while (data.Last() != (byte)'\n');
+
+        // Remove the last byte, which is always a terminator
+        if (data.Count > 0 && data.Last() == (byte)'\n')
+            data.RemoveAt(data.Count - 1);
+
+        return [.. data];
     }
 
-    public async Task SendRaw(byte[] command, CancellationToken token)
+    public async Task<byte[]> PointerPeek(int size, IEnumerable<long> jumps, CancellationToken token)
     {
-        await SendAsync(command, token).ConfigureAwait(false);
-    }
-
-    public Task<byte[]> PointerPeek(int size, IEnumerable<long> jumps, CancellationToken token)
-    {
-        return ReadBytesFromCmdAsync(SwitchCommand.PointerPeek(jumps, size), size, token);
+        return await ReadAsync(SwitchCommand.PointerPeek(jumps, size), token).ConfigureAwait(false);
     }
 
     public async Task PointerPoke(byte[] data, IEnumerable<long> jumps, CancellationToken token)
@@ -225,15 +201,13 @@ public sealed class SwitchSocketAsync : SwitchSocket, ISwitchConnectionAsync
 
     public async Task<ulong> PointerAll(IEnumerable<long> jumps, CancellationToken token)
     {
-        var offsetBytes = await ReadBytesFromCmdAsync(SwitchCommand.PointerAll(jumps), sizeof(ulong), token).ConfigureAwait(false);
-        Array.Reverse(offsetBytes, 0, 8);
+        var offsetBytes = await ReadAsync(SwitchCommand.PointerAll(jumps), token).ConfigureAwait(false);
         return BitConverter.ToUInt64(offsetBytes, 0);
     }
 
     public async Task<ulong> PointerRelative(IEnumerable<long> jumps, CancellationToken token)
     {
-        var offsetBytes = await ReadBytesFromCmdAsync(SwitchCommand.PointerRelative(jumps), sizeof(ulong), token).ConfigureAwait(false);
-        Array.Reverse(offsetBytes, 0, 8);
+        var offsetBytes = await ReadAsync(SwitchCommand.PointerRelative(jumps), token).ConfigureAwait(false);
         return BitConverter.ToUInt64(offsetBytes, 0);
     }
 }

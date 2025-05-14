@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -25,9 +25,6 @@ public interface ISwitchConnectionAsync : IConsoleConnectionAsync
 
     Task WriteBytesMainAsync(byte[] data, ulong offset, CancellationToken token);
     Task WriteBytesAbsoluteAsync(byte[] data, ulong offset, CancellationToken token);
-
-    Task<byte[]> ReadRaw(byte[] command, int length, CancellationToken token);
-    Task SendRaw(byte[] command, CancellationToken token);
 
     Task<byte[]> PointerPeek(int size, IEnumerable<long> jumps, CancellationToken token);
     Task PointerPoke(byte[] data, IEnumerable<long> jumps, CancellationToken token);

@@ -16,8 +16,8 @@ public abstract class SwitchSocket : IConsoleConnection
     public string Label { get; set; }
     public bool Connected => Connection.Connected;
 
-    public int MaximumTransferSize { get; set; } = 0x1C0;
-    public int BaseDelay { get; set; } = 64;
+    public int MaximumTransferSize { get; set; } = 256;
+    public int BaseDelay { get; set; } = 10;
     public int DelayFactor { get; set; } = 256;
 
     protected SwitchSocket(IWirelessConnectionConfig wi, SocketType type = SocketType.Stream, ProtocolType protocol = ProtocolType.Tcp)

@@ -28,9 +28,9 @@ public interface ICommandBuilder
 {
     SwitchOffsetType Type { get; }
 
-    byte[] Peek(ulong offset, int length, bool crlf = true);
-    byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets, bool crlf = true);
-    byte[] Poke(ulong offset, ReadOnlySpan<byte> data, bool crlf = true);
+    byte[] Peek(ulong offset, int length);
+    byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets);
+    byte[] Poke(ulong offset, ReadOnlySpan<byte> data);
 }
 
 public static class SwitchOffsetTypeUtil
@@ -47,11 +47,11 @@ public sealed class HeapCommand : ICommandBuilder
 {
     public SwitchOffsetType Type => SwitchOffsetType.Heap;
 
-    public byte[] Peek(ulong offset, int length, bool crlf = true) => SwitchCommand.Peek((uint)offset, length, crlf);
+    public byte[] Peek(ulong offset, int length) => SwitchCommand.Peek((uint)offset, length);
 
-    public byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets, bool crlf = true) => SwitchCommand.PeekMulti(offsets, crlf);
+    public byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets) => SwitchCommand.PeekMulti(offsets);
 
-    public byte[] Poke(ulong offset, ReadOnlySpan<byte> data, bool crlf = true) => SwitchCommand.Poke((uint)offset, data, crlf);
+    public byte[] Poke(ulong offset, ReadOnlySpan<byte> data) => SwitchCommand.Poke((uint)offset, data);
 }
 
 /// <summary>
@@ -61,11 +61,11 @@ public sealed class MainCommand : ICommandBuilder
 {
     public SwitchOffsetType Type => SwitchOffsetType.Main;
 
-    public byte[] Peek(ulong offset, int length, bool crlf = true) => SwitchCommand.PeekMain(offset, length, crlf);
+    public byte[] Peek(ulong offset, int length) => SwitchCommand.PeekMain(offset, length);
 
-    public byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets, bool crlf = true) => SwitchCommand.PeekMainMulti(offsets, crlf);
+    public byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets) => SwitchCommand.PeekMainMulti(offsets);
 
-    public byte[] Poke(ulong offset, ReadOnlySpan<byte> data, bool crlf = true) => SwitchCommand.PokeMain(offset, data, crlf);
+    public byte[] Poke(ulong offset, ReadOnlySpan<byte> data) => SwitchCommand.PokeMain(offset, data);
 }
 
 /// <summary>
@@ -75,9 +75,9 @@ public sealed class AbsoluteCommand : ICommandBuilder
 {
     public SwitchOffsetType Type => SwitchOffsetType.Absolute;
 
-    public byte[] Peek(ulong offset, int length, bool crlf = true) => SwitchCommand.PeekAbsolute(offset, length, crlf);
+    public byte[] Peek(ulong offset, int length) => SwitchCommand.PeekAbsolute(offset, length);
 
-    public byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets, bool crlf = true) => SwitchCommand.PeekAbsoluteMulti(offsets, crlf);
+    public byte[] PeekMulti(IReadOnlyDictionary<ulong, int> offsets) => SwitchCommand.PeekAbsoluteMulti(offsets);
 
-    public byte[] Poke(ulong offset, ReadOnlySpan<byte> data, bool crlf = true) => SwitchCommand.PokeAbsolute(offset, data, crlf);
+    public byte[] Poke(ulong offset, ReadOnlySpan<byte> data) => SwitchCommand.PokeAbsolute(offset, data);
 }

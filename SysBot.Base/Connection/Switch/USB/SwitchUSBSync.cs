@@ -1,4 +1,4 @@
-﻿using System;
+using System;
  using static SysBot.Base.SwitchOffsetTypeUtil;
 
 namespace SysBot.Base;
@@ -21,15 +21,15 @@ public sealed class SwitchUSBSync(int Port) : SwitchUSB(Port), ISwitchConnection
 
     public ulong GetMainNsoBase()
     {
-        Send(SwitchCommand.GetMainNsoBase(false));
-        byte[] baseBytes = ReadBulkUSB();
+        Send(SwitchCommand.GetMainNsoBase());
+        byte[] baseBytes = ReadInternal();
         return BitConverter.ToUInt64(baseBytes, 0);
     }
 
     public ulong GetHeapBase()
     {
-        Send(SwitchCommand.GetHeapBase(false));
-        byte[] baseBytes = ReadBulkUSB();
+        Send(SwitchCommand.GetHeapBase());
+        byte[] baseBytes = ReadInternal();
         return BitConverter.ToUInt64(baseBytes, 0);
     }
 }

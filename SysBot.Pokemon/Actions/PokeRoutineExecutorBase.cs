@@ -1,5 +1,6 @@
 using PKHeX.Core;
 using SysBot.Base;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -8,10 +9,10 @@ namespace SysBot.Pokemon;
 public abstract class PokeRoutineExecutorBase(IConsoleBotManaged<IConsoleConnection, IConsoleConnectionAsync> Config)
     : SwitchRoutineExecutor<PokeBotState>(Config)
 {
-    public const decimal BotbaseVersion = 2.4m;
+    public Version BotbaseVersion = new(2, 4);
 
     public LanguageID GameLang { get; private set; }
-    public GameVersion Version { get; private set; }
+    public GameVersion GameVersion { get; private set; }
     public string InGameName { get; private set; } = "SysBot.NET";
 
     public static readonly TrackedUserLog PreviousUsers = new();
@@ -29,13 +30,13 @@ public abstract class PokeRoutineExecutorBase(IConsoleBotManaged<IConsoleConnect
     protected void InitSaveData(SaveFile sav)
     {
         GameLang = (LanguageID)sav.Language;
-        Version = sav.Version;
+        GameVersion = sav.Version;
         InGameName = sav.OT;
         Connection.Label = $"{InGameName}-{sav.DisplayTID:000000}";
         Log($"{Connection.Name} identified as {Connection.Label}, using {GameLang}.");
     }
 
-    protected bool IsValidTrainerData() => GameLang is > 0 and <= LanguageID.ChineseT && InGameName.Length > 0 && Version > 0;
+    protected bool IsValidTrainerData() => GameLang is > 0 and <= LanguageID.ChineseT && InGameName.Length > 0 && GameVersion > 0;
 
     public override void SoftStop() => Config.Pause();
 
