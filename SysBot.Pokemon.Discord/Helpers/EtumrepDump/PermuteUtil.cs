@@ -377,8 +377,8 @@ public static class PermuteUtil
             "shiny" => result.IsShiny,
             "shalpha" => result.IsShiny && result.IsAlpha,
             "alpha" => result.IsAlpha || (result.IsShiny && result.IsAlpha),
-            "mini" => result.IsMini,
-            "shmini" => result.IsShiny && result.IsMini,
+            "mini" => result.Height == 0,
+            "shmini" => result.IsShiny && result.Height == 0,
             _ => result.IsShiny,
         };
 
