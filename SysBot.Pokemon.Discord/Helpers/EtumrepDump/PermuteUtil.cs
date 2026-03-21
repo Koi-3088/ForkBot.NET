@@ -181,6 +181,33 @@ public static class PermuteUtil
                 new(100, "Rufflet", false, [55, 58], 0),
                 new(  1, "Rufflet", true,  [70, 73], 3),
             ],
+            // Fieldlands: No number: spawner close to the crescent-moon shaped lake in the North-East, right above the Alpha Floatzel; Not Night; Any weather (2-2)
+            [
+                new(100, "Buizel", false, [2, 4], 0),
+                new(  2, "Buizel", true,  [17, 19], 3),
+            ],
+            // Coastlands: No number: spawner in the water just south of the Molten Arena; Night; Sunny, Cloudy, Drought, Fog (3-3)
+            [
+                new(100, "Tentacool",    false, [24, 29], 0),
+                new(  2, "Tentacool",    true,  [39, 44], 3),
+                new( 60, "Tentacruel", false, [31, 34], 0),
+                new(  1, "Tentacruel", true,  [46, 49], 3),
+                new(100, "Drifloon",    false, [24, 27], 0),
+                new(  2, "Drifloon",    true,  [39, 42], 3),
+                new( 60, "Drifblim",   false, [31, 34], 0),
+                new(  1, "Drifblim",   true,  [46, 49], 3),
+            ],
+            // Icelands: 81AB7DC29C2E5AB3; Night; Sunny, Cloudy (2-2)
+            [
+                new(100, "Swinub",    false, [29, 32], 0),
+                new(  2, "Swinub",    true,  [44, 47], 3),
+                new( 50, "Piloswine", false, [47, 50], 0),
+                new(  1, "Piloswine", true,  [62, 65], 3),
+                new( 20, "Duskull",    false, [33, 36], 0),
+                new(  2, "Duskull",    true,  [48, 51], 3),
+                new(100, "Dusclops", false, [47, 50], 0),
+                new(  1, "Dusclops", true,  [62, 65], 3),
+            ],
         ];
 
         for (int s = 0; s < FakeSlots.Length; s++)
@@ -572,7 +599,10 @@ public static class PermuteUtil
             new SelectMenuOptionBuilder("Swinub/Piloswine", "19", "All shiny Swinub/Piloswine paths"),
             new SelectMenuOptionBuilder("Paras/Parasect", "20", "All shiny Paras/Parasect paths"),
             new SelectMenuOptionBuilder("Paras/Parasect/Zubat/Golbat", "21", "All shiny Paras/Parasect/Zubat/Golbat paths"),
-            new SelectMenuOptionBuilder("Rufflet", "22", "All shiny Rufflet paths")
+            new SelectMenuOptionBuilder("Rufflet", "22", "All shiny Rufflet paths"),
+            new SelectMenuOptionBuilder("Buizel", "23", "All shiny Buizel paths"),
+            new SelectMenuOptionBuilder("Tentacool/Tentacruel/Drifloon/Drifblim", "24", "All shiny Tentacool/Tentacruel/Drifloon/Drifblim paths"),
+            new SelectMenuOptionBuilder("Swinub/Piloswine/Duskull/Dusclops", "25", "All shiny Swinub/Piloswine/Duskull/Dusclops paths")
         ]
     };
 }
