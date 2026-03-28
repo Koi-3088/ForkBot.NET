@@ -429,7 +429,7 @@ public static class PermuteUtil
             {
                 var spawnerInput = int.Parse(modal.Data.CustomId.Split(';')[2]);
                 var key = SpawnGenerator.EncounterTables.FirstOrDefault(x => x.Value == FakeSlots[spawnerInput]).Key;
-                int count = spawnerInput is (2 or 12 or 13) ? 3 : 2;
+                int count = spawnerInput is (2 or 12 or 13 or 24) ? 3 : 2;
                 var details = new SpawnCount(count, count);
                 var set = new SpawnSet(key, count);
                 var spawner = SpawnInfo.GetLoop(details, set, SpawnType.Regular);
