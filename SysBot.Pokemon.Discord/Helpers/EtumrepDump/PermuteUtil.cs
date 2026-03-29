@@ -404,6 +404,8 @@ public static class PermuteUtil
             "shiny" => result.IsShiny,
             "shalpha" => result.IsShiny && result.IsAlpha,
             "alpha" => result.IsAlpha || (result.IsShiny && result.IsAlpha),
+            "mini" => result.Height == 0,
+            "shmini" => result.IsShiny && result.Height == 0,
             _ => result.IsShiny,
         };
 
@@ -412,6 +414,8 @@ public static class PermuteUtil
             "shiny" => "all shiny paths",
             "shalpha" => "all shiny alpha paths",
             "alpha" => "all alpha paths",
+            "mini" => "all mini paths",
+            "shmini" => "all shiny mini paths",
             _ => "all shiny paths",
         };
 
@@ -553,6 +557,8 @@ public static class PermuteUtil
             new SelectMenuOptionBuilder("Shiny", "shiny", "All shiny paths."),
             new SelectMenuOptionBuilder("Shiny AND alpha", "shalpha", "Only shiny alpha paths."),
             new SelectMenuOptionBuilder("Alpha", "alpha", "Only alpha paths, including non-shiny."),
+            new SelectMenuOptionBuilder("Mini (XXXS).", "mini", "Only mini (XXXS) paths."),
+            new SelectMenuOptionBuilder("Shiny AND mini (XXXS).", "shmini", "Only shiny mini (XXXS) paths.")
         ]
     };
 
