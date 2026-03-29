@@ -821,7 +821,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             (ushort)Species.Shinx, (ushort)Species.Luxio, (ushort)Species.Luxray,
             (ushort)Species.Spiritomb,
             (ushort)Species.Stantler,
-            (ushort)Species.Starly, (ushort)Species.Staravia,
+            (ushort)Species.Starly, (ushort)Species.Staravia, (ushort)Species.Staraptor,
             (ushort)Species.Wurmple, (ushort)Species.Cascoon, (ushort)Species.Silcoon,
         ];
 
