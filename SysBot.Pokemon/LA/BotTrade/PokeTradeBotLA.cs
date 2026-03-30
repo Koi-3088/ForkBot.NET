@@ -789,7 +789,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             (ushort)Species.Ralts, (ushort)Species.Budew, (ushort)Species.Roselia,
             (ushort)Species.Hippopotas, (ushort)Species.Hippowdon,
             (ushort)Species.Aipom,
-            (ushort)Species.Pikachu, (ushort)Species.Pichu, (ushort)Species.Kricketot, (ushort)Species.Kricketune,
+            (ushort)Species.Pikachu, (ushort)Species.Pichu, (ushort)Species.Kricketot,
             (ushort)Species.Psyduck, (ushort)Species.Buneary,
             (ushort)Species.Petilil, (ushort)Species.Gastly, (ushort)Species.Haunter,
             (ushort)Species.Glameow, (ushort)Species.Purugly,
