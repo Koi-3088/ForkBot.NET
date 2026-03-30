@@ -778,6 +778,7 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
 
         ushort[] multiExceptions =
         [
+            // Original multispawner species
             (ushort)Species.Bidoof, (ushort)Species.Eevee,
             (ushort)Species.Combee,
             (ushort)Species.Qwilfish,
@@ -798,6 +799,11 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             (ushort)Species.Swinub, (ushort)Species.Piloswine,
             (ushort)Species.Paras, (ushort)Species.Parasect, (ushort)Species.Zubat, (ushort)Species.Golbat,
             (ushort)Species.Rufflet,
+            
+            // Additional multispawner species (as added multispawners)
+            (ushort)Species.Buizel,
+            (ushort)Species.Tentacool, (ushort)Species.Tentacruel, (ushort)Species.Drifloon, (ushort)Species.Drifblim,
+            (ushort)Species.Duskull, (ushort)Species.Dusclops,
         ];
 
         bool isMulti = multiExceptions.Intersect(dumps.Select(x => x.Species)).ToArray().Length >= 1 && dumps.All(x => multiExceptions.Contains(x.Species));
