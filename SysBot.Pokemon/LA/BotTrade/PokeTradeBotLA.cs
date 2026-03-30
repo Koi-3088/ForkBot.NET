@@ -802,28 +802,8 @@ public class PokeTradeBotLA(PokeTradeHub<PA8> Hub, PokeBotState Config) : PokeRo
             
             // Additional multispawner species (as added multispawners)
             (ushort)Species.Buizel,
-            (ushort)Species.Tentacool, (ushort)Species.Tentacruel,
+            (ushort)Species.Tentacool, (ushort)Species.Tentacruel, (ushort)Species.Drifloon, (ushort)Species.Drifblim,
             (ushort)Species.Duskull, (ushort)Species.Dusclops,
-            
-            // Additional variable multispawner species that can appear together
-            (ushort)Species.Bronzor, (ushort)Species.Bronzong,
-            (ushort)Species.Chimchar, (ushort)Species.Monferno,
-            (ushort)Species.Croagunk, (ushort)Species.Toxicroak,
-            (ushort)Species.Geodude, (ushort)Species.Graveler,
-            (ushort)Species.Gligar,
-            (ushort)Species.Happiny, (ushort)Species.Chansey,
-            (ushort)Species.Machop, (ushort)Species.Machoke,
-            (ushort)Species.MimeJr, (ushort)Species.MrMime,
-            (ushort)Species.Munchlax,
-            (ushort)Species.Octillery, (ushort)Species.Phione,
-            (ushort)Species.Ponyta, (ushort)Species.Rapidash,
-            (ushort)Species.Scyther,
-            (ushort)Species.Shinx, (ushort)Species.Luxio, (ushort)Species.Luxray,
-            (ushort)Species.Spiritomb,
-            (ushort)Species.Stantler,
-            (ushort)Species.Starly, (ushort)Species.Staravia, (ushort)Species.Staraptor,
-            (ushort)Species.Unown,
-            (ushort)Species.Wurmple, (ushort)Species.Cascoon, (ushort)Species.Silcoon,
         ];
 
         bool isMulti = multiExceptions.Intersect(dumps.Select(x => x.Species)).ToArray().Length >= 1 && dumps.All(x => multiExceptions.Contains(x.Species));
